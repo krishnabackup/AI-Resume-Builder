@@ -1,7 +1,5 @@
-import React from "react";
-import { useState, useEffect, useRef } from "react";
-import { useNavigate, useLocation, Link } from "react-router-dom";
-import UpToSkillsImg from "../assets/UptoSkills.webp";
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import featureImage1 from "../assets/rejection.png";
 import featureImage2 from "../assets/advice2.png";
 import featureImage3 from "../assets/solve.png";
@@ -27,10 +25,6 @@ import {
   Layout,
   Zap,
   Layers,
-  Menu,
-  LogOut,
-  UserPlus,
-  LogIn,
   ChevronLeft,
   ChevronRight,
   Activity,
@@ -41,10 +35,7 @@ function LandingPage() {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentTemplateIndex, setCurrentTemplateIndex] = useState(0);
-  const [direction, setDirection] = useState("next");
-
   const scrollContainerRef = useRef(null);
-  const base = import.meta.env.BASE_URL || "/";
   const isLoggedIn =
     typeof window !== "undefined" && !!localStorage.getItem("token");
 
@@ -178,7 +169,7 @@ function LandingPage() {
   const location = useLocation();
   useEffect(() => {
     // Handle State Navigation (From Back to Home button)
-    window.scrollTo(0, 0)
+    window.scrollTo(0, 0);
     if (location.state?.scrollTo === "features") {
       const el = document.getElementById("features");
       if (el) {
@@ -408,7 +399,6 @@ function LandingPage() {
                   alt={step.heading}
                   // className="w-1/2 h-full object-contain rounded-3xl transition-transform duration-500"
                   className="w-full md:w-1/2 h-auto object-contain rounded-3xl transition-transform duration-500"
-
                 />
 
                 {/* TEXT CONTENT */}

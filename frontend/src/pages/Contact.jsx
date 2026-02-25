@@ -1,15 +1,13 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import UpToSkillsImg from '../assets/UptoSkills.webp';
 import Footer from "./Footer"
 import NavBar from "../components/NavBar";
 // Add MapPin and Mail to your existing lucide-react import
-import { Mail, Phone, LifeBuoy, Users, MessageSquare, ChevronRight, Zap, MapPin } from 'lucide-react';
+import { Mail, Phone, LifeBuoy, Users, MessageSquare, Zap, MapPin } from 'lucide-react';
 import BlurCircle from './BlurCircle';
 import { motion } from 'framer-motion';
 
 function Contact() {
-  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -29,7 +27,7 @@ function Contact() {
     <NavBar />
     <div className="h-12" />
       {/* HERO SECTION - MATCHING REFERENCE IMAGE */}
-     <section className="relative px-8 pt-32 pb-16 overflow-hidden bg-white isolate">
+     <section className="relative px-6 pt-20 md:pt-32 lg:pt-40 pb-14 overflow-hidden bg-white isolate">
   
   {/* BLUR CIRCLES - Using more saturated colors for visibility */}
   <BlurCircle 
@@ -177,7 +175,7 @@ function Contact() {
 </div>
   </div>
 </section>
-<section className="relative px-6 py-20 overflow-hidden bg-white lg:px-8">
+<section className="relative px-6 py-18 overflow-hidden bg-white lg:px-8">
   {/* Background Decorative Element */}
   <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-blue-50/50 blur-[100px] rounded-full -z-10" />
   

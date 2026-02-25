@@ -13,7 +13,9 @@ import {
 
 import "./Dashboard.css";
 
-const Dashboard = ({ setActivePage }) => {
+
+const Dashboard = () => {
+  
   const navigate = useNavigate();
 
   const [dashboardData, setDashboardData] = useState(null);

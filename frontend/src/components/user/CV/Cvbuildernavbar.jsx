@@ -4,7 +4,6 @@ import { Upload, Download, PenTool, Zap } from "lucide-react";
 const CVBuilderTopBar = ({
   activeTab,
   setActiveTab,
-<<<<<<< HEAD
   onSave,
   isSaving,
   title,
@@ -48,55 +47,6 @@ const CVBuilderTopBar = ({
               } select-none`}
           >
             Builder
-=======
-  onDownload,
-  isSaving,
-  isDownloading,
-}) => {
-  return (
-    <div className="w-full ">
-      {/* Main row */}
-      <div className="px-3 sm:px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        {/* ── Left section ── */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6">
-          {/* Title */}
-          <h1 className="font-['Outfit'] text-xl sm:text-2xl select-none whitespace-nowrap">
-            Create CV
-          </h1>
-
-          {/* Tabs */}
-          <div className="bg-gray-100 rounded-xl p-1 flex w-fit">
-            <button
-              onClick={() => setActiveTab("builder")}
-              className={`rounded-xl px-3 py-1.5 text-sm transition whitespace-nowrap ${
-                activeTab === "builder"
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-600 hover:text-slate-800"
-              }`}
-            >
-              Builder
-            </button>
-
-            <button
-              onClick={() => setActiveTab("templates")}
-              className={`rounded-xl px-3 py-1.5 text-sm transition whitespace-nowrap ${
-                activeTab === "templates"
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-600 hover:text-slate-800"
-              }`}
-            >
-              Templates
-            </button>
-          </div>
-        </div>
-
-        {/* ── Right section ── */}
-        <div className="flex items-center justify-between sm:justify-end gap-2 flex-wrap">
-          {/* Designer */}
-          <button className="hidden lg:flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-800 font-medium shadow-sm hover:bg-black hover:text-white transition-all duration-200 whitespace-nowrap">
-            <PenTool size={18} />
-            CV Designer
->>>>>>> 528d8f7fcdf42f6e744461133fb369a8677bf1d2
           </button>
 
           {/* Upload */}
@@ -107,17 +57,11 @@ const CVBuilderTopBar = ({
 
           {/* Download */}
           <button
-<<<<<<< HEAD
             onClick={() => setActiveTab("templates")}
             className={`py-1 px-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === "templates"
                 ? "bg-white text-slate-900 shadow-sm"
                 : "text-slate-500 hover:text-slate-900"
               } select-none`}
-=======
-            onClick={onDownload}
-            disabled={isDownloading}
-            className="flex items-center gap-2 text-white bg-indigo-600 rounded-lg text-sm transition-all duration-200 hover:bg-indigo-700 py-2 px-3 sm:px-5 disabled:bg-indigo-400 disabled:cursor-not-allowed whitespace-nowrap"
->>>>>>> 528d8f7fcdf42f6e744461133fb369a8677bf1d2
           >
             {isDownloading ? (
               <>
@@ -158,7 +102,6 @@ const CVBuilderTopBar = ({
           </div>
         )}
       </div>
-<<<<<<< HEAD
 
       {/* Right Side: Actions */}
       <div className="flex flex-wrap justify-center md:justify-end items-center gap-2 w-full md:w-auto">
@@ -185,8 +128,6 @@ const CVBuilderTopBar = ({
           <span className="hidden md:inline">{isSaving ? "Saving..." : "Download"}</span>
         </button>
       </div>
-=======
->>>>>>> 528d8f7fcdf42f6e744461133fb369a8677bf1d2
     </div>
   );
 };

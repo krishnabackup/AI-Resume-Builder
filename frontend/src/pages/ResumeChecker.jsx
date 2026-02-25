@@ -12,20 +12,15 @@ import {
   ChevronDown,
   Info,
   ArrowRight,
-  Upload,
-  FileText,
-  Loader2,
   UploadCloud,
-  X, // Added missing icon
   FileCheck, // Added missing icon
 } from "lucide-react";
-import UpToSkillsImg from "../assets/UptoSkills.webp";
 import NavBar from "../components/NavBar";
 import Footer from "./Footer"
 
 const AIResumeChecker = () => {
   const navigate = useNavigate();
-  const [isUploading, setIsUploading] = useState(false);
+  const [ setIsUploading] = useState(false);
   // --- ADDED MISSING STATE ---
   const [selectedFile, setSelectedFile] = useState(null);
   const fileInputRef = useRef(null);
