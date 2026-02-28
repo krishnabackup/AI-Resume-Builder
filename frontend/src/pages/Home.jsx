@@ -31,7 +31,6 @@ import {
   ChevronRight,
   Activity,
 } from "lucide-react";
-import AiChatBot from "./Aichat";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 40 },

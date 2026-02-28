@@ -259,6 +259,13 @@ ${(formData.jobSummary || formData.jobDescription) ? `
 </div>
 </body>
 </html>`);
+// <<<<<<< HEAD
+// =======
+   
+// <<<<<<< HEAD
+// >>>>>>> parent of e8bdcc6 (Merge branch 'main' of https://github.com/Rahulnam30/AI-Resume-Builder)
+// =======
+// >>>>>>> parent of e8bdcc6 (Merge branch 'main' of https://github.com/Rahulnam30/AI-Resume-Builder)
     printWindow.document.close();
     setTimeout(() => setIsExporting(false), 1500);
   };
@@ -516,11 +523,24 @@ ${(formData.jobSummary || formData.jobDescription) ? `
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
+// <<<<<<< HEAD
     setTimeout(() => setIsExporting(false), 800);
   };
+// =======
+
+//   const url = URL.createObjectURL(blob);
+//   const a = document.createElement("a");
+//   a.href = url;
+//   a.download = `Cover-Letter-${formData.jobTitle.replace(/[^a-zA-Z0-9]/g, '-')}.doc`;
+//   document.body.appendChild(a);
+//   a.click();
+//   document.body.removeChild(a);
+// URL.revokeObjectURL(url);
 
 
-
+//   setTimeout(() => setIsExporting(false), 800);
+// };
+// >>>>>>> parent of e8bdcc6 (Merge branch 'main' of https://github.com/Rahulnam30/AI-Resume-Builder)
 
   const currentIdx = tabs.findIndex(t => t.id === activeSection);
   const goLeft = () => currentIdx > 0 && setActiveSection(tabs[currentIdx - 1].id);
