@@ -1,9 +1,16 @@
 import { useState } from "react";
-import { Trash2, EditIcon, Plus, Check } from "lucide-react";
+import {
+  Trash2,
+  EditIcon,
+  Plus,
+  Check,
+  RefreshCw,
+  Sparkles,
+} from "lucide-react";
 
 const ExperienceForm = ({ formData, setFormData }) => {
   const [editingId, setEditingId] = useState(null);
-
+  const [generatingId, setGeneratingId] = useState(null);
   const addExperience = () => {
     const id = crypto.randomUUID();
     setFormData((prev) => ({
@@ -14,7 +21,6 @@ const ExperienceForm = ({ formData, setFormData }) => {
           id,
           title: "",
           company: "",
-          location: "",
           startDate: "",
           endDate: "",
           description: "",
@@ -58,6 +64,49 @@ const ExperienceForm = ({ formData, setFormData }) => {
       "Dec",
     ];
     return `${months[Number(month) - 1]} ${year}`;
+  };
+
+  const handleAIEnhance = async (id) => {
+    try {
+      setGeneratingId(id);
+      // Convert experience and projects objects to strings
+      const experienceStr = formData.experience.find((e) => e.id === id);
+      const data = {
+        id,
+        title: experienceStr?.title || "",
+        company: experienceStr?.company || "",
+        startDate: experienceStr?.startDate || "",
+        endDate: experienceStr?.endDate || "",
+        description: experienceStr?.description ?? "",
+      };
+
+      if (!data.title || !data.company || !data.startDate || !data.endDate) {
+        alert(
+          "Please fill in the Job Title, Company, Start Date, and End Date fields before enhancing with AI.",
+        );
+        setGeneratingId(null);
+        return;
+      }
+      console.log("Data sent:", data);
+
+      const response = await axiosInstance.post(
+        "/api/resume/enhance-work-experience",
+        data,
+      );
+      console.log("Response received:", response);
+      console.log("Description generated:", response.data.aiResume);
+      console.log("Updating experience with ID:", id);
+      console.log("Updating experience with data:", formData.experience);
+      updateExperience(id, "description", response.data.aiResume);
+    } catch (error) {
+      console.error("Failed to generate description:", error);
+      console.error("Error details:", error.response?.data || error.message);
+      alert(
+        `Failed to generate description: ${error.response?.data?.error || error.message}`,
+      );
+    } finally {
+      setGeneratingId(null);
+    }
   };
 
   return (
@@ -188,7 +237,20 @@ const ExperienceForm = ({ formData, setFormData }) => {
                 </div>
 
                 <div className="flex flex-col gap-2 mb-3">
-                  <label>Description</label>
+                  <div className="w-full flex items-center justify-between">
+                    <label>Description *</label>
+                    <button
+                      className="flex gap-2 ml-2 p-2 rounded-lg text-xs bg-blue-100 text-blue-600 hover:bg-blue-200 hover:text-blue-800"
+                      onClick={() => handleAIEnhance(exp.id)}
+                    >
+                      {generatingId === exp.id ? (
+                        <RefreshCw size={15} className={`ml-1 animate-spin`} />
+                      ) : (
+                        <Sparkles size={14} />
+                      )}
+                      Enhance with AI
+                    </button>
+                  </div>
                   <textarea
                     rows={4}
                     placeholder="Describe your responsibilities and achievements..."

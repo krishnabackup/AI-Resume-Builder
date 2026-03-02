@@ -131,9 +131,8 @@ export default function UserSidebar() {
       </div>
       {/* Overlay */}
       <div
-        className={`fixed inset-0 z-30 bg-black bg-opacity-50 transition-opacity duration-300 ${
-          isMobileOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
+        className={`fixed inset-0 z-30 bg-black bg-opacity-50 transition-opacity duration-300 ${isMobileOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
         onClick={() => setIsMobileOpen(false)}
       ></div>
       {/* Sidebar */}
@@ -204,14 +203,15 @@ export default function UserSidebar() {
             <div className="tooltip">Logout</div>
           )}
         </div>
-      </motion.aside>
+      </motion.aside >
 
       {/* Right Panel (Navbar + Content) */}
-      <div
-        className={`transition-all duration-300 mt-0 ${isCollapsed ? "md:ml-[80px]" : "md:ml-[256px]"}`}
+      < div
+        className={`transition-all duration-300 mt-0 ${isCollapsed ? "md:ml-[80px]" : "md:ml-[256px]"}`
+        }
       >
         <Outlet />
-      </div>
+      </div >
     </>
   );
 }

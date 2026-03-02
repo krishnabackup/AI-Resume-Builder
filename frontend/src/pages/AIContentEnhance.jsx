@@ -72,7 +72,7 @@ const AIEnhancementPage = () => {
   <img
     src={AiEnhancement}
     alt="AI Resume Content Enhancement"
-    className="w-full max-w-[820px] xl:max-w-[950px] drop-shadow-2xl"
+    className="hidden md:block w-full max-w-[820px] xl:max-w-[950px] drop-shadow-2xl"
   />
 </div>
 

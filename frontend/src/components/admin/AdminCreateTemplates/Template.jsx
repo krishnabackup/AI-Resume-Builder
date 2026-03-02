@@ -151,11 +151,14 @@ export default function AdminTemplates() {
                   className="bg-orange-50 border border-orange-200 rounded-xl p-3"
                 >
                   <div className="relative w-full aspect-[210/297] bg-white rounded-lg overflow-hidden mb-3">
-                    <img
-                      src={tpl.imageUrl}
-                      alt={tpl.name}
-                      className="w-full h-full object-cover"
-                    />
+                   <img
+  src={tpl.image}
+  alt={tpl.name}
+  className="w-full h-full object-cover"
+  onError={(e) => {
+    e.target.src = CV_PLACEHOLDER;
+  }}
+/>
                   </div>
                   <h3 className="text-sm font-semibold text-slate-800">
                     {tpl.name}
@@ -216,11 +219,15 @@ export default function AdminTemplates() {
                           className="relative w-full aspect-[210/297] bg-slate-100 rounded-lg overflow-hidden cursor-pointer"
                           onClick={() => handlePreview(tpl.image)}
                         >
-                          <img
-                            src={tpl.image}
-                            alt={tpl.name}
-                            className="w-full h-full object-cover"
-                          />
+                         <img
+  src={tpl.image}
+  alt={tpl.name}
+  className="w-full h-full object-cover"
+  onError={(e) => {
+    e.target.onerror = null; // prevent infinite loop
+    e.target.src = CV_PLACEHOLDER;
+  }}
+/>
                           <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
                             <Eye
                               className="text-white drop-shadow-md"

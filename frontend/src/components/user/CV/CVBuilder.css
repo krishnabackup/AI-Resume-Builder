@@ -4,139 +4,139 @@
 
 /* Form Section */
 .form-section {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .form-section-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: #1a1a2e;
-    margin: 0 0 4px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin: 0 0 4px 0;
 }
 
 /* Form Grid — single column so fields stack vertically */
 .form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
 }
 
 /* Form Group */
 .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .form-group.full-width {
-    grid-column: 1 / -1;
+  grid-column: 1 / -1;
 }
 
 .form-group label {
-    font-size: 13px;
-    font-weight: 500;
-    color: #374151;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
 }
 
 .form-group input,
 .form-group select,
 .form-group textarea {
-    padding: 10px 14px;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    font-size: 14px;
-    color: #1a1a2e;
-    background: #fff;
-    transition: all 0.2s;
-    width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1a1a2e;
+  background: #fff;
+  transition: all 0.2s;
+  width: 100%;
 }
 
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
-    outline: none;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .form-group textarea {
-    resize: vertical;
-    min-height: 100px;
-    font-family: inherit;
-    line-height: 1.5;
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+  line-height: 1.5;
 }
 
 /* Entry Card — each experience / education / project / cert block */
 .entry-card {
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 /* Entry Header — title + delete button row */
 .entry-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 14px;
-    font-weight: 600;
-    color: #1a1a2e;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a2e;
 }
 
 /* Remove Entry Button */
 .remove-entry-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    background: #fee2e2;
-    border: none;
-    border-radius: 8px;
-    color: #dc2626;
-    cursor: pointer;
-    transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: #fee2e2;
+  border: none;
+  border-radius: 8px;
+  color: #dc2626;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
 .remove-entry-btn:hover {
-    background: #fecaca;
-    color: #b91c1c;
+  background: #fecaca;
+  color: #b91c1c;
 }
 
 /* Add Entry Button */
 .add-entry-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 12px 20px;
-    background: #f0f9ff;
-    border: 1px dashed #93c5fd;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #2563eb;
-    cursor: pointer;
-    transition: all 0.2s;
-    width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 20px;
+  background: #f0f9ff;
+  border: 1px dashed #93c5fd;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #2563eb;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
 }
 
 .add-entry-btn:hover {
-    background: #dbeafe;
-    border-color: #60a5fa;
+  background: #dbeafe;
+  border-color: #60a5fa;
 }
 
 /* Responsive: stack form-grid to single column on small screens */
 @media (max-width: 640px) {
-    .form-grid {
-        grid-template-columns: 1fr;
-    }
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ===============================
@@ -147,16 +147,16 @@
    so the measurement container can get the real content height */
 .paginated-measure-box .resume-root,
 .paginated-content-slice .resume-root {
-    min-height: unset !important;
-    max-width: unset !important;
-    border: none !important;
-    box-shadow: none !important;
-    width: 100% !important;
-    padding: 0 !important;
-    margin: 0 !important;
+  min-height: unset !important;
+  max-width: unset !important;
+  border: none !important;
+  box-shadow: none !important;
+  width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
 /* Ensure content flows naturally within pages */
 .paginated-content-slice {
-    line-height: 1.6;
+  line-height: 1.6;
 }

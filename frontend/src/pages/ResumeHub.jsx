@@ -75,7 +75,7 @@ const ResumeHubPage = () => {
   <img
     src={hub}
     alt="Hub"
-    className="w-full max-w-[720px] lg:max-w-[850px] xl:max-w-[950px] h-auto drop-shadow-2xl"
+    className="hidden md:block w-full max-w-[720px] lg:max-w-[850px] xl:max-w-[950px] h-auto drop-shadow-2xl"
   />
 
   {/* Floating Badge */}

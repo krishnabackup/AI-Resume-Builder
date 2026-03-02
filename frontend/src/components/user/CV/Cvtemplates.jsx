@@ -7,6 +7,13 @@ import ModernTemplate from "./Templates/ModernTemplate";
 import ProfessionalTemplate from "./Templates/ProfessionalTemplate";
 import Simple from "./Templates/Simple";
 import AcademicSidebarTemplate from "./Templates/AcademicSidebarTemplate";
+import ClinicaElegantTemplate from "./Templates/ClinicaElegantTemplate.jsx";
+import VertexSidebarCV from "./templates/VertexSidebarCV";
+import EliteSidebarResume from "./templates/EliteSidebarTemplate";
+import EclipseTemplate from "./templates/EclipseTemplate";
+import Eclipse from "./templates/Eclipse";
+import Harbor from "./templates/HarborTemplate.jsx";
+
 
 const CVTemplates = {
   professional: ProfessionalTemplate,
@@ -18,6 +25,12 @@ const CVTemplates = {
   twoColumn: TwoColumnATS,
   simple: Simple,
   academicSidebar: AcademicSidebarTemplate,
+  Elegant: ClinicaElegantTemplate,
+  vertex: VertexSidebarCV,
+  elite: EliteSidebarResume,
+  eclipse: EclipseTemplate,
+  eclipse1: Eclipse,
+  harbor: Harbor,
 };
 
 export default CVTemplates;

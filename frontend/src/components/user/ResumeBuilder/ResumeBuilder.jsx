@@ -6,16 +6,12 @@ import {
   Award,
   Briefcase,
   CheckCircle,
-  Download,
   FolderKanban,
   GraduationCap,
-  PenTool,
-  Upload,
   User,
   Zap,
   Search,
   FileText,
-  RefreshCw,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../../api/axios";
@@ -37,6 +33,7 @@ import { getCompletionStatus } from "./completion";
 import { dummyData } from "./dummyData";
 
 import UserNavbar from "../UserNavBar/UserNavBar";
+import CVBuilderTopBar from "../CV/Cvbuildernavbar";
 
 const ResumeBuilder = ({ setActivePage = () => {} }) => {
   /* -------------------- CORE STATE -------------------- */
@@ -72,6 +69,8 @@ const ResumeBuilder = ({ setActivePage = () => {} }) => {
 
   const [activeTab, setActiveTab] = useState("builder");
   const [activeSection, setActiveSection] = useState("personal");
+  const [isAiMode, setIsAiMode] = useState(false);
+  const [documentTitle, setDocumentTitle] = useState("");
 
   /*-----------To make the upload input functional-------------*/
 
@@ -123,6 +122,7 @@ const ResumeBuilder = ({ setActivePage = () => {} }) => {
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
   const previewRef = useRef(null);
+
   const GenerateResumePDF = async (resumeHtml) => {
     try {
       setLoading(true);
@@ -144,7 +144,9 @@ const ResumeBuilder = ({ setActivePage = () => {} }) => {
 
       const link = document.createElement("a");
       link.href = url;
-      link.download = "resume.pdf";
+      const sanitize = (s) => (s || "").replace(/[^a-z0-9_\- ]/gi, "").trim().replace(/\s+/g, "_");
+      const fileName = sanitize(documentTitle) || sanitize(formData.fullName) || "Resume";
+      link.download = `${fileName}.pdf`;
       link.click();
 
       window.URL.revokeObjectURL(url);
@@ -157,17 +159,30 @@ const ResumeBuilder = ({ setActivePage = () => {} }) => {
   };
 
   const handleDownload = async (e) => {
-    if (exporting) return; // prevent double clicks
-
+    if (exporting) return;
     const html = await previewRef.current?.getResumeHTML();
     if (!html) return;
-
     try {
       setExporting(true);
       await GenerateResumePDF(html);
     } finally {
       setExporting(false);
     }
+  };
+
+  const handleDownloadWord = async () => {
+    const html = await previewRef.current?.getResumeHTML();
+    if (!html) return;
+    const wordHtml = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Resume</title></head><body>${html}</body></html>`;
+    const blob = new Blob(['\uFEFF', wordHtml], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const sanitize = (s) => (s || "").replace(/[^a-z0-9_\- ]/gi, "").trim().replace(/\s+/g, "_");
+    const fileName = sanitize(documentTitle) || sanitize(formData.fullName) || "Resume";
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${fileName}.doc`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   /*------------------- PREVIOUS & NEXT BUTTON ------------*/
@@ -313,9 +328,7 @@ const ResumeBuilder = ({ setActivePage = () => {} }) => {
         </div>
 
         {/* BUILDER + PREVIEW */}
-        <div
-          className={`grid gap-14 p-1.5 ml-2 mr-2 grid-cols-1 md:grid-cols-[32%_68%] ${isPreviewExpanded ? "md:grid-cols-[0_100%]" : ""}`}
-        >
+        <div className="grid gap-14 p-1.5 ml-2 mr-2 grid-cols-1 md:grid-cols-[32%_68%]">
           {/* builder-section */}
           <div className="bg-white rounded-xl h-full pl-0.5 overflow-hidden flex-1">
             <FormTabs
@@ -361,19 +374,21 @@ const ResumeBuilder = ({ setActivePage = () => {} }) => {
               </button>
             </div>
           </div>
-          <div className="md:block hidden">
-            {!isPreviewHidden && (
-              <LivePreview
-                ref={previewRef}
-                formData={formData}
-                currentTemplate={currentTemplate}
-                isExpanded={isPreviewExpanded}
-                onExpand={() => setIsPreviewExpanded(true)}
-                onCollapse={() => setIsPreviewExpanded(false)}
-                onMinimize={() => setIsPreviewHidden(true)}
-              />
-            )}
-          </div>
+
+        {!isPreviewHidden && !isPreviewExpanded && (
+  <div className="hidden md:block">
+    <LivePreview
+      ref={previewRef}
+      formData={formData}
+      currentTemplate={currentTemplate}
+      isExpanded={false}
+      onExpand={() => setIsPreviewExpanded(true)}
+      onCollapse={() => setIsPreviewExpanded(false)}
+      onMinimize={() => setIsPreviewHidden(true)}
+    />
+  </div>
+)}
+
         </div>
         <div className="w-full h-4"></div>
       </>
@@ -382,133 +397,64 @@ const ResumeBuilder = ({ setActivePage = () => {} }) => {
 
   return (
     <>
-      <UserNavbar />
+ {!isPreviewExpanded && <UserNavbar />}
+ {isPreviewExpanded && (
+  <div className="fixed inset-0 z-[99999] bg-white overflow-auto">
+    <LivePreview
+      ref={previewRef}
+      formData={formData}
+      currentTemplate={currentTemplate}
+      isExpanded={true}
+      onExpand={() => {}}
+      onCollapse={() => setIsPreviewExpanded(false)}
+      onMinimize={() => setIsPreviewHidden(true)}
+    />
+  </div>
+)}
       {/* resume-builder-page */}
+      <CVBuilderTopBar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        onDownload={handleDownload}
+        onDownloadWord={handleDownloadWord}
+        onUpload={(file) => console.log("Resume upload:", file?.name)}
+        isDownloading={loading}
+        downloadDisabled={!completion.isComplete}
+        title={documentTitle}
+        onTitleChange={(_, val) => setDocumentTitle(val)}
+        titlePlaceholder="Untitled Resume"
+        templatesLabel="Resume Templates"
+        showDesigner={false}
+        showAiToggle={true}
+        isAiMode={isAiMode}
+        onToggleAiMode={() => setIsAiMode((v) => !v)}
+        extraButtons={
+          <button
+            onClick={() => navigate("/user/cover-letter")}
+            className="hidden lg:flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-800 font-medium shadow-sm hover:bg-black hover:text-white transition-all duration-200 whitespace-nowrap select-none"
+          >
+            <FileText size={18} />
+            Create Cover Letter
+          </button>
+        }
+      />
+
       <div className="p-2.5 overflow-hidden font-sans tracking-[0.01em]">
-        {/* main-header */}
-        <div className="block md:flex items-center justify-between pr-5">
-          <div className="w-full flex md:flex-row justify-between items-start md:items-center p-2 min-h-[50px] gap-4">
-            {/* LEFT SIDE: Heading + Toggle */}
-            <div className="flex md:flex-row md:items-center gap-4 w-full md:w-auto">
-              {/* Title Section */}
-              <div>
-                <h1 className="text-2xl font-['Outfit']">
-                  {activeTab === "builder"
-                    ? "Create Resume"
-                    : "Resume Templates"}
-                </h1>
-                {activeTab === "templates" && (
-                  <p className="text-sm text-slate-500 mt-1 hidden md:block">
-                    Choose a professionally designed template to get started.
-                  </p>
-                )}
-              </div>
-
-              {/* Toggle Switch */}
-              <div className="bg-gray-100 gap-1 md:flex hidden rounded-2xl p-1 w-fit mx-auto md:mx-0">
-                <button
-                  className={`rounded-2xl md:py-1 py-1.5 md:px-3.5 px-4 text-sm ${activeTab === "builder" ? "bg-white text-slate-900 shadow-sm" : ""} select-none`}
-                  onClick={() => setActiveTab("builder")}
-                >
-                  Builder
-                </button>
-                <button
-                  className={`py-1 px-2.5 rounded-2xl text-sm ${activeTab === "templates" ? "bg-white text-slate-900 shadow-sm" : ""} select-none`}
-                  onClick={() => setActiveTab("templates")}
-                >
-                  Templates
-                </button>
-              </div>
-            </div>
-
-            {/* RIGHT SIDE: Actions or Search */}
-            <div className="md:w-auto flex items-center justify-end gap-2">
-              {activeTab === "builder" && (
-                <>
-                  <button
-                    onClick={() => navigate("/user/cover-letter")}
-                    className="items-center gap-2 px-4 py-2 rounded-lg hidden md:flex border border-gray-300 bg-white text-gray-800 font-medium shadow-sm hover:bg-black hover:text-white transition-all duration-200 select-none"
-                  >
-                    <FileText size={18} />
-                    Create Cover Letter
-                  </button>
-                  <button
-                    onClick={handleButtonClick}
-                    className="flex gap-2 text-white cursor-pointer bg-black border-0 rounded-lg text-sm transition-all duration-200 select-none md:hover:bg-black/70 py-2 px-5 md:py-2.5 md:px-5"
-                  >
-                    <Upload size={18} />
-                    <span className="hidden md:inline">Upload</span>
-                  </button>
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept=".pdf,.doc,.docx"
-                    ref={input_file}
-                    onChange={handleFileChange}
-                  />
-                  <button
-                    className="flex gap-2 text-white cursor-pointer bg-indigo-600 border-0 rounded-lg select-none text-sm transition-all duration-200 select-none hover:bg-indigo-700 hover:to-indigo-800 disabled:opacity-30 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-gray-100 py-2 px-5 md:py-2.5 md:px-5"
-                    onClick={(e) => handleDownload(e)}
-                    disabled={!completion.isComplete}
-                  >
-                    {loading ? (
-                      <RefreshCw size={18} className={`ml-1 animate-spin`} />
-                    ) : (
-                      <Download size={18} />
-                    )}
-                    <span className="hidden md:inline">Download</span>
-                  </button>
-                </>
-              )}
-            </div>
+        {activeTab !== "builder" && (
+          <div className="relative w-full md:w-80 mb-4 px-3">
+            <Search
+              className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400"
+              size={18}
+            />
+            <input
+              type="text"
+              placeholder="Search templates..."
+              value={templateSearch}
+              onChange={(e) => setTemplateSearch(e.target.value)}
+              className="pl-10 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none w-full shadow-sm"
+            />
           </div>
-          {/* main-tabs */}
-          <div className="w-full bg-gray-200 md:hidden flex gap-1 rounded-2xl p-1 w-fit my-3 mb-5 mx-auto md:mx-0">
-            <button
-              className={`flex-1 mr-1 rounded-xl py-1.5 md:px-2.5 px-4 text-sm ${activeTab === "builder" ? "bg-white text-slate-900 shadow-sm" : ""} select-none`}
-              onClick={() => setActiveTab("builder")}
-            >
-              Builder
-            </button>
-            <button
-              className={`flex-1 py-1 px-2.5 rounded-xl text-sm ${activeTab === "templates" ? "bg-white text-slate-900 shadow-sm" : ""} select-none`}
-              onClick={() => setActiveTab("templates")}
-            >
-              Templates
-            </button>
-          </div>
-          {activeTab !== "builder" && (
-            /* Search Bar for Templates */
-            <div className="relative w-full md:w-80">
-              <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                size={18}
-              />
-              <input
-                type="text"
-                placeholder="Search templates..."
-                value={templateSearch}
-                onChange={(e) => setTemplateSearch(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none w-full shadow-sm"
-              />
-            </div>
-          )}
-        </div>
-        {/* main-tabs */}
-        <div className="w-full bg-gray-200 md:hidden flex gap-1 rounded-2xl p-1 w-fit my-5 mx-auto md:mx-0">
-          <button
-            className={`flex-1 mr-1 rounded-xl py-1.5 md:px-2.5 px-4 text-sm ${activeTab === "builder" ? "bg-white text-slate-900 shadow-sm" : ""} select-none`}
-            onClick={() => setActiveTab("builder")}
-          >
-            Builder
-          </button>
-          <button
-            className={`flex-1 py-1 px-2.5 rounded-xl text-sm ${activeTab === "templates" ? "bg-white text-slate-900 shadow-sm" : ""} select-none`}
-            onClick={() => setActiveTab("templates")}
-          >
-            Templates
-          </button>
-        </div>
+        )}
 
         {renderMainContent()}
       </div>

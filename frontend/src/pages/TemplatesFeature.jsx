@@ -91,7 +91,7 @@ const TemplatesFeature = () => {
         <img
           src={image}
           alt="Resume Templates Showcase"
-          className="w-full max-w-[620px] lg:max-w-[680px] drop-shadow-2xl"
+          className="hidden md:block w-full max-w-[620px] lg:max-w-[680px] drop-shadow-2xl"
         />
       </div>
 

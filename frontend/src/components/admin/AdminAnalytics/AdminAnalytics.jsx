@@ -1,16 +1,23 @@
 import React, { useEffect, useState } from "react";
-import { TrendingUp, Users, UserCheck, UserMinus, Star, Activity, Zap, Shield } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { TrendingUp, Users, UserCheck, UserMinus, Star, Activity, Zap, Shield, Crown, Award, Gem } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import axiosInstance from "../../../api/axios";
 
 export default function AdminAnalytics() {
   const [userGrowth, setUserGrowth] = useState({ count: 0, note: "" });
   const [conversions, setConversions] = useState({ count: 0, note: "" });
   const [activeUsers, setActiveUsers] = useState({ count: 0, note: "" });
-  const [churnRate, setChurnRate] = useState({ count: 0, note: "" });
+  const [deletedUsers, setDeletedUsers] = useState({ count: 0, note: "" });
   const [mostUsedTemplates, setMostUsedTemplates] = useState([]);
-  const [revenueTrend, setRevenueTrend] = useState([]);
-  const [subscriptionTrend, setSubscriptionTrend] = useState([]);
+  const [chartData, setChartData] = useState([]);
+  const [subscriptionBreakdown, setSubscriptionBreakdown] = useState([]);
+  const [summary, setSummary] = useState({
+    apiSuccessRate: "0%",
+    apiFailureRate: "0%",
+    avgResponseTime: "0ms",
+    totalApiCalls: 0,
+    systemUptime: "99.98%"
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,10 +30,17 @@ export default function AdminAnalytics() {
       setUserGrowth(response.data.userGrowth);
       setConversions(response.data.conversions);
       setActiveUsers(response.data.activeUsers);
-      setChurnRate(response.data.churnRate);
+      setDeletedUsers(response.data.deletedUsers || { count: 0, note: "" });
       setMostUsedTemplates(response.data.mostUsedTemplates || []);
-      setRevenueTrend(response.data.revenueTrend || []);
-      setSubscriptionTrend(response.data.subscriptionTrend || []);
+      setChartData(response.data.chartData || []);
+      setSubscriptionBreakdown(response.data.subscriptionBreakdown || []);
+      setSummary(response.data.summary || {
+        apiSuccessRate: "0%",
+        apiFailureRate: "0%",
+        avgResponseTime: "0ms",
+        totalApiCalls: 0,
+        systemUptime: "99.98%"
+      });
       setLoading(false);
     } catch (error) {
       console.error("Error fetching analytics:", error);
@@ -60,9 +74,9 @@ export default function AdminAnalytics() {
       valueColor: "text-slate-900",
     },
     {
-      title: "Churned Users",
-      value: loading ? "..." : `${churnRate.count} Users`,
-      note: churnRate.note,
+      title: "Deleted Users",
+      value: loading ? "..." : `${deletedUsers.count} Users`,
+      note: deletedUsers.note,
       icon: <UserMinus className="text-red-600" />,
       iconBg: "bg-red-50",
       valueColor: "text-slate-900",
@@ -113,12 +127,16 @@ export default function AdminAnalytics() {
             </div>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-4xl font-bold text-green-600">98.5</span>
+            <span className="text-4xl font-bold text-green-600">
+              {loading ? "..." : summary.apiSuccessRate.replace("%", "")}
+            </span>
             <span className="text-slate-500">/100</span>
           </div>
-          <p className="text-sm text-slate-500 mt-2">System running smoothly</p>
+          <p className="text-sm text-slate-500 mt-2">
+            {parseFloat(summary.apiSuccessRate) > 95 ? "System running smoothly" : "Monitoring performance"}
+          </p>
           <div className="mt-4 bg-slate-100 rounded-full h-2">
-            <div className="bg-green-600 h-2 rounded-full" style={{ width: '98.5%' }}></div>
+            <div className="bg-green-600 h-2 rounded-full" style={{ width: summary.apiSuccessRate }}></div>
           </div>
         </div>
 
@@ -154,10 +172,12 @@ export default function AdminAnalytics() {
             </div>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-4xl font-bold text-blue-600">245</span>
+            <span className="text-4xl font-bold text-blue-600">
+              {loading ? "..." : summary.avgResponseTime.replace("ms", "")}
+            </span>
             <span className="text-slate-500">ms</span>
           </div>
-          <p className="text-sm text-green-600 mt-2">↓ 12% faster than last week</p>
+          <p className="text-sm text-green-600 mt-2">Platform latency</p>
         </div>
       </div>
 
@@ -171,20 +191,24 @@ export default function AdminAnalytics() {
               <Shield className="text-green-600" size={16} />
             </div>
           </div>
-          <p className="text-2xl font-bold text-slate-900">99.98%</p>
+          <p className="text-2xl font-bold text-slate-900">
+            {loading ? "..." : summary.systemUptime}
+          </p>
           <p className="text-xs text-slate-500 mt-1">Last 30 days</p>
         </div>
 
         {/* Data Accuracy */}
         <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-sm text-slate-500">Data Accuracy</p>
+            <p className="text-sm text-slate-500">Total API Calls</p>
             <div className="bg-purple-50 p-2 rounded-full">
               <Activity className="text-purple-600" size={16} />
             </div>
           </div>
-          <p className="text-2xl font-bold text-slate-900">97.2%</p>
-          <p className="text-xs text-slate-500 mt-1">Validation rate</p>
+          <p className="text-2xl font-bold text-slate-900">
+            {loading ? "..." : summary.totalApiCalls}
+          </p>
+          <p className="text-xs text-slate-500 mt-1">Last 30 days</p>
         </div>
 
         {/* API Success Rate */}
@@ -195,46 +219,51 @@ export default function AdminAnalytics() {
               <Zap className="text-blue-600" size={16} />
             </div>
           </div>
-          <p className="text-2xl font-bold text-slate-900">99.5%</p>
-          <p className="text-xs text-green-600 mt-1">↑ 0.3% improvement</p>
+          <p className="text-2xl font-bold text-slate-900">
+            {loading ? "..." : summary.apiSuccessRate}
+          </p>
+          <p className="text-xs text-green-600 mt-1">Real-time health</p>
         </div>
 
         {/* Error Rate */}
         <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-sm text-slate-500">Error Rate</p>
+            <p className="text-sm text-slate-500">API Failure Rate</p>
             <div className="bg-red-50 p-2 rounded-full">
               <Activity className="text-red-600" size={16} />
             </div>
           </div>
-          <p className="text-2xl font-bold text-slate-900">0.5%</p>
-          <p className="text-xs text-green-600 mt-1">↓ Within acceptable range</p>
+          <p className="text-2xl font-bold text-slate-900">
+            {loading ? "..." : summary.apiFailureRate}
+          </p>
+          <p className="text-xs text-red-600 mt-1">Real-time error monitoring</p>
         </div>
       </div>
 
       {/* Middle Section */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Revenue */}
+        {/* Growth & Revenue Chart */}
         <div className="xl:col-span-2 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-          <h2 className="text-lg font-semibold mb-4">
-            Revenue & Subscription Trends
+          <h2 className="text-lg font-semibold mb-1">
+            Platform Growth & Revenue
           </h2>
+          <p className="text-sm text-slate-500 mb-6">User acquisition vs Revenue generated</p>
 
           {loading ? (
             <div className="h-64 flex items-center justify-center text-slate-400">
               Loading chart data...
             </div>
-          ) : revenueTrend.length > 0 || subscriptionTrend.length > 0 ? (
+          ) : chartData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart>
+              <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                 <XAxis
                   dataKey="month"
                   stroke="#64748b"
                   fontSize={12}
-                  allowDuplicatedCategory={false}
                 />
-                <YAxis stroke="#64748b" fontSize={12} />
+                <YAxis yAxisId="left" stroke="#64748b" fontSize={12} />
+                <YAxis yAxisId="right" orientation="right" stroke="#64748b" fontSize={12} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: '#fff',
@@ -244,31 +273,27 @@ export default function AdminAnalytics() {
                 />
                 <Legend />
 
-                {revenueTrend.length > 0 && (
-                  <Line
-                    data={revenueTrend}
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="#10b981"
-                    strokeWidth={2}
-                    name="Revenue ($)"
-                    dot={{ fill: '#10b981', r: 4 }}
-                    activeDot={{ r: 6 }}
-                  />
-                )}
+                <Line
+                  yAxisId="right"
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#10b981"
+                  strokeWidth={2}
+                  name="Revenue (₹)"
+                  dot={{ fill: '#10b981', r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
 
-                {subscriptionTrend.length > 0 && (
-                  <Line
-                    data={subscriptionTrend}
-                    type="monotone"
-                    dataKey="subscriptions"
-                    stroke="#3b82f6"
-                    strokeWidth={2}
-                    name="Subscriptions"
-                    dot={{ fill: '#3b82f6', r: 4 }}
-                    activeDot={{ r: 6 }}
-                  />
-                )}
+                <Line
+                  yAxisId="left"
+                  type="monotone"
+                  dataKey="users"
+                  stroke="#3b82f6"
+                  strokeWidth={2}
+                  name="New Users"
+                  dot={{ fill: '#3b82f6', r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
               </LineChart>
             </ResponsiveContainer>
           ) : (
@@ -278,7 +303,7 @@ export default function AdminAnalytics() {
           )}
         </div>
 
-        {/* Templates */}
+        {/* Most Used Templates */}
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
           <h2 className="text-lg font-semibold mb-4">Most Used Templates</h2>
 
@@ -287,14 +312,15 @@ export default function AdminAnalytics() {
           ) : mostUsedTemplates.length > 0 ? (
             <div className="space-y-4 text-sm">
               {mostUsedTemplates.map((template, index) => {
-                const colors = ["text-blue-600", "text-purple-600", "text-red-600", "text-orange-600", "text-slate-500"];
+                const colors = ["text-blue-600", "text-purple-600", "text-emerald-600", "text-orange-600", "text-slate-500"];
+                const bgs = ["bg-blue-50", "bg-purple-50", "bg-emerald-50", "bg-orange-50", "bg-slate-50"];
                 return (
-                  <div key={template.templateId} className="flex justify-between items-center">
-                    <span className="text-slate-700">
-                      Template {template.templateId}
+                  <div key={template.templateId} className={`flex justify-between items-center p-3 rounded-xl ${bgs[index % bgs.length]}`}>
+                    <span className="font-medium text-slate-700">
+                      {template.templateId}
                     </span>
-                    <span className={`${colors[index % colors.length]} font-medium`}>
-                      {template.percentage}% ({template.count})
+                    <span className={`${colors[index % colors.length]} font-bold`}>
+                      {template.count} uses ({template.percentage}%)
                     </span>
                   </div>
                 );
@@ -305,6 +331,109 @@ export default function AdminAnalytics() {
               No template usage data yet
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Subscription Breakdown Section */}
+      <div className="mt-8 bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900">Subscription Distribution</h2>
+            <p className="text-sm text-slate-500 mt-1">Breakdown of user tiers and market share</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-center">
+          {/* Visual Overview - Donut Chart */}
+          <div className="xl:col-span-4 flex justify-center">
+            {loading ? (
+              <div className="w-64 h-64 rounded-full bg-slate-50 animate-pulse border-4 border-slate-100 flex items-center justify-center text-slate-300">
+                Charting...
+              </div>
+            ) : (
+              <div className="relative w-full max-w-[280px]">
+                <ResponsiveContainer width="100%" height={280}>
+                  <PieChart>
+                    <Pie
+                      data={subscriptionBreakdown}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={75}
+                      outerRadius={100}
+                      paddingAngle={5}
+                      dataKey="count"
+                    >
+                      {subscriptionBreakdown.map((entry, index) => {
+                        const colors = ['#94a3b8', '#3b82f6', '#8b5cf6', '#f59e0b', '#10b981'];
+                        return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+                      })}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <span className="text-3xl font-bold text-slate-900">
+                    {subscriptionBreakdown.reduce((acc, curr) => acc + curr.count, 0)}
+                  </span>
+                  <span className="text-xs text-slate-500 font-medium uppercase tracking-widest">Total Users</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Detailed Cards */}
+          <div className="xl:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+            {loading ? (
+              Array(4).fill(0).map((_, i) => (
+                <div key={i} className="h-28 bg-slate-50 rounded-2xl animate-pulse" />
+              ))
+            ) : subscriptionBreakdown.length > 0 ? (
+              subscriptionBreakdown.map((item, index) => {
+                const configs = {
+                  Free: { icon: <Users size={18} />, color: "bg-slate-500", light: "bg-slate-50", text: "text-slate-600", border: "border-slate-100" },
+                  Pro: { icon: <Star size={18} />, color: "bg-blue-600", light: "bg-blue-50", text: "text-blue-700", border: "border-blue-100" },
+                  Premium: { icon: <Award size={18} />, color: "bg-purple-600", light: "bg-purple-50", text: "text-purple-700", border: "border-purple-100" },
+                  "Ultra pro": { icon: <Crown size={18} />, color: "bg-amber-500", light: "bg-amber-50", text: "text-amber-700", border: "border-amber-100" },
+                  "Ultra Pro": { icon: <Crown size={18} />, color: "bg-amber-500", light: "bg-amber-50", text: "text-amber-700", border: "border-amber-100" },
+                  Basic: { icon: <Zap size={18} />, color: "bg-emerald-500", light: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-100" },
+                };
+                const config = configs[item.plan] || { icon: <Gem size={18} />, color: "bg-slate-400", light: "bg-slate-50", text: "text-slate-600", border: "border-slate-100" };
+                const total = subscriptionBreakdown.reduce((s, b) => s + b.count, 0) || 1;
+                const percentage = Math.round((item.count / total) * 100);
+
+                return (
+                  <div key={item.plan} className={`group p-5 rounded-2xl border ${config.border} bg-white hover:shadow-lg hover:shadow-slate-100 transition-all duration-300`}>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2.5 rounded-xl ${config.light} ${config.text} group-hover:scale-110 transition-transform`}>
+                          {config.icon}
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-slate-800">{item.plan}</h4>
+                          <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Subscription Tier</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-black text-slate-900 leading-none">{item.count}</p>
+                        <p className="text-[10px] font-bold text-slate-400 mt-1">{percentage}% SHARE</p>
+                      </div>
+                    </div>
+                    <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${config.color} transition-all duration-1000`}
+                        style={{ width: `${percentage}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="col-span-2 text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                <Users size={32} className="mx-auto text-slate-300 mb-3" />
+                <p className="text-slate-400 font-medium">No subscription data discovered yet</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

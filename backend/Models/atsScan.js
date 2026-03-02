@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 
+
 import User from "./User.js";
 import Template from "./template.js";
 import ResumeProfile from "./resumeProfile.js";
@@ -27,10 +28,7 @@ const atsScansSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    jobDescription: {
-      type: String,
-      required: true,
-    },
+  
     overallScore: {
       type: Number,
       required: true,

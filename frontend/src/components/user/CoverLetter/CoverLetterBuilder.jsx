@@ -1,8 +1,16 @@
-import { useState } from 'react';
-import { 
-  ArrowLeft, ArrowRight, Building2, Briefcase, FileText, User, 
-  Download, AlertTriangle 
-} from 'lucide-react';
+// CoverLetterBuilder.jsx
+import { useState, useEffect } from "react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Building2,
+  Briefcase,
+  FileText,
+  User,
+  AlertTriangle,
+  FileText as FileTextIcon,
+  X,
+} from "lucide-react";
 import CoverLetterFormTabs from "./CoverLetterFormTabs";
 import RecipientInfoForm from "./forms/RecipientInfoForm";
 import JobDetailsForm from "./forms/JobDetailsForm";
@@ -11,6 +19,8 @@ import ClosingForm from "./forms/ClosingForm";
 import CoverLetterPreview from "./CoverLetterPreview";
 import CoverLetterTemplates from "./CoverLetterTemplates";
 import UserNavBar from "../UserNavBar/UserNavBar";
+import CVBuilderTopBar from "../CV/Cvbuildernavbar";
+import axiosInstance from "../../../api/axios";
 import "./CoverLetterBuilder.css";
 
 const tabs = [
@@ -33,6 +43,8 @@ const CoverLetterBuilder = () => {
     companyAddress: "",
     jobTitle: "",
     jobReference: "",
+    jobSummary: "",
+    jobDescription: "",
     openingParagraph: "",
     bodyParagraph1: "",
     bodyParagraph2: "",
@@ -43,9 +55,17 @@ const CoverLetterBuilder = () => {
 
   const [selectedTemplate, setSelectedTemplate] = useState("professional");
   const [activeSection, setActiveSection] = useState("recipient");
-  const [isPreviewExpanded, setIsPreviewExpanded] = useState(false);
-  const [isPreviewHidden, setIsPreviewHidden] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [showMobilePreview, setShowMobilePreview] = useState(false);
+  const [isAiMode, setIsAiMode] = useState(false);
+  const [documentTitle, setDocumentTitle] = useState("");
+
+  useEffect(() => {
+    document.body.style.overflow = showMobilePreview ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showMobilePreview]);
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -57,357 +77,480 @@ const CoverLetterBuilder = () => {
     day: "numeric",
   });
 
-  // ✅ PERFECT WORD EXPORT - NO DEPENDENCIES (IDENTICAL TO PDF)
-  const exportToWord = () => {
+  /* ======================================================
+     SAVE DOWNLOAD RECORD
+  ====================================================== */
+  const saveDownloadRecord = async (html, format = "PDF") => {
+    try {
+      await axiosInstance.post("/api/downloads", {
+        name: `Cover Letter - ${formData.fullName || "Document"}`,
+        type: "cover-letter",
+        format,
+        html,
+        template: selectedTemplate,
+        size: format === "PDF" ? "150 KB" : "200 KB",
+      });
+    } catch (err) {
+      console.error("Failed to save cover letter download:", err);
+    }
+  };
+
+  /* ======================================================
+     SAVE COVER LETTER TO DOWNLOADS COLLECTION
+  ====================================================== */
+  const saveCoverLetterToDownloads = async () => {
+    try {
+      const TemplateComponent = CoverLetterTemplates[selectedTemplate];
+      if (!TemplateComponent) return;
+
+      const container = document.createElement("div");
+      Object.assign(container.style, {
+        position: "fixed",
+        top: "0",
+        left: "-9999px",
+        width: "794px",
+        background: "#ffffff",
+      });
+      document.body.appendChild(container);
+
+      const { createRoot } = await import("react-dom/client");
+
+      await new Promise((resolve) => {
+        const root = createRoot(container);
+        root.render(
+          <TemplateComponent formData={formData} exportDate={date} />,
+        );
+        setTimeout(resolve, 400);
+      });
+
+      const html = container.innerHTML;
+      await saveDownloadRecord(html, "PDF");
+
+      document.body.removeChild(container);
+    } catch (err) {
+      console.error("Failed to save cover letter to downloads:", err);
+    }
+  };
+
+  /* ======================================================
+     PDF EXPORT
+  ====================================================== */
+  const exportToPDF = async () => {
     if (!formData.fullName || !formData.jobTitle) {
-      alert('Please fill your name and job title first');
+      alert("Please fill your name and job title first");
       return;
     }
 
     setIsExporting(true);
 
-    const preHtml = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Cover Letter - ${formData.jobTitle}</title><style>
-      @page { margin: 0.75in; }
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { 
-        font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, serif !important;
-        font-size: 12pt !important; line-height: 1.4 !important; color: #1e293b !important;
-        padding: 0.75in !important; max-width: 8.5in !important; margin: 0 auto !important;
-      }
-      .contact-info { text-align: right !important; margin-bottom: 0.25in !important; font-size: 11pt !important; line-height: 1.3 !important; }
-      .contact-name { font-weight: 600 !important; font-size: 13pt !important; margin-bottom: 0.15in !important; }
-      .contact-details { margin-bottom: 0.2in !important; font-size: 10pt !important; }
-      .letter-date { color: #64748b !important; font-size: 11pt !important; margin-top: 0.15in !important; }
-      .recipient-info { margin-bottom: 0.75in !important; max-width: 4in !important; line-height: 1.3 !important; font-size: 11pt !important; }
-      .recipient-line { margin-bottom: 0.15in !important; }
-      .recipient-name { font-weight: 500 !important; }
-      .company-name { font-weight: 600 !important; }
-      .salutation { font-weight: 600 !important; font-size: 13pt !important; margin-bottom: 0.75in !important; }
-      .subject-section { text-align: center !important; margin-bottom: 0.75in !important; }
-      .subject-box { 
-        display: inline-block !important; border: 1px solid #cbd5e1 !important; 
-        padding: 0.25in 0.4in !important; background: #f8fafc !important; 
-        font-weight: 600 !important; font-size: 11pt !important; text-transform: uppercase !important; 
-        letter-spacing: 0.5px !important; min-width: 4in !important;
-      }
-      .subject-ref { font-size: 10pt !important; color: #64748b !important; margin-top: 0.1in !important; font-weight: normal !important; text-transform: none !important; }
-      .body-paragraph { text-indent: 2em !important; margin-bottom: 0.5in !important; line-height: 1.6 !important; font-size: 12pt !important; }
-      .signature { margin-top: 2in !important; text-align: right !important; }
-      .signature-closing { margin-bottom: 0.25in !important; font-size: 13pt !important; }
-      .signature-name { font-weight: 600 !important; font-size: 13pt !important; }
-    </style></head><body>`;
+    const sanitize = (s) =>
+      (s || "").replace(/[^a-z0-9_ \-]/gi, "").trim().replace(/\s+/g, "_");
+    const fileName =
+      sanitize(documentTitle) || sanitize(formData.fullName) || "Cover-Letter";
 
-    const postHtml = `</body></html>`;
+    const letterHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>${fileName}</title>
+<style>
+@page { margin: 1.25in 0.85in 0.75in 0.85in !important; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Times New Roman', Times, serif !important;
+  font-size: 11pt !important;
+  line-height: 1.3 !important;
+  color: black !important;
+  background: white !important;
+  padding: 0 !important;
+}
+.contact-info {
+  text-align: right !important;
+  margin-bottom: 18pt !important;
+  font-size: 11pt !important;
+  padding: 6pt 0 !important;
+}
+.contact-name {
+  font-weight: bold !important;
+  font-size: 11pt !important;
+  margin-bottom: 2pt !important;
+}
+.contact-details {
+  font-size: 9pt !important;
+  line-height: 1.2 !important;
+  margin-bottom: 4pt !important;
+}
+.contact-details div { margin-bottom: 1pt !important; }
+.letter-date { font-size: 11pt !important; margin-top: 4pt !important; }
+.job-reference { text-align: center !important; margin: 12pt 0 !important; font-size: 10pt !important; }
+.job-title { font-weight: bold !important; font-size: 10pt !important; text-transform: uppercase !important; }
+.job-ref { font-size: 9pt !important; margin-top: 1pt !important; }
+.job-details-section {
+  margin-bottom: 12pt !important;
+  font-size: 10pt !important;
+  font-style: italic !important;
+  padding: 6pt 0 6pt 12pt !important;
+  border-left: 2px solid #666 !important;
+}
+.job-details-section div { margin-top: 4pt !important; }
+.recipient-info {
+  margin-bottom: 24pt !important;
+  max-width: 4in !important;
+  font-size: 10pt !important;
+  padding-left: 6pt !important;
+}
+.recipient-info > div { margin-bottom: 2pt !important; line-height: 1.2 !important; }
+.recipient-name, .company-name { font-weight: bold !important; margin-bottom: 2pt !important; }
+.salutation { font-weight: bold !important; font-size: 11pt !important; margin: 6pt 0 12pt 0 !important; }
+.body-paragraph { text-indent: 0.2in !important; margin-bottom: 10pt !important; line-height: 1.4 !important; font-size: 11pt !important; }
+.body-paragraph:last-child { margin-bottom: 24pt !important; }
+.signature { margin-top: 24pt !important; text-align: right !important; }
+.signature-closing { margin-bottom: 2pt !important; font-size: 11pt !important; font-style: italic !important; }
+.signature-name { font-weight: bold !important; font-size: 11pt !important; }
+</style>
+</head>
+<body>
+<div class="contact-info">
+  <div class="contact-name">${formData.fullName || "Your Name"}</div>
+  ${formData.address ? formData.address.replace(/\n/g, "<br>") : ""}
+  <div class="contact-details">
+    ${formData.email ? `<div>${formData.email}</div>` : ""}
+    ${formData.phone ? `<div>${formData.phone}</div>` : ""}
+    ${formData.linkedin ? `<div>${formData.linkedin}</div>` : ""}
+  </div>
+  <div class="letter-date">${date}</div>
+</div>
 
-    const htmlContent = `
-      <div class="contact-info">
-        <div class="contact-name">${formData.fullName}</div>
-        ${(formData.address || '').replace(/\n/g, '<br>')}
-        <div class="contact-details">
-          ${formData.email || ''}${(formData.phone ? ' | ' + formData.phone : '')}
-          ${(formData.linkedin ? '<br>' + formData.linkedin : '')}
-        </div>
-        <div class="letter-date">${date}</div>
-      </div>
-      <div class="recipient-info">
-        <div class="recipient-line recipient-name">${formData.recipientName || 'Hiring Manager'}</div>
-        ${formData.recipientTitle ? `<div class="recipient-line">${formData.recipientTitle}</div>` : ''}
-        ${formData.companyName ? `<div class="recipient-line company-name">${formData.companyName}</div>` : ''}
-        ${(formData.companyAddress || '').replace(/\n/g, '<br>')}
-      </div>
-      <div class="salutation">Dear ${formData.recipientName || 'Hiring Manager'},</div>
-      ${(formData.jobTitle || formData.jobReference) ? `
-        <div class="subject-section">
-          <div class="subject-box">
-            ${formData.jobTitle ? `Re: ${formData.jobTitle}` : ''}
-            ${formData.jobReference ? `<div class="subject-ref">Reference: ${formData.jobReference}</div>` : ''}
-          </div>
-        </div>
-      ` : ''}
-      <div class="body-paragraph">${(formData.openingParagraph || '').replace(/\n/g, '<br><br>')}</div>
-      <div class="body-paragraph">${(formData.bodyParagraph1 || '').replace(/\n/g, '<br><br>')}</div>
-      <div class="body-paragraph">${(formData.bodyParagraph2 || '').replace(/\n/g, '<br><br>')}</div>
-      <div class="body-paragraph">${(formData.closingParagraph || '').replace(/\n/g, '<br><br>')}</div>
-      <div class="signature">
-        <div class="signature-closing">${formData.customSalutation || formData.salutation || 'Sincerely'}</div>
-        <div class="signature-name">${formData.fullName}</div>
-      </div>
-    `;
+${
+  formData.jobTitle || formData.jobReference
+    ? `<div class="job-reference">
+  ${formData.jobTitle ? `<div class="job-title">RE: ${formData.jobTitle.toUpperCase()}</div>` : ""}
+  ${formData.jobReference ? `<div class="job-ref">Ref: ${formData.jobReference}</div>` : ""}
+</div>`
+    : ""
+}
 
-    const html = preHtml + htmlContent + postHtml;
-    const blob = new Blob(['\ufeff', html], { type: 'application/msword;charset=utf-8' });
+${
+  formData.jobSummary || formData.jobDescription
+    ? `<div class="job-details-section">
+  ${formData.jobSummary ? `<div><strong>Job Summary:</strong> ${formData.jobSummary}</div>` : ""}
+  ${formData.jobDescription ? `<div><strong>Key Responsibilities:</strong> ${formData.jobDescription}</div>` : ""}
+</div>`
+    : ""
+}
+
+<div class="recipient-info">
+  <div class="recipient-name">${formData.recipientName || "Hiring Manager"}</div>
+  ${formData.recipientTitle ? `<div>${formData.recipientTitle}</div>` : ""}
+  ${formData.companyName ? `<div class="company-name">${formData.companyName}</div>` : ""}
+  ${formData.companyAddress ? formData.companyAddress.replace(/\n/g, "<br>") : ""}
+</div>
+
+<div class="salutation">Dear ${formData.recipientName || "Hiring Manager"},</div>
+
+<div class="body-paragraph">${(formData.openingParagraph || "I'm excited to apply for this position...").replace(/\n/g, "<br>")}</div>
+<div class="body-paragraph">${(formData.bodyParagraph1 || "In my previous role...").replace(/\n/g, "<br>")}</div>
+<div class="body-paragraph">${(formData.bodyParagraph2 || "My technical skills include...").replace(/\n/g, "<br>")}</div>
+<div class="body-paragraph">${(formData.closingParagraph || "I'm particularly drawn to your company...").replace(/\n/g, "<br>")}</div>
+
+<div class="signature">
+  <div class="signature-closing">${formData.customSalutation || formData.salutation || "Sincerely"}</div>
+  <div class="signature-name">${formData.fullName || "Your Name"}</div>
+</div>
+</body>
+</html>`;
+
+    try {
+      const response = await axiosInstance.post(
+        "/api/resume/generate-pdf",
+        { html: letterHtml },
+        { responseType: "blob" }
+      );
+
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${fileName}.pdf`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+
+      saveDownloadRecord(letterHtml, "PDF");
+    } catch (err) {
+      console.error("Cover letter PDF generation failed:", err);
+      alert("Failed to generate PDF. Please try again.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  /* ======================================================
+     WORD EXPORT
+  ====================================================== */
+  const exportToWord = () => {
+    if (!formData.fullName || !formData.jobTitle) {
+      alert("Please fill your name and job title first");
+      return;
+    }
+
+    setIsExporting(true);
+
+    const html = `
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+  xmlns:w="urn:schemas-microsoft-com:office:word"
+  xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="utf-8">
+<title>Cover Letter - ${formData.jobTitle}</title>
+<!--[if gte mso 9]>
+<xml>
+<w:WordDocument>
+<w:View>Print</w:View>
+<w:Zoom>100</w:Zoom>
+<w:DoNotOptimizeForBrowser/>
+<w:ValidateAgainstSchemas/>
+<w:SaveIfXMLInvalid>false</w:SaveIfXMLInvalid>
+<w:IgnoreMixedContent>false</w:IgnoreMixedContent>
+<w:AlwaysShowPlaceholderText>false</w:AlwaysShowPlaceholderText>
+<w:DoNotPromoteQF/>
+<w:LidThemeOther>EN-US</w:LidThemeOther>
+<w:LidThemeAsian>X-NONE</w:LidThemeAsian>
+<w:LidThemeComplexScript>X-NONE</w:LidThemeComplexScript>
+<w:Compatibility>
+<w:BreakWrappedTables/>
+<w:SnapToGridInCell/>
+<w:WrapTextWithPunct/>
+<w:UseAsianBreakRules/>
+<w:DontGrowAutofit/>
+<w:SplitPgBreakAndParaMark/>
+<w:DontVertAlignCellWithSp/>
+<w:DontBreakConstrainedForcedTables/>
+<w:DontVertAlignInTxbx/>
+<w:Word11KerningPairs/>
+<w:CachedColBalance/>
+</w:Compatibility>
+<w:BrowserLevel>MicrosoftInternetExplorer4</w:BrowserLevel>
+</xml>
+<![endif]-->
+<style>
+@page { margin: 1.25in 0.85in 0.75in 0.85in !important; size: A4 portrait !important; }
+* { margin: 0 !important; padding: 0 !important; box-sizing: border-box !important; }
+body {
+  font-family: 'Times New Roman', 'Times', serif !important;
+  font-size: 11pt !important;
+  line-height: 1.3 !important;
+  color: black !important;
+  background: white !important;
+  padding: 36pt 0 0 0 !important;
+  width: 794px !important;
+  margin: 0 auto !important;
+}
+.contact-info { text-align: right !important; margin-bottom: 18pt !important; font-size: 11pt !important; padding: 6pt 0 !important; }
+.contact-name { font-weight: bold !important; font-size: 11pt !important; margin-bottom: 2pt !important; }
+.contact-details { font-size: 11pt !important; line-height: 1.2 !important; margin-bottom: 4pt !important; }
+.contact-details div { margin-bottom: 1pt !important; font-size: 11pt !important; }
+.letter-date { font-size: 11pt !important; margin-top: 4pt !important; }
+.job-reference { text-align: center !important; margin: 12pt 0 !important; font-size: 11pt !important; }
+.job-title { font-weight: bold !important; font-size: 11pt !important; text-transform: uppercase !important; margin-bottom: 1pt !important; }
+.job-ref { font-size: 11pt !important; }
+.job-details-section { margin-bottom: 12pt !important; font-size: 11pt !important; font-style: italic !important; padding: 6pt 0 6pt 12pt !important; border-left: 2px solid #666 !important; }
+.job-details-section div { margin-top: 4pt !important; font-size: 11pt !important; }
+.recipient-info { margin-bottom: 24pt !important; max-width: 4in !important; font-size: 11pt !important; padding-left: 6pt !important; }
+.recipient-info > div { margin-bottom: 2pt !important; line-height: 1.2 !important; font-size: 11pt !important; }
+.recipient-name, .company-name { font-weight: bold !important; margin-bottom: 2pt !important; font-size: 11pt !important; }
+.recipient-title { margin-bottom: 2pt !important; font-size: 11pt !important; }
+.salutation { font-weight: bold !important; font-size: 11pt !important; margin: 6pt 0 12pt 0 !important; }
+.body-paragraph { text-indent: 0.2in !important; margin-bottom: 10pt !important; line-height: 1.4 !important; font-size: 11pt !important; }
+.body-paragraph:last-child { margin-bottom: 24pt !important; }
+.signature { margin-top: 24pt !important; text-align: right !important; }
+.signature-closing { margin-bottom: 2pt !important; font-size: 11pt !important; font-style: italic !important; }
+.signature-name { font-weight: bold !important; font-size: 11pt !important; }
+p, div, span { font-family: inherit !important; font-size: 11pt !important; line-height: inherit !important; }
+</style>
+</head>
+<body>
+<div class="contact-info">
+  <div class="contact-name">${formData.fullName || "Your Name"}</div>
+  ${
+    formData.address
+      ? formData.address
+          .split("\n")
+          .filter(Boolean)
+          .map((line) => `<div>${line}</div>`)
+          .join("")
+      : ""
+  }
+  <div class="contact-details">
+    ${formData.email ? `<div>${formData.email}</div>` : ""}
+    ${formData.phone ? `<div>${formData.phone}</div>` : ""}
+    ${formData.linkedin ? `<div>${formData.linkedin}</div>` : ""}
+  </div>
+  <div class="letter-date">${date}</div>
+</div>
+
+${
+  formData.jobTitle || formData.jobReference
+    ? `<div class="job-reference">
+  ${formData.jobTitle ? `<div class="job-title">RE: ${formData.jobTitle.toUpperCase()}</div>` : ""}
+  ${formData.jobReference ? `<div class="job-ref">Ref: ${formData.jobReference}</div>` : ""}
+</div>`
+    : ""
+}
+
+${
+  formData.jobSummary || formData.jobDescription
+    ? `<div class="job-details-section">
+  ${formData.jobSummary ? `<div><strong>Job Summary:</strong> ${formData.jobSummary}</div>` : ""}
+  ${formData.jobDescription ? `<div><strong>Key Responsibilities:</strong> ${formData.jobDescription}</div>` : ""}
+</div>`
+    : ""
+}
+
+<div class="recipient-info">
+  <div class="recipient-name">${formData.recipientName || "Hiring Manager"}</div>
+  ${formData.recipientTitle ? `<div class="recipient-title">${formData.recipientTitle}</div>` : ""}
+  ${formData.companyName ? `<div class="company-name">${formData.companyName}</div>` : ""}
+  ${
+    formData.companyAddress
+      ? formData.companyAddress
+          .split("\n")
+          .filter(Boolean)
+          .map((line) => `<div>${line}</div>`)
+          .join("")
+      : ""
+  }
+</div>
+
+<div class="salutation">Dear ${formData.recipientName || "Hiring Manager"},</div>
+
+<div class="body-paragraph">${(formData.openingParagraph || "I'm excited to apply for this position...").replace(/\n/g, "<br>")}</div>
+<div class="body-paragraph">${(formData.bodyParagraph1 || "In my previous role...").replace(/\n/g, "<br>")}</div>
+<div class="body-paragraph">${(formData.bodyParagraph2 || "My technical skills include...").replace(/\n/g, "<br>")}</div>
+<div class="body-paragraph">${(formData.closingParagraph || "I'm particularly drawn to your company...").replace(/\n/g, "<br>")}</div>
+
+<div class="signature">
+  <div class="signature-closing">${formData.customSalutation || formData.salutation || "Sincerely"}</div>
+  <div class="signature-name">${formData.fullName || "Your Name"}</div>
+</div>
+</body>
+</html>`;
+
+    const blob = new Blob(["\ufeff", html], {
+      type: "application/msword;charset=utf-8",
+    });
+
     const url = URL.createObjectURL(blob);
-    
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `Cover-Letter-${formData.jobTitle.replace(/[^a-zA-Z0-9]/g, '-').substring(0, 30)}.doc`;
+    a.download = `${(() => { const s = (v) => (v || "").replace(/[^a-zA-Z0-9_ \-]/g, "").trim().replace(/\s+/g, "_"); return s(documentTitle) || s(formData.fullName) || "Cover-Letter"; })()}.doc`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    
-    setTimeout(() => setIsExporting(false), 1000);
-  };
 
-  // YOUR PERFECT PDF EXPORT (unchanged)
-  const exportToPDF = () => {
-    if (!formData.fullName || !formData.jobTitle) {
-      alert('Please fill your name and job title first');
-      return;
-    }
-
-    setIsExporting(true);
-    
-    const printWindow = window.open('', '_blank', 'width=850,height=1100');
-    
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>PDF - ${formData.jobTitle}</title>
-        <style>
-          @page { margin: 0.75in 0.75in 0.75in 0.75in !important; size: Letter !important; }
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', serif !important;
-            font-size: 12pt !important;
-            line-height: 1.4 !important;
-            color: #1e293b !important;
-            background: white !important;
-            padding: 0.4in !important;
-            max-width: 8.5in !important;
-            margin: 0 auto !important;
-          }
-          .contact-info { 
-            text-align: right !important; 
-            margin-bottom: 0.25in !important; 
-            font-size: 11pt !important; 
-            line-height: 1.3 !important;
-          }
-          .contact-name { 
-            font-weight: 600 !important; 
-            font-size: 13pt !important; 
-            margin-bottom: 0.15in !important; 
-          }
-          .contact-details { margin-bottom: 0.2in !important; font-size: 10pt !important; }
-          .letter-date { 
-            color: #64748b !important; 
-            font-size: 11pt !important; 
-            margin-top: 0.15in !important;
-          }
-          .recipient-info { 
-            margin-bottom: 0.75in !important; 
-            max-width: 4in !important; 
-            line-height: 1.3 !important;
-            font-size: 11pt !important;
-          }
-          .recipient-line { 
-            margin-bottom: 0.15in !important; 
-          }
-          .recipient-name { font-weight: 500 !important; }
-          .company-name { font-weight: 600 !important; }
-          .salutation { 
-            font-weight: 600 !important; 
-            font-size: 13pt !important; 
-            margin-bottom: 0.75in !important; 
-          }
-          .subject-section { 
-            text-align: center !important; 
-            margin-bottom: 0.75in !important; 
-          }
-          .subject-box { 
-            display: inline-block !important;
-            border-top: 1px solid #cbd5e1 !important; 
-            border-bottom: 1px solid #cbd5e1 !important;
-            padding: 0.25in 0.4in !important;
-            background: #f8fafc !important;
-            font-weight: 600 !important;
-            font-size: 11pt !important;
-            text-transform: uppercase !important;
-            letter-spacing: 0.5px !important;
-            min-width: 4in !important;
-          }
-          .subject-ref { 
-            font-size: 10pt !important; 
-            color: #64748b !important; 
-            margin-top: 0.1in !important;
-            font-weight: normal !important;
-            text-transform: none !important;
-          }
-          .body-paragraph { 
-            text-indent: 2em !important; 
-            margin-bottom: 0.5in !important; 
-            line-height: 1.6 !important;
-            font-size: 12pt !important;
-            text-align: left !important;
-          }
-          .signature { 
-            margin-top: 2in !important; 
-            text-align: right !important; 
-          }
-          .signature-closing { 
-            margin-bottom: 0.25in !important; 
-            font-size: 13pt !important;
-          }
-          .signature-name { 
-            font-weight: 600 !important; 
-            font-size: 13pt !important; 
-          }
-          @media print { 
-            body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } 
-          }
-        </style>
-      </head>
-      <body onload="setTimeout(() => window.print(), 800)">
-        <div class="contact-info">
-          <div class="contact-name">${formData.fullName || 'Your Name'}</div>
-          ${(formData.address || '').replace(/\n/g, '<br>')}
-          <div class="contact-details">
-            ${formData.email || ''}${(formData.phone ? ' | ' + formData.phone : '')}
-            ${(formData.linkedin ? '<br>' + formData.linkedin : '')}
-          </div>
-          <div class="letter-date">${date}</div>
-        </div>
-        <div class="recipient-info">
-          <div class="recipient-line recipient-name">${formData.recipientName || 'Hiring Manager'}</div>
-          ${formData.recipientTitle ? `<div class="recipient-line">${formData.recipientTitle}</div>` : ''}
-          ${formData.companyName ? `<div class="recipient-line company-name">${formData.companyName}</div>` : ''}
-          ${(formData.companyAddress || '').replace(/\n/g, '<br>')}
-        </div>
-        <div class="salutation">Dear ${formData.recipientName || 'Hiring Manager'},</div>
-        ${(formData.jobTitle || formData.jobReference) ? `
-          <div class="subject-section">
-            <div class="subject-box">
-              ${formData.jobTitle ? `Re: ${formData.jobTitle}` : ''}
-              ${formData.jobReference ? `<div class="subject-ref">Reference: ${formData.jobReference}</div>` : ''}
-            </div>
-          </div>
-        ` : ''}
-        <div class="body-paragraph">${(formData.openingParagraph || '').replace(/\n/g, '<br>')}</div>
-        <div class="body-paragraph">${(formData.bodyParagraph1 || '').replace(/\n/g, '<br>')}</div>
-        <div class="body-paragraph">${(formData.bodyParagraph2 || '').replace(/\n/g, '<br>')}</div>
-        <div class="body-paragraph">${(formData.closingParagraph || '').replace(/\n/g, '<br>')}</div>
-        <div class="signature">
-          <div class="signature-closing">${formData.customSalutation || formData.salutation || 'Sincerely'}</div>
-          <div class="signature-name">${formData.fullName || 'Your Name'}</div>
-        </div>
-        <div style="text-align: center; margin-top: 1in; color: #94a3b8; font-size: 10pt;">
-          Print (Ctrl+P) → Destination: "Save as PDF"
-        </div>
-      </body>
-      </html>
-    `);
-
-    printWindow.document.close();
-    setTimeout(() => setIsExporting(false), 2000);
+    saveDownloadRecord(html, "DOCX");
+    setTimeout(() => setIsExporting(false), 800);
   };
 
   const currentIdx = tabs.findIndex((t) => t.id === activeSection);
-
-  const goLeft = () => {
-    if (currentIdx > 0) setActiveSection(tabs[currentIdx - 1].id);
-  };
-
-  const goRight = () => {
-    if (currentIdx < tabs.length - 1)
-      setActiveSection(tabs[currentIdx + 1].id);
-  };
+  const goLeft = () =>
+    currentIdx > 0 && setActiveSection(tabs[currentIdx - 1].id);
+  const goRight = () =>
+    currentIdx < tabs.length - 1 && setActiveSection(tabs[currentIdx + 1].id);
 
   const renderFormContent = () => {
     switch (activeSection) {
       case "recipient":
-        return <RecipientInfoForm formData={formData} onInputChange={handleInputChange} />;
+        return (
+          <RecipientInfoForm
+            formData={formData}
+            onInputChange={handleInputChange}
+          />
+        );
       case "job":
-        return <JobDetailsForm formData={formData} onInputChange={handleInputChange} />;
+        return (
+          <JobDetailsForm
+            formData={formData}
+            onInputChange={handleInputChange}
+          />
+        );
       case "body":
-        return <BodyContentForm formData={formData} onInputChange={handleInputChange} />;
+        return (
+          <BodyContentForm
+            formData={formData}
+            onInputChange={handleInputChange}
+          />
+        );
       case "closing":
-        return <ClosingForm formData={formData} onInputChange={handleInputChange} />;
+        return (
+          <ClosingForm formData={formData} onInputChange={handleInputChange} />
+        );
       default:
         return null;
     }
   };
 
   return (
-    <div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50 relative z-0">
       <UserNavBar />
-      <div className="p-3">
-        <div className="flex justify-between items-center mb-5">
-          <h1 className="text-2xl font-['Outfit']">Create Cover Letter</h1>
-          <div className="flex gap-3">
-            <button
-              onClick={exportToPDF}
-              disabled={isExporting}
-              className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-xl shadow-xl hover:bg-red-700 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
-            >
-              {isExporting ? (
-                <>
-                  <div className="animate-spin rounded-full w-4 h-4 border-2 border-white border-t-transparent" />
-                  <span>PDF</span>
-                </>
-              ) : (
-                <>
-                  <Download size={18} />
-                  <span>PDF</span>
-                </>
-              )}
-            </button>
-            <button
-              onClick={exportToWord}
-              disabled={isExporting}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl shadow-xl hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
-            >
-              {isExporting ? (
-                <>
-                  <div className="animate-spin rounded-full w-4 h-4 border-2 border-white border-t-transparent" />
-                  <span>Word</span>
-                </>
-              ) : (
-                <>
-                  <Download size={18} />
-                  <span>Word</span>
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-
-        <div className="flex gap-3 p-4 bg-amber-50 border border-amber-200 rounded-lg mb-5">
-          <AlertTriangle size={20} />
-          Fill all sections to generate a professional cover letter.
-        </div>
-
-        <div className="md:hidden mb-6">
-          <CoverLetterPreview
-            formData={formData}
-            selectedTemplate={selectedTemplate}
-            isExpanded={isPreviewExpanded}
-            onExpand={() => setIsPreviewExpanded(true)}
-            onCollapse={() => setIsPreviewExpanded(false)}
-            onMinimize={() => setIsPreviewHidden(true)}
+      <CVBuilderTopBar
+        activeTab="builder"
+        setActiveTab={() => {}}
+        onDownload={exportToPDF}
+        onDownloadWord={exportToWord}
+        isDownloading={isExporting}
+        title={documentTitle}
+        onTitleChange={(_, val) => setDocumentTitle(val)}
+        titlePlaceholder="Untitled Cover Letter"
+        templatesLabel="Cover Letter Templates"
+        showTabs={false}
+        showAiToggle={true}
+        isAiMode={isAiMode}
+        onToggleAiMode={() => setIsAiMode((v) => !v)}
+        showUpload={false}
+        showDesigner={false}
+      />
+      <div className="px-2 py-4 sm:px-4 lg:px-4 w-screen max-w-full mx-0">
+        {/* Warning Banner */}
+        <div className="flex gap-3 p-3 bg-amber-50 border border-amber-200 rounded-xl mb-4 shadow-sm px-2">
+          <AlertTriangle
+            className="text-amber-500 flex-shrink-0 mt-0.5"
+            size={18}
           />
+          <span className="text-sm font-medium text-amber-800">
+            Fill Job Summary & Description in Job Details tab for a complete
+            professional letter.
+          </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-[32%_68%] gap-10">
-          <div className="bg-white rounded-xl p-2">
+        {/* Main Layout */}
+        <div className="flex h-[calc(100vh-180px)] gap-[10px] w-full mt-2 lg:mt-5 p-0 sm:p-2 lg:flex-row flex-col max-w-[1920px] mx-auto overflow-hidden relative z-10">
+          {/* FORM PANEL */}
+          <div className="bg-white rounded-xl h-full overflow-hidden flex flex-col w-full lg:w-[520px] shrink-0 border border-slate-200 order-2 lg:order-1 relative z-20">
             <CoverLetterFormTabs
               activeSection={activeSection}
               setActiveSection={setActiveSection}
+              onTogglePreview={() => setShowMobilePreview((v) => !v)}
             />
-            <div className="mt-5">{renderFormContent()}</div>
-            <div className="flex justify-between mt-6">
-              {currentIdx > 0 && (
-                <button
-                  onClick={goLeft}
-                  className="flex items-center gap-1 bg-slate-100 px-4 py-2 rounded-lg"
-                >
-                  <ArrowLeft size={18} />
-                  Previous
-                </button>
-              )}
+            <div className="mt-3 flex-1 overflow-y-auto py-2 pr-2">
+              {renderFormContent()}
+            </div>
+            <div className="flex justify-between items-center mt-auto p-4 border-t border-slate-100 bg-white">
+              <button
+                onClick={goLeft}
+                disabled={currentIdx === 0}
+                className="flex gap-1 items-center text-sm bg-slate-100 px-4 py-2 rounded-lg select-none disabled:opacity-40 disabled:cursor-not-allowed transition"
+              >
+                <ArrowLeft size={18} /> Previous
+              </button>
+              <div className="flex-1 text-center text-xs text-gray-500 font-medium">
+                Step {currentIdx + 1} of {tabs.length}
+              </div>
               <button
                 onClick={goRight}
-                className="flex items-center gap-1 bg-black text-white px-6 py-2 rounded-lg"
+                disabled={currentIdx === tabs.length - 1}
+                className="flex gap-1 items-center text-sm bg-black text-white px-4 py-2 rounded-lg select-none disabled:opacity-40 disabled:cursor-not-allowed transition"
               >
                 {currentIdx === tabs.length - 1 ? "Finish" : "Next"}
                 <ArrowRight size={18} />
@@ -415,22 +558,58 @@ const CoverLetterBuilder = () => {
             </div>
           </div>
 
-          <div className="hidden md:block">
-            {!isPreviewHidden && (
-              <div className="h-[950px]">
-                <CoverLetterPreview
-                  formData={formData}
-                  selectedTemplate={selectedTemplate}
-                  isExpanded={isPreviewExpanded}
-                  onExpand={() => setIsPreviewExpanded(true)}
-                  onCollapse={() => setIsPreviewExpanded(false)}
-                  onMinimize={() => setIsPreviewHidden(true)}
-                />
-              </div>
-            )}
+          {/* PREVIEW PANEL */}
+          <div className="hidden lg:flex flex-col flex-1 min-w-0 bg-[#eef2f7] rounded-xl overflow-hidden border border-slate-200 relative order-1 lg:order-2 z-10">
+            <CoverLetterPreview formData={formData} exportDate={date} />
           </div>
         </div>
       </div>
+
+      {/* Mobile Preview Overlay */}
+      {showMobilePreview && (
+        <div className="lg:hidden fixed inset-0 z-50 flex flex-col">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowMobilePreview(false)}
+          />
+          <div
+            className="relative mt-auto bg-white rounded-t-2xl shadow-2xl flex flex-col"
+            style={{
+              height: "92dvh",
+              animation: "clPreviewSlideUp 0.3s cubic-bezier(0.32,0.72,0,1)",
+            }}
+          >
+            <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+              <div className="w-10 h-1 rounded-full bg-slate-300" />
+            </div>
+            <div className="flex items-center justify-between px-4 pb-2 flex-shrink-0">
+              <span className="text-sm font-semibold text-slate-700">
+                Cover Letter Preview
+              </span>
+              <button
+                onClick={() => setShowMobilePreview(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors"
+              >
+                <X size={15} />
+              </button>
+            </div>
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              <CoverLetterPreview formData={formData} exportDate={date} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      <footer className="footer pb-6">
+        © {new Date().getFullYear()} ResumeAI Inc. All rights reserved.
+      </footer>
+
+      <style>{`
+        @keyframes clPreviewSlideUp {
+          from { transform: translateY(100%); opacity: 0.5; }
+          to   { transform: translateY(0);    opacity: 1;   }
+        }
+      `}</style>
     </div>
   );
 };

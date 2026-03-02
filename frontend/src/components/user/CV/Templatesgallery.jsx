@@ -14,6 +14,12 @@ export const templates = [
   { id: "academic", name: "Academic", category: "Traditional" },
   { id: "twoColumn", name: "Two Column", category: "Traditional" },
   { id: "simple", name: "Simple", category: "Traditional" },
+  { id: "Elegant", name: "Elegant", category: "Contemporary" },
+  { id: "vertex", name: "Vertex Sidebar", category: "Contemporary" },
+  { id: "elite", name: "Elite ", category: "Creative" },
+  { id: "eclipse", name: "Eclipse", category: "Contemporary" },
+  { id: "eclipse1", name: "Eclipse", category: "Traditional" },
+  { id: "harbor", name: "Harbor", category: "Creative" },
 ];
 
 /* ----------------------------- Card ----------------------------- */

@@ -1,0 +1,372 @@
+/* =======================
+   PAGE WRAPPER
+======================= */
+.admin-profile-page {
+  background: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+}
+
+
+
+/* =======================
+   PAGE CONTENT
+======================= */
+.profile-page-content {
+  flex: 1;
+  padding: 1.5rem;
+}
+
+/* =======================
+   GRID LAYOUT
+======================= */
+.profile-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 2rem;
+}
+
+/* =======================
+   SIDEBAR CARD
+======================= */
+.profile-sidebar-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 2rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  height: fit-content;
+}
+
+.profile-header-section {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.avatar-frame {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0f172a, #1f2937);
+  color: #ffffff;
+  font-size: 2rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-name {
+  text-align: center;
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-top: 1rem;
+}
+
+.profile-bio {
+  text-align: center;
+  color: #6b7280;
+  font-size: 0.95rem;
+  margin-top: 0.5rem;
+}
+
+.member-info {
+  margin-top: 0.75rem;
+  display: flex;
+  justify-content: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: #9ca3af;
+}
+
+.profile-divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 1.25rem 0;
+}
+
+.profile-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.action-button {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: #0f172a;
+  color: #ffffff;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.action-button:hover {
+  background: #020617;
+}
+
+/* =======================
+   MAIN CARD
+======================= */
+.profile-main-card {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 2rem 2rem 1rem;
+}
+
+.card-header h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.card-header p {
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+.card-content {
+  padding: 0 2rem 2rem;
+}
+
+/* =======================
+   FORM
+======================= */
+.form-section {
+  margin-top: 1.5rem;
+}
+
+.form-section h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0.5rem;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.field-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.field-group label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.field-group input {
+  height: 44px;
+  padding: 0 0.75rem;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  font-size: 0.9rem;
+}
+
+.field-group input:focus {
+  outline: none;
+  border-color: #0f172a;
+}
+
+/* URL FIELD */
+.url-input {
+  display: flex;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.url-input span {
+  background: #f3f4f6;
+  padding: 0 0.75rem;
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.url-input input {
+  border: none;
+  flex: 1;
+  padding: 0 0.75rem;
+}
+
+/* =======================
+   ACTION BUTTONS
+======================= */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 1.5rem;
+}
+
+.btn-cancel,
+.btn-save {
+  height: 44px;
+  padding: 0 1.75rem;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-cancel {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  color: #374151;
+}
+
+.btn-save {
+  background: #0f172a;
+  color: #ffffff;
+  border: none;
+}
+
+.btn-save:hover {
+  background: #020617;
+}
+
+/* =======================
+   RESPONSIVE (MOBILE)
+======================= */
+@media (max-width: 1024px) {
+  .profile-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .profile-page-content {
+    padding: 1rem;
+  }
+
+  .card-header,
+  .card-content {
+    padding: 1.25rem;
+  }
+
+  .field-row {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .btn-save,
+  .btn-cancel {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* =========================
+   MOBILE SCROLL OPTIMIZATION
+========================= */
+@media (max-width: 640px) {
+
+  /* Reduce top spacing */
+  .profile-page-content {
+    padding: 0.75rem;
+  }
+
+  /* Compact sidebar */
+  .profile-sidebar-card {
+    padding: 1.25rem 1rem;
+  }
+
+  .avatar-frame {
+    width: 72px;
+    height: 72px;
+    font-size: 1.4rem;
+  }
+
+  .profile-name {
+    font-size: 1.25rem;
+  }
+
+  .profile-bio {
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .member-info {
+    font-size: 0.8rem;
+    margin-bottom: 0.75rem;
+  }
+
+  /* Compact main card */
+  .card-header {
+    padding: 1rem 1rem 0.5rem;
+  }
+
+  .card-header h2 {
+    font-size: 1.3rem;
+  }
+
+  .card-content {
+    padding: 1rem;
+  }
+
+  /* Reduce form spacing */
+  .form-section {
+    margin-bottom: 1.25rem;
+  }
+
+  .form-section h3 {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .field-row {
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .field-group input {
+    padding: 0.6rem 0.7rem;
+    font-size: 0.85rem;
+  }
+
+  /* Buttons tighter */
+  .form-actions {
+    padding-top: 1rem;
+    gap: 0.75rem;
+  }
+
+  .btn-save,
+  .btn-cancel {
+    padding: 0.6rem;
+    font-size: 0.9rem;
+  }
+}

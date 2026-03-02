@@ -29,7 +29,8 @@ import PaginatedPreview from "./PaginatedPreview";
 import mergeWithSampleData, {
   hasAnyUserData,
 } from "../../../utils/Datahelpers";
-
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 /* ─── constants ─────────────────────────────────────────────────────────── */
 const CV_WIDTH = 794;
 const ZOOM_STEP = 0.1;
@@ -189,6 +190,107 @@ const CVPreview = ({
   const TemplateComponent = CVTemplates[selectedTemplate];
   const displayData = useMemo(() => mergeWithSampleData(formData), [formData]);
   const isUserData = useMemo(() => hasAnyUserData(formData), [formData]);
+  const previewRef = useRef(null);
+
+  const downloadPDF = async () => {
+    const TemplateComponent = CVTemplates[selectedTemplate];
+    if (!TemplateComponent) return;
+
+    try {
+      // Create hidden container at full A4 width
+      const container = document.createElement("div");
+      Object.assign(container.style, {
+        position: "fixed",
+        top: "0",
+        left: "-9999px",
+        width: `${CV_WIDTH}px`, // full width
+        background: "#ffffff",
+        zIndex: "-1",
+      });
+
+      document.body.appendChild(container);
+
+      const { createRoot } = await import("react-dom/client");
+
+      await new Promise((resolve) => {
+        const root = createRoot(container);
+        root.render(<TemplateComponent formData={displayData} />);
+        setTimeout(resolve, 400);
+      });
+
+      // Capture full canvas
+      const canvas = await html2canvas(container, {
+        scale: 3,
+        useCORS: true,
+        logging: false,
+        windowWidth: CV_WIDTH,
+      });
+
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const mmPageW = 210;
+      const mmPageH = 297;
+
+      const pxPerMm = canvas.width / mmPageW;
+      const pxSliceH = Math.round(mmPageH * pxPerMm);
+
+      let yPx = 0;
+      let first = true;
+
+      while (yPx < canvas.height) {
+        const sliceH = Math.min(pxSliceH, canvas.height - yPx);
+
+        const pageCanvas = document.createElement("canvas");
+        pageCanvas.width = canvas.width;
+        pageCanvas.height = pxSliceH;
+
+        const ctx = pageCanvas.getContext("2d");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+
+        ctx.drawImage(
+          canvas,
+          0,
+          yPx,
+          canvas.width,
+          sliceH,
+          0,
+          0,
+          canvas.width,
+          sliceH,
+        );
+
+        const imgData = pageCanvas.toDataURL("image/jpeg", 0.96);
+
+        if (!first) pdf.addPage();
+
+        pdf.addImage(imgData, "JPEG", 0, 0, mmPageW, mmPageH);
+
+        yPx += sliceH;
+        first = false;
+      }
+
+      const clean = (str) =>
+        str
+          ?.replace(/[^a-z0-9_\- ]/gi, "")
+          .trim()
+          .replace(/\s+/g, "_");
+
+      const name = clean(displayData?.fullName) || "Resume";
+      const template = clean(selectedTemplate) || "Template";
+
+      pdf.save(`${name}_${template}.pdf`);
+      setIsDownloading(false);
+
+      document.body.removeChild(container);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   /* ── auto-fit ─────────────────────────────────────────────────────────── */
   useLayoutEffect(() => {
@@ -425,10 +527,8 @@ const CVPreview = ({
               <RotateCcw size={12} />
             </IconBtn>
             <Divider />
-            <IconBtn onClick={() => window.print()} title="Print">
-              <Printer size={14} />
-            </IconBtn>
-            <IconBtn onClick={() => {}} title="Download PDF">
+
+            <IconBtn onClick={downloadPDF} title="Download PDF">
               <Download size={14} />
             </IconBtn>
             <Divider />
@@ -495,7 +595,10 @@ const CVPreview = ({
                   {
                     icon: <Download size={13} />,
                     label: "Download PDF",
-                    action: () => setMoreOpen(false),
+                    action: () => {
+                      downloadPDF();
+                      setMoreOpen(false);
+                    },
                   },
                   {
                     icon: showGrid ? <X size={13} /> : <Eye size={13} />,
@@ -628,16 +731,18 @@ const CVPreview = ({
         }}
       >
         {TemplateComponent ? (
-          <PaginatedPreview
-            zoom={effectiveZoom}
-            currentPage={currentPage}
-            onTotalPagesChange={(n) => {
-              setTotalPages(n);
-              setCurrentPage((p) => clamp(p, 1, n));
-            }}
-          >
-            <TemplateComponent formData={displayData} />
-          </PaginatedPreview>
+          <div ref={previewRef}>
+            <PaginatedPreview
+              zoom={effectiveZoom}
+              currentPage={currentPage}
+              onTotalPagesChange={(n) => {
+                setTotalPages(n);
+                setCurrentPage((p) => clamp(p, 1, n));
+              }}
+            >
+              <TemplateComponent formData={displayData} />
+            </PaginatedPreview>
+          </div>
         ) : (
           <div
             style={{
@@ -736,14 +841,24 @@ const CVPreview = ({
     </>
   );
 
+  const getNavbarHeight = () => {
+    const nav = document.getElementById("main-navbar");
+    return nav ? nav.offsetHeight : 0;
+  };
+
   if (isMaximized) {
+    const navHeight = getNavbarHeight();
+
     return (
       <div
         ref={rootRef}
         style={{
           position: "fixed",
-          inset: 0,
-          zIndex: 99,
+          top: navHeight,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 999,
           display: "flex",
           flexDirection: "column",
           background: "#eef2f7",

@@ -76,7 +76,7 @@ const StrategicInsightsPage = () => {<section className="py-12"></section>
     <img
       src={growth}
       alt="Resume Analysis Dashboard"
-      className="w-full h-auto drop-shadow-2xl"
+      className="hidden md:block w-full h-auto drop-shadow-2xl"
     />
 
     {/* Floating Badge 1 */}

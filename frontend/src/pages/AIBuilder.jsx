@@ -124,7 +124,7 @@ const AIBuilderFeature = () => {
               <img
                 src={AiBuilder}
                 alt="ATS Score Analysis"
-                className="w-full h-auto object-contain drop-shadow-2xl"
+                className="hidden md:block w-full h-auto object-contain drop-shadow-2xl"
               />
 
             </div>

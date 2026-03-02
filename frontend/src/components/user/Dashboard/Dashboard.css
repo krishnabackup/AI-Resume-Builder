@@ -1,8 +1,10 @@
 /* Container for dashboard page content */
 .dashboard-page {
-  max-width: 100%; /* Allow content to reach edges */
+  max-width: 100%;
+  /* Allow content to reach edges */
   margin: 0;
-  padding: 0; /* Remove padding here so the topbar can touch edges */
+  padding: 0;
+  /* Remove padding here so the topbar can touch edges */
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background-color: #ffffff;
 }
@@ -29,7 +31,7 @@
 }
 
 /* Each stat card */
-.dashboard-stats > div {
+.dashboard-stats>div {
   flex: 1;
   background: #fff;
   padding: 18px 24px;
@@ -44,7 +46,7 @@
 }
 
 /* Stat icon */
-.dashboard-stats > div img {
+.dashboard-stats>div img {
   width: 28px;
   height: 28px;
   object-fit: contain;
@@ -186,10 +188,10 @@
 }
 
 
-  .dashboard-stats > div {
-    font-size: 1rem;
-    padding: 14px 18px;
-  }
+.dashboard-stats>div {
+  font-size: 1rem;
+  padding: 14px 18px;
+}
 
 
 /* ===============================
@@ -199,42 +201,47 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #fcfcfc; 
-  border-bottom: 1px solid #edeff2; 
-  padding: 12px 40px; 
+  background-color: #fcfcfc;
+  border-bottom: 1px solid #edeff2;
+  padding: 12px 40px;
   margin-bottom: 24px;
   width: 100%;
   box-sizing: border-box;
 }
+
 .topbar-right {
   display: flex;
   align-items: center;
   gap: 20px;
 }
+
 .dashboard-content-container {
   width: 100%;
-  max-width: none;      /* REMOVE constraint */
+  max-width: none;
+  /* REMOVE constraint */
   margin: 0;
-  padding: 0 24px 40px; /* controlled inner spacing */
+  padding: 24px 24px 40px;
+  /* controlled inner spacing */
 }
 
 
 /* Tablet */
 @media (min-width: 768px) {
   .dashboard-content-container {
-    padding: 0 24px 36px;
+    padding: 24px 24px 36px;
   }
 }
 
 /* Desktop */
 @media (min-width: 1024px) {
   .dashboard-content-container {
-    padding: 0 30px 40px;
+    padding: 24px 30px 40px;
   }
 }
-  @media (max-width: 360px) {
+
+@media (max-width: 360px) {
   .dashboard-content-container {
-    padding: 0 12px 28px;
+    padding: 24px 12px 28px;
   }
 }
 
@@ -245,7 +252,7 @@
   padding: 10px 16px;
   border-radius: 10px;
   border: 1px solid #e5e7eb;
-  background: #ffffff; 
+  background: #ffffff;
   font-size: 0.9rem;
 }
 
@@ -263,15 +270,17 @@
   align-items: center;
   gap: 10px;
   padding: 4px 8px;
-  background: transparent; /* Clean look */
-  box-shadow: none; 
+  background: transparent;
+  /* Clean look */
+  box-shadow: none;
   border-radius: 8px;
   cursor: pointer;
 }
 
 .profile-area:hover {
   background: #f9fafb;
-  transform: none; /* Keep it static and clean */
+  transform: none;
+  /* Keep it static and clean */
 }
 
 .profile-area img {
@@ -320,6 +329,7 @@
     opacity: 0;
     transform: translateY(-6px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -365,7 +375,8 @@
 .profile-initials {
   width: 40px;
   height: 40px;
-  background-color: #6366f1; /* Primary color */
+  background-color: #6366f1;
+  /* Primary color */
   color: #fff;
   font-weight: 600;
   font-size: 1rem;
@@ -380,7 +391,8 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: #2563eb; /* Blue circle, change color if you want */
+  background-color: #2563eb;
+  /* Blue circle, change color if you want */
   color: #fff;
   display: flex;
   align-items: center;
@@ -389,6 +401,7 @@
   font-size: 16px;
   cursor: pointer;
 }
+
 .stat-icon {
   font-size: 28px;
   margin-bottom: 8px;
@@ -462,13 +475,13 @@
   cursor: pointer;
 
   /* Styles to match the image */
-  background-color: #ffffff; 
-  color: #1a1a1a;          
-  font-family: 'Inter', sans-serif; 
+  background-color: #ffffff;
+  color: #1a1a1a;
+  font-family: 'Inter', sans-serif;
   font-size: 14px;
-  width: 100%;              
-  max-width: 200px;         
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+  width: 100%;
+  max-width: 200px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   transition: background-color 0.2s ease;
 }
 
@@ -508,8 +521,10 @@
   color: #6b7280;
   font-weight: 500;
 }
+
 .stat-icon-inline {
-  font-size: 14px; /* SMALL icon */
+  font-size: 14px;
+  /* SMALL icon */
   color: #9ca3af;
 }
 
@@ -540,7 +555,7 @@
 }
 
 .create-btn {
- 
+
   padding: 10px 16px;
   background-color: #ffffff !important;
   color: #000000 !important;
@@ -554,15 +569,16 @@
   outline: none !important;
   box-shadow: none !important;
 }
+
 /* This block ensures that even if you hover, the styles stay identical */
-.create-btn:hover, 
-.create-btn:active, 
+.create-btn:hover,
+.create-btn:active,
 .create-btn:focus {
   background-color: #ffffff !important;
   color: #000000 !important;
   border: 1px solid #000000 !important;
   /* Keeps the cursor as a pointer, but changes nothing else */
-  cursor: pointer; 
+  cursor: pointer;
 }
 
 /* Responsive */
@@ -584,14 +600,14 @@
   display: flex;
   justify-content: flex-end;
   margin-top: 16px;
-  border-top: 1px solid #f3f4f6; 
+  border-top: 1px solid #f3f4f6;
   padding-top: 12px;
 }
 
 .view-all-btn {
   background: none;
   border: none;
-  color: #2563eb; 
+  color: #2563eb;
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;

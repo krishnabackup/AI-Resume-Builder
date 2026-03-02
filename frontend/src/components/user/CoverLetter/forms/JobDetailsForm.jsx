@@ -1,89 +1,82 @@
-const ClosingForm = ({ formData, onInputChange }) => {
-  const salutationOptions = [
-    { value: 'Sincerely', label: 'Sincerely' },
-    { value: 'Best regards', label: 'Best regards' },
-    { value: 'Kind regards', label: 'Kind regards' },
-    { value: 'Respectfully', label: 'Respectfully' },
-    { value: 'Thank you', label: 'Thank you' },
-    { value: 'Warm regards', label: 'Warm regards' },
-    { value: 'With appreciation', label: 'With appreciation' },
-    { value: 'custom', label: 'Custom...' }
+import { useState, useEffect } from 'react';
+
+const JobDetailsForm = ({ formData, onInputChange }) => {
+  const whereFoundOptions = [
+    'Company Website', 'LinkedIn', 'Indeed', 'Glassdoor', 
+    'Referral', 'Job Fair', 'Recruiter', 'Other'
   ];
+
+  const [localData, setLocalData] = useState({
+    jobTitle: '', jobReference: '', whereFound: '', jobDescription: ''
+  });
+
+  useEffect(() => {
+    setLocalData({
+      jobTitle: formData.jobTitle || '',
+      jobReference: formData.jobReference || '',
+      whereFound: formData.whereFound || '',
+      jobDescription: formData.jobDescription || ''
+    });
+  }, [formData]);
+
+  const handleChange = (field, value) => {
+    const safeValue = value || '';
+    setLocalData(prev => ({ ...prev, [field]: safeValue }));
+    onInputChange(field, safeValue);
+  };
 
   return (
     <div className="form-section">
-      <h3 className="form-section-title">Closing & Signature</h3>
+      <h3 className="form-section-title">Job Details</h3>
       <p className="form-description">
-        Choose how you'd like to sign off your cover letter.
+        Provide details about the position you're applying for.
       </p>
-
+      
       <div className="form-grid">
         <div className="form-group">
-          <label>Salutation</label>
+          <label>Job Title *</label>
+          <input
+            type="text"
+            placeholder="Software Engineer"
+            value={localData.jobTitle}
+            onChange={(e) => handleChange('jobTitle', e.target.value)}
+          />
+        </div>
+        <div className="form-group">
+          <label>Job Reference Number</label>
+          <input
+            type="text"
+            placeholder="REF-12345"
+            value={localData.jobReference}
+            onChange={(e) => handleChange('jobReference', e.target.value)}
+          />
+          <small className="form-hint">If provided in the job listing</small>
+        </div>
+        <div className="form-group">
+          <label>Where did you find this job?</label>
           <select
-            value={formData.salutation}
-            onChange={(e) => onInputChange('salutation', e.target.value)}
+            value={localData.whereFound}
+            onChange={(e) => handleChange('whereFound', e.target.value)}
           >
-            {salutationOptions.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
+            <option value="">Select an option</option>
+            {whereFoundOptions.map(option => (
+              <option key={option} value={option}>{option}</option>
             ))}
           </select>
         </div>
-
-        {formData.salutation === 'custom' && (
-          <div className="form-group">
-            <label>Custom Salutation</label>
-            <input
-              type="text"
-              placeholder="Your custom closing"
-              value={formData.customSalutation}
-              onChange={(e) => onInputChange('customSalutation', e.target.value)}
-            />
-          </div>
-        )}
       </div>
 
-      <div className="signature-preview">
-        <h4>Signature Preview</h4>
-        <div className="signature-box">
-          <p className="salutation-text">
-            {formData.salutation === 'custom' ? formData.customSalutation : formData.salutation},
-          </p>
-          <p className="signature-name">{formData.fullName || 'Your Name'}</p>
-          {formData.email && <p className="signature-detail">{formData.email}</p>}
-          {formData.phone && <p className="signature-detail">{formData.phone}</p>}
-          {formData.linkedin && <p className="signature-detail">{formData.linkedin}</p>}
-        </div>
-      </div>
-
-      <div className="closing-tips">
-        <h4>📌 Tips for a Strong Closing</h4>
-        <ul>
-          <li><strong>Be professional:</strong> Stick to traditional closings for formal applications</li>
-          <li><strong>Match the tone:</strong> Your closing should match the overall tone of your letter</li>
-          <li><strong>Include contact info:</strong> Make it easy for employers to reach you</li>
-          <li><strong>Proofread:</strong> Double-check spelling of your name and contact details</li>
-        </ul>
-      </div>
-
-      <div className="date-settings">
-        <h3 className="form-section-title">Letter Date</h3>
-        <p className="form-description">
-          Date to display on letter
-        </p>
-        <div className="form-group">
-          <label>Select Date</label>
-          <input
-            type="date"
-            value={formData.letterDate || new Date().toISOString().split('T')[0]}
-            onChange={(e) => onInputChange('letterDate', e.target.value)}
-          />
-        </div>
+      <div className="form-group full-width" style={{ marginTop: '24px' }}>
+        <label>Job Description (Optional)</label>
+        <textarea
+          placeholder="Paste job description for better AI suggestions..."
+          value={localData.jobDescription}
+          onChange={(e) => handleChange('jobDescription', e.target.value)}
+          rows={6}
+        />
       </div>
     </div>
   );
 };
 
-export default ClosingForm;
+export default JobDetailsForm;

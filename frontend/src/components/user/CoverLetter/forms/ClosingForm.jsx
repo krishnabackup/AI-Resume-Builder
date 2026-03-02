@@ -19,7 +19,7 @@ const ClosingForm = ({ formData, onInputChange }) => {
 
       <div className="form-grid">
         <div className="form-group">
-          <label>Salutation</label>
+          <label>Salutation *</label>
           <select
             value={formData.salutation}
             onChange={(e) => onInputChange('salutation', e.target.value)}
@@ -31,7 +31,7 @@ const ClosingForm = ({ formData, onInputChange }) => {
             ))}
           </select>
         </div>
-
+        
         {formData.salutation === 'custom' && (
           <div className="form-group">
             <label>Custom Salutation</label>
@@ -69,12 +69,9 @@ const ClosingForm = ({ formData, onInputChange }) => {
       </div>
 
       <div className="date-settings">
-        <h3 className="form-section-title">Letter Date</h3>
-        <p className="form-description">
-          Date to display on letter
-        </p>
+        <h4>Letter Date</h4>
         <div className="form-group">
-          <label>Select Date</label>
+          <label>Date to display on letter</label>
           <input
             type="date"
             value={formData.letterDate || new Date().toISOString().split('T')[0]}

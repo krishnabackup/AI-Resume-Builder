@@ -74,6 +74,14 @@ const resumeSchema = new mongoose.Schema(
     },
 
     certifications: [certificationSchema],
+    templateId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Template",
+    },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
   {
     timestamps: true,

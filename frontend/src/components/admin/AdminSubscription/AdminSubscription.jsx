@@ -1,34 +1,130 @@
 import React, { useState, useEffect } from "react";
-import { Check, ToggleLeft, ToggleRight, Pencil } from "lucide-react";
+import { Check, ToggleLeft, ToggleRight, Pencil, Plus, Trash2, GripVertical } from "lucide-react";
 import axiosInstance from "../../../api/axios";
 import { usePricing } from "../../../context/Pricingcontext";
+import toast, { Toaster } from 'react-hot-toast';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+// Helper to generate unique IDs
+const generateId = () => Math.random().toString(36).substr(2, 9);
+
+const SortableFeatureItem = ({ id, feature, onChange, onRemove }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <li ref={setNodeRef} style={style} className="flex items-center gap-2 bg-white">
+      <div
+        {...attributes}
+        {...listeners}
+        className="cursor-grab text-black hover:text-gray-700 p-1 touch-none"
+      >
+        <GripVertical className="w-5 h-5" />
+      </div>
+      <input
+        type="text"
+        value={feature.text}
+        onChange={(e) => onChange(e.target.value)}
+        className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:border-blue-500 focus:outline-none"
+        placeholder="Feature description"
+      />
+      <button
+        onClick={onRemove}
+        className="p-1 text-red-500 hover:bg-red-50 rounded"
+        title="Remove feature"
+      >
+        <Trash2 className="w-4 h-4" />
+      </button>
+    </li>
+  );
+};
 
 const AdminSubscription = () => {
-  const { plans, setPlans, savePlans, fetchPlans } = usePricing(); // ⭐ Added fetchPlans
+  const { plans, savePlans, fetchPlans } = usePricing();
+  const [localPlans, setLocalPlans] = useState([]);
   const [paidUsers, setPaidUsers] = useState([]);
+  const [freeUsersCount, setFreeUsersCount] = useState(0);
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   useEffect(() => {
-    fetchPaidUsers();
-    fetchPlans(); // ⭐ Refresh plans when component mounts
+    fetchData();
+    fetchPlans();
   }, []);
 
-  const fetchPaidUsers = async () => {
+  // Sync localPlans with plans from context when fetched
+  useEffect(() => {
+    if (plans.length > 0) {
+      setLocalPlans(
+        plans.map(plan => ({
+          ...plan,
+          features: plan.features.map(f => ({ id: generateId(), text: f }))
+        }))
+      );
+    }
+  }, [plans]);
+
+  const fetchData = async () => {
     try {
-      const response = await axiosInstance.get("/api/user");
-      // Filter for Pro users
-      const proUsers = response.data.filter(user => user.plan === "Pro");
-      setPaidUsers(proUsers);
+      setLoading(true);
+
+      // Fetch all users
+      const usersResponse = await axiosInstance.get("/api/user");
+      const allUsers = usersResponse.data;
+
+      // Filter users
+      const pro = allUsers.filter(user => user.plan === "Pro" || user.plan === "Premium" || user.plan === "Ultra Pro");
+      const free = allUsers.filter(user => !user.plan || user.plan === "Free");
+
+      setPaidUsers(pro);
+      setFreeUsersCount(free.length);
+
+      // Fetch stats for revenue
+      const statsResponse = await axiosInstance.get("/api/user/dashboard-stat");
+      setStats(statsResponse.data);
+
       setLoading(false);
     } catch (err) {
-      console.error("Failed to fetch users", err);
+      console.error("Failed to fetch data", err);
       setLoading(false);
     }
   };
 
   const togglePlan = (id) => {
-    setPlans((prev) =>
+    setLocalPlans((prev) =>
       prev.map((plan) =>
         plan.id === id ? { ...plan, active: !plan.active } : plan
       )
@@ -36,27 +132,93 @@ const AdminSubscription = () => {
   };
 
   const updatePrice = (id, value) => {
-    setPlans((prev) =>
+    setLocalPlans((prev) =>
       prev.map((plan) => (plan.id === id ? { ...plan, price: value } : plan))
     );
   };
 
+  const handleFeatureChange = (planId, featureId, newValue) => {
+    setLocalPlans((prev) =>
+      prev.map((plan) => {
+        if (plan.id === planId) {
+          const newFeatures = plan.features.map(f =>
+            f.id === featureId ? { ...f, text: newValue } : f
+          );
+          return { ...plan, features: newFeatures };
+        }
+        return plan;
+      })
+    );
+  };
+
+  const handleAddFeature = (planId) => {
+    setLocalPlans((prev) =>
+      prev.map((plan) => {
+        if (plan.id === planId) {
+          return {
+            ...plan,
+            features: [...plan.features, { id: generateId(), text: "New Feature" }]
+          };
+        }
+        return plan;
+      })
+    );
+  };
+
+  const handleRemoveFeature = (planId, featureId) => {
+    setLocalPlans((prev) =>
+      prev.map((plan) => {
+        if (plan.id === planId) {
+          const newFeatures = plan.features.filter((f) => f.id !== featureId);
+          return { ...plan, features: newFeatures };
+        }
+        return plan;
+      })
+    );
+  };
+
+  const handleDragEnd = (event, planId) => {
+    const { active, over } = event;
+
+    if (active.id !== over.id) {
+      setLocalPlans((prev) =>
+        prev.map(plan => {
+          if (plan.id === planId) {
+            const oldIndex = plan.features.findIndex(f => f.id === active.id);
+            const newIndex = plan.features.findIndex(f => f.id === over.id);
+            return {
+              ...plan,
+              features: arrayMove(plan.features, oldIndex, newIndex)
+            };
+          }
+          return plan;
+        })
+      );
+    }
+  };
+
   const handleSaveChanges = async () => {
     setSaving(true);
-    const result = await savePlans(plans);
+    // Convert back to string array for backend
+    const plansToSave = localPlans.map(plan => ({
+      ...plan,
+      features: plan.features.map(f => f.text)
+    }));
+
+    const result = await savePlans(plansToSave);
     setSaving(false);
 
     if (result.success) {
-      alert('✅ Pricing changes saved successfully! The changes will now be visible on the pricing page.');
-      // ⭐ Refresh plans from backend to ensure sync
+      toast.success('Pricing changes saved successfully! The changes will now be visible on the pricing page.');
       await fetchPlans();
     } else {
-      alert('❌ Failed to save changes: ' + result.error);
+      toast.error('Failed to save changes: ' + result.error);
     }
   };
 
   return (
     <div className="min-h-screen bg-slate-50 p-4 sm:p-6">
+      <Toaster position="top-right" />
       {/* Header */}
       <div className="mb-6 sm:mb-10">
         <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
@@ -68,37 +230,42 @@ const AdminSubscription = () => {
       </div>
 
       {/* Stats / Dashboard */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6 mb-10">
-        <div className="bg-white p-6 rounded-xl shadow flex flex-col gap-2">
-          <p className="text-sm text-gray-500">Total Revenue</p>
-          <p className="text-2xl font-bold">
-            ₹124,500 <span className="text-green-500 text-sm">+12%</span>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6 mb-6 sm:mb-10">
+        <div className="bg-white p-4 sm:p-6 rounded-xl shadow flex flex-col gap-2">
+          <p className="text-xs sm:text-sm text-gray-500">Total Revenue</p>
+          <p className="text-xl sm:text-2xl font-bold">
+            ₹{stats?.revenue?.total?.toLocaleString() || 0}
+            {stats?.revenue?.change !== 0 && (
+              <span className={`text-xs sm:text-sm ml-2 ${stats?.revenue?.change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                {stats?.revenue?.change > 0 ? '+' : ''}{stats?.revenue?.change}%
+              </span>
+            )}
           </p>
         </div>
-        <div className="bg-white p-6 rounded-xl shadow flex flex-col gap-2">
-          <p className="text-sm text-gray-500">Active Subscribers</p>
-          <p className="text-2xl font-bold">
-            {paidUsers.length} <span className="text-gray-400 text-sm">(Pro Users)</span>
+        <div className="bg-white p-4 sm:p-6 rounded-xl shadow flex flex-col gap-2">
+          <p className="text-xs sm:text-sm text-gray-500">Active Subscribers</p>
+          <p className="text-xl sm:text-2xl font-bold">
+            {paidUsers.length} <span className="text-gray-400 text-xs sm:text-sm">(Pro)</span>
           </p>
         </div>
-        <div className="bg-white p-6 rounded-xl shadow flex flex-col gap-2">
-          <p className="text-sm text-gray-500">Free Users</p>
-          <p className="text-2xl font-bold">
-            15,400{" "}
-            <span className="text-gray-400 text-sm">(Potential leads)</span>
+        <div className="bg-white p-4 sm:p-6 rounded-xl shadow flex flex-col gap-2">
+          <p className="text-xs sm:text-sm text-gray-500">Free Users</p>
+          <p className="text-xl sm:text-2xl font-bold">
+            {freeUsersCount.toLocaleString()}
+            <span className="text-gray-400 text-xs sm:text-sm ml-2">(Leads)</span>
           </p>
         </div>
       </div>
 
       {/* Plans */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-8">
-        {plans.map((plan) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        {localPlans.map((plan) => (
           <div
             key={plan.id}
-            className="rounded-2xl border border-gray-200 bg-white p-6 shadow"
+            className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow h-full flex flex-col"
           >
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-900">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
                 {plan.name}
               </h2>
               <button onClick={() => togglePlan(plan.id)}>
@@ -127,18 +294,39 @@ const AdminSubscription = () => {
               </div>
             </div>
 
-            {/* Features */}
-            <ul className="mt-5 space-y-2">
-              {plan.features.map((feature, i) => (
-                <li
-                  key={i}
-                  className="flex items-center gap-2 text-sm text-gray-700"
+            {/* Features with Drag and Drop */}
+            <div className="mt-5 flex-1">
+              <label className="text-sm text-gray-600 mb-2 block">Features</label>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={(e) => handleDragEnd(e, plan.id)}
+              >
+                <SortableContext
+                  items={plan.features.map(f => f.id)}
+                  strategy={verticalListSortingStrategy}
                 >
-                  <Check className="w-4 h-4 text-green-500" />
-                  {feature}
-                </li>
-              ))}
-            </ul>
+                  <ul className="space-y-2">
+                    {plan.features.map((feature) => (
+                      <SortableFeatureItem
+                        key={feature.id}
+                        id={feature.id}
+                        feature={feature}
+                        onChange={(val) => handleFeatureChange(plan.id, feature.id, val)}
+                        onRemove={() => handleRemoveFeature(plan.id, feature.id)}
+                      />
+                    ))}
+                  </ul>
+                </SortableContext>
+              </DndContext>
+
+              <button
+                onClick={() => handleAddFeature(plan.id)}
+                className="mt-3 flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium"
+              >
+                <Plus className="w-4 h-4" /> Add Feature
+              </button>
+            </div>
 
             <div className="mt-6">
               <span
@@ -212,8 +400,8 @@ const AdminSubscription = () => {
                     <td className="px-6 py-4 text-center">
                       <span
                         className={`px-2 py-1 rounded text-xs font-medium ${user.isActive
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
                           }`}
                       >
                         {user.isActive ? "Active" : "Inactive"}
@@ -221,7 +409,7 @@ const AdminSubscription = () => {
                     </td>
                     <td className="px-6 py-4 text-center text-gray-500">
                       {user.createdAt
-                        ? new Date(user.createdAt).toLocaleDateString()
+                        ? new Date(user.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
                         : "N/A"}
                     </td>
                   </tr>
@@ -253,8 +441,8 @@ const AdminSubscription = () => {
                     </div>
                     <span
                       className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border ${user.isActive
-                          ? "bg-green-100 text-green-700 border-green-200"
-                          : "bg-red-100 text-red-700 border-red-200"
+                        ? "bg-green-100 text-green-700 border-green-200"
+                        : "bg-red-100 text-red-700 border-red-200"
                         }`}
                     >
                       {user.isActive ? "Active" : "Inactive"}
@@ -267,7 +455,7 @@ const AdminSubscription = () => {
                     </span>
                     <span className="text-xs text-gray-400">
                       {user.createdAt
-                        ? new Date(user.createdAt).toLocaleDateString()
+                        ? new Date(user.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
                         : "N/A"}
                     </span>
                   </div>

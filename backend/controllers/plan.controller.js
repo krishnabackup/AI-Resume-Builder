@@ -17,11 +17,11 @@ export const getAllPlans = async (req, res) => {
 export const getPlanById = async (req, res) => {
   try {
     const plan = await Plan.findOne({ planId: req.params.id });
-    
+
     if (!plan) {
       return res.status(404).json({ message: "Plan not found" });
     }
-    
+
     res.status(200).json(plan);
   } catch (error) {
     res
@@ -42,8 +42,8 @@ export const updateAllPlans = async (req, res) => {
     // Validate each plan
     for (const plan of plans) {
       if (!plan.planId || !plan.name || plan.price === undefined) {
-        return res.status(400).json({ 
-          message: "Each plan must have planId, name, and price" 
+        return res.status(400).json({
+          message: "Each plan must have planId, name, and price"
         });
       }
     }
@@ -113,11 +113,11 @@ export const initializePlans = async (req, res) => {
   try {
     // Check if plans already exist
     const existingPlans = await Plan.countDocuments();
-    
+
     if (existingPlans > 0) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: "Plans already initialized",
-        count: existingPlans 
+        count: existingPlans
       });
     }
 

@@ -116,7 +116,7 @@ const ScoreChecker = () => {
               <img
                 src={write}
                 alt="Resume scoring illustration"
-                className="w-full max-w-md lg:max-w-lg xl:max-w-xl object-contain"
+                className="hidden md:block w-full max-w-md lg:max-w-lg xl:max-w-xl object-contain"
               />
             </div>
 
