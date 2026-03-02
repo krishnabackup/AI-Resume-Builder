@@ -1,5 +1,5 @@
 // CoverLetterBuilder.jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -23,6 +23,60 @@ import CVBuilderTopBar from "../CV/Cvbuildernavbar";
 import axiosInstance from "../../../api/axios";
 import "./CoverLetterBuilder.css";
 
+/* ─────────────────────────────────────────────────────────
+   FLOATING FORM PANEL (mirrors CV & Resume behavior)
+   Anchors to its container's DOM position so the panel
+   stays pinned beneath the sticky navbar while scrolling.
+───────────────────────────────────────────────────────── */
+const FloatingFormPanel = ({ children, topOffset, containerRef }) => {
+  const panelRef = useRef(null);
+  const rafRef = useRef(null);
+  const currentY = useRef(0);
+  const targetY = useRef(0);
+
+  useEffect(() => {
+    const STIFFNESS = 0.12;
+    const tick = () => {
+      currentY.current += (targetY.current - currentY.current) * STIFFNESS;
+      if (panelRef.current) {
+        panelRef.current.style.transform = `translateY(${currentY.current}px)`;
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => {
+      if (!containerRef?.current) {
+        targetY.current = Math.max(0, window.scrollY - topOffset);
+        return;
+      }
+      const containerTop =
+        containerRef.current.getBoundingClientRect().top + window.scrollY;
+      const desired = window.scrollY + topOffset - containerTop;
+      targetY.current = Math.max(0, desired);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [topOffset, containerRef]);
+
+  return (
+    <div
+      ref={panelRef}
+      style={{
+        willChange: "transform",
+        height: `calc(100vh - ${topOffset}px)`,
+      }}
+      className="flex flex-col"
+    >
+      {children}
+    </div>
+  );
+};
+
 const tabs = [
   { id: "recipient", label: "Recipient", icon: Building2 },
   { id: "job", label: "Job Details", icon: Briefcase },
@@ -31,6 +85,10 @@ const tabs = [
 ];
 
 const CoverLetterBuilder = () => {
+  const headerRef = useRef(null);
+  const leftColRef = useRef(null);
+  const formContainerRef = useRef(null);
+  const [headerHeight, setHeaderHeight] = useState(64);
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -66,6 +124,22 @@ const CoverLetterBuilder = () => {
       document.body.style.overflow = "";
     };
   }, [showMobilePreview]);
+
+  // Measure sticky navbar height for floating offset
+  useEffect(() => {
+    const measure = () => {
+      if (headerRef.current) setHeaderHeight(headerRef.current.offsetHeight);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (headerRef.current) ro.observe(headerRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  // Scroll current step form back to top when section changes
+  useEffect(() => {
+    formContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, [activeSection]);
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -503,7 +577,14 @@ ${
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50 relative z-0">
-      <UserNavBar />
+      {/* Sticky navbar, same behavior as CV/Resume */}
+      <div
+        ref={headerRef}
+        className="sticky top-0 z-30 bg-gradient-to-br from-slate-50 to-gray-50"
+      >
+        <UserNavBar />
+      </div>
+
       <CVBuilderTopBar
         activeTab="builder"
         setActiveTab={() => {}}
@@ -521,6 +602,7 @@ ${
         showUpload={false}
         showDesigner={false}
       />
+
       <div className="px-2 py-4 sm:px-4 lg:px-4 w-screen max-w-full mx-0">
         {/* Warning Banner */}
         <div className="flex gap-3 p-3 bg-amber-50 border border-amber-200 rounded-xl mb-4 shadow-sm px-2">
@@ -534,10 +616,60 @@ ${
           </span>
         </div>
 
-        {/* Main Layout */}
-        <div className="flex h-[calc(100vh-180px)] gap-[10px] w-full mt-2 lg:mt-5 p-0 sm:p-2 lg:flex-row flex-col max-w-[1920px] mx-auto overflow-hidden relative z-10">
-          {/* FORM PANEL */}
-          <div className="bg-white rounded-xl h-full overflow-hidden flex flex-col w-full lg:w-[520px] shrink-0 border border-slate-200 order-2 lg:order-1 relative z-20">
+        {/* Main Layout – desktop floating form + preview (matches CV/Resume) */}
+        <div className="flex gap-[10px] w-full mt-2 lg:mt-5 p-0 sm:p-2 lg:flex-row flex-col max-w-[1920px] mx-auto relative z-10">
+          {/* Desktop floating form panel */}
+          <div
+            ref={leftColRef}
+            className="flex-shrink-0 hidden lg:block"
+            style={{ width: 520 }}
+          >
+            <FloatingFormPanel
+              topOffset={headerHeight}
+              containerRef={leftColRef}
+            >
+              <div className="bg-white rounded-xl h-full overflow-hidden flex flex-col border border-slate-200">
+                <CoverLetterFormTabs
+                  activeSection={activeSection}
+                  setActiveSection={setActiveSection}
+                  onTogglePreview={() => setShowMobilePreview((v) => !v)}
+                />
+                <div
+                  ref={formContainerRef}
+                  className="mt-3 flex-1 overflow-y-auto py-2 pr-2"
+                  style={{
+                    scrollbarWidth: "thin",
+                    scrollbarColor: "#e2e8f0 transparent",
+                  }}
+                >
+                  {renderFormContent()}
+                </div>
+                <div className="flex justify-between items-center mt-auto p-4 border-t border-slate-100 bg-white">
+                  <button
+                    onClick={goLeft}
+                    disabled={currentIdx === 0}
+                    className="flex gap-1 items-center text-sm bg-slate-100 px-4 py-2 rounded-lg select-none disabled:opacity-40 disabled:cursor-not-allowed transition"
+                  >
+                    <ArrowLeft size={18} /> Previous
+                  </button>
+                  <div className="flex-1 text-center text-xs text-gray-500 font-medium">
+                    Step {currentIdx + 1} of {tabs.length}
+                  </div>
+                  <button
+                    onClick={goRight}
+                    disabled={currentIdx === tabs.length - 1}
+                    className="flex gap-1 items-center text-sm bg-black text-white px-4 py-2 rounded-lg select-none disabled:opacity-40 disabled:cursor-not-allowed transition"
+                  >
+                    {currentIdx === tabs.length - 1 ? "Finish" : "Next"}
+                    <ArrowRight size={18} />
+                  </button>
+                </div>
+              </div>
+            </FloatingFormPanel>
+          </div>
+
+          {/* Mobile form card (full-width, scrollable, with bottom controls) */}
+          <div className="w-full lg:hidden bg-white rounded-xl overflow-hidden flex flex-col border border-slate-200">
             <CoverLetterFormTabs
               activeSection={activeSection}
               setActiveSection={setActiveSection}
@@ -575,7 +707,7 @@ ${
         </div>
       </div>
 
-      {/* Mobile Preview Overlay */}
+      {/* Mobile Preview Overlay (already CV-like) */}
       {showMobilePreview && (
         <div className="lg:hidden fixed inset-0 z-50 flex flex-col">
           <div
@@ -609,6 +741,7 @@ ${
           </div>
         </div>
       )}
+
       <footer className="mt-auto text-center py-4 bg-white border-t text-sm text-gray-600">
         © {new Date().getFullYear()} ResumeAI Inc. All rights reserved.
       </footer>
