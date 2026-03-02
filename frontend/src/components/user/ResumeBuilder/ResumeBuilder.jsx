@@ -341,6 +341,7 @@ const ResumeBuilder = ({ setActivePage = () => {} }) => {
         return (
           <PersonalInfoForm
             formData={formData}
+            templateId={selectedTemplate}
             onInputChange={handleInputChange}
             onUseSummary={handleUseSummary}
           />
