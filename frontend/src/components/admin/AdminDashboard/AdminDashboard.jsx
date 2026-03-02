@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Users, FileText, CreditCard, DollarSign } from "lucide-react";
+import { Users, FileText, CreditCard, IndianRupee } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -29,6 +29,7 @@ export default function AdminDashboard() {
   const [subscriptionSplit, setSubscriptionSplit] = useState([]);
   const [userGrowth, setUserGrowth] = useState([]);
   const [dailyActivity, setDailyActivity] = useState([]);
+  const [freeUserCount,setFreeUserCount] = useState(0);
 
   /* ------------------ DUMMY DATA ------------------ */
   const colors = ["#6366F1", "#22C55E", "#F59E0B", "#EC4899"];
@@ -60,9 +61,9 @@ export default function AdminDashboard() {
     },
     {
       title: "Total Revenue",
-      value: `$ ${totalRevenue}`,
+      value: `₹ ${totalRevenue.toLocaleString("en-IN")}`,
       change: `+${totalRevenueChange}%`,
-      icon: DollarSign,
+      icon: IndianRupee,
       color: "text-green-600",
       bg: "bg-green-50",
     },
@@ -84,6 +85,7 @@ export default function AdminDashboard() {
       setTotalResumeGenChange(result.data?.resumes?.change || 0);
       setResumeChart(result.data?.resumeChart || []);
       setSubscriptionSplit(result.data?.subscriptionSplit || []);
+      setFreeUserCount(result.data?.freeUserCount || 0)
       setUserGrowth(result.data?.userGrowth || []);
       setDailyActivity(result.data?.dailyActiveUsers || []);
     } catch (error) {
@@ -92,7 +94,10 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    fetchTotalUser();
+    const loadData = async () => {
+      await fetchTotalUser();
+    };
+    loadData();
   }, []);
 
   return (
@@ -204,7 +209,8 @@ export default function AdminDashboard() {
 
             {/* Custom Legend */}
             <div className="flex flex-wrap justify-center gap-2 sm:gap-6 mt-2 sm:mt-4">
-              {subscriptionSplit.map((item, i) => (
+              {
+              subscriptionSplit.map((item, i) => (
                 <div
                   key={item.name}
                   className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm"

@@ -672,6 +672,9 @@ export const getAdminDashboardStats = async (req, res) => {
       ];
 
     // SUBSCRIPTION DISTRIBUTION
+  
+    const freeUserCount = await User.countDocuments({plan : "Free"});
+
     const subscriptionDistribution = await Subscription.aggregate([
       { $match: { status: "active" } },
       {
@@ -681,17 +684,21 @@ export const getAdminDashboardStats = async (req, res) => {
         },
       },
     ]);
-
-    const subscriptionSplit = subscriptionDistribution.length > 0
+    const totalSubscription = totalActiveSubs + totalUsers;
+    const paidSubscriptionSplit = subscriptionDistribution.length > 0
       ? subscriptionDistribution.map((item) => ({
-        name: (item._id || "Free").charAt(0).toUpperCase() + (item._id || "Free").slice(1),
-        value: item.count,
+        name: (item._id).charAt(0).toUpperCase() + (item._id || "Free").slice(1),
+        value: Number(((item.count / totalSubscription) * 100).toFixed(2)),
       }))
       : [
         { name: "Free", value: 80 },
         { name: "Basic", value: 20 },
         { name: "Pro", value: 20 },
       ];
+       const subscriptionSplit = [
+  { name: "Free", value: Number(((freeUserCount/totalSubscription) * 100).toFixed(2)) },
+  ...paidSubscriptionSplit
+];
 
     // USER GROWTH (LAST 6 MONTHS)
     const userGrowthAgg = await User.aggregate([
@@ -784,6 +791,7 @@ export const getAdminDashboardStats = async (req, res) => {
       },
       resumeChart,
       subscriptionSplit,
+      freeUserCount,
       userGrowth,
       dailyActiveUsers,
     });

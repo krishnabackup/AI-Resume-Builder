@@ -10,7 +10,7 @@ const subscriptionSchema = new mongoose.Schema(
 
     plan: {
       type: String,
-      enum: ["free", "basic", "premium"],
+      enum: ["pro", "lifetime"],
       required: true,
     },
 
@@ -26,8 +26,7 @@ const subscriptionSchema = new mongoose.Schema(
     },
 
     endDate: {
-      type: Date,
-      required: true,
+      type: Date
     },
   },
   { timestamps: true } // ⭐ used for monthly comparison
