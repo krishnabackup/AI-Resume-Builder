@@ -305,7 +305,7 @@ export default function AdminAnalytics() {
 
         {/* Most Used Templates */}
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-          <h2 className="text-lg font-semibold mb-4">Most Used Templates</h2>
+          <h2 className="text-lg font-semibold mb-4">Most Used Resume Templates</h2>
 
           {loading ? (
             <div className="text-center text-slate-400 py-8">Loading...</div>

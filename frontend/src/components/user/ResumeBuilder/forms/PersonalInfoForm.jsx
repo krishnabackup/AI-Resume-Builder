@@ -3,7 +3,7 @@ import { RefreshCw, Sparkles } from "lucide-react";
 import { getCompletionStatus } from "./../completion";
 import axiosInstance from "../../../../api/axios";
 
-const PersonalInfoForm = ({ formData, onInputChange, onUseSummary }) => {
+const PersonalInfoForm = ({ formData, templateId, onInputChange, onUseSummary }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const isInitialRender = useRef(true);
   const debounceTimer = useRef(null);
@@ -55,6 +55,7 @@ const PersonalInfoForm = ({ formData, onInputChange, onUseSummary }) => {
         certifications: formData.certifications,
         projects: formData.projects,
         summary: formData.summary,
+        templateId: templateId,
       };
       const response = await axiosInstance.post(
         "/api/resume/generate-summary",
