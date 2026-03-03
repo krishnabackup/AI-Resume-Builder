@@ -250,6 +250,8 @@ const ResumeBuilder = ({ setActivePage = () => {} }) => {
     try {
       setExporting(true);
       await GenerateResumePDF(html);
+      // Save to downloads page
+      await saveDownloadRecord(html, "PDF");
     } finally {
       setExporting(false);
     }
@@ -273,6 +275,34 @@ const ResumeBuilder = ({ setActivePage = () => {} }) => {
     a.download = `${fileName}.doc`;
     a.click();
     URL.revokeObjectURL(url);
+    
+    // Save to downloads page
+    await saveDownloadRecord(html, "DOCX");
+  };
+
+  /* ======================================================
+     SAVE RESUME DOWNLOAD RECORD
+  ====================================================== */
+  const saveDownloadRecord = async (html, format = "PDF") => {
+    try {
+      const sanitize = (s) =>
+        (s || "")
+          .replace(/[^a-z0-9_\- ]/gi, "")
+          .trim()
+          .replace(/\s+/g, "_");
+      const nameToUse = sanitize(documentTitle) || sanitize(formData.fullName) || "Document";
+      
+      await axiosInstance.post("/api/downloads", {
+        name: `Resume - ${nameToUse}`,
+        type: "resume",
+        format,
+        html,
+        template: selectedTemplate,
+        size: format === "PDF" ? "250 KB" : "200 KB",
+      });
+    } catch (err) {
+      console.error("Failed to save resume download:", err);
+    }
   };
 
   /*------------------- PREVIOUS & NEXT BUTTON ------------*/
