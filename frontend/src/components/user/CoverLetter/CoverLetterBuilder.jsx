@@ -157,7 +157,7 @@ const CoverLetterBuilder = () => {
   const saveDownloadRecord = async (html, format = "PDF") => {
     try {
       await axiosInstance.post("/api/downloads", {
-        name: `Cover Letter - ${formData.fullName || "Document"}`,
+        name: `Cover Letter - ${documentTitle || formData.fullName || "Document"}`,
         type: "cover-letter",
         format,
         html,
