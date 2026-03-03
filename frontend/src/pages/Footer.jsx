@@ -1,9 +1,14 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import UpToSkillsImg from "../assets/logo6.png";
-import { ChevronDown } from "lucide-react";
+
 // Import React Icons
-import { SiYoutube, SiInstagram, SiLinkedin, SiFacebook } from "react-icons/si";
+import {
+  SiYoutube,
+  SiInstagram,
+  SiLinkedin,
+  SiFacebook
+} from "react-icons/si";
 import { FaArrowRight } from "react-icons/fa6";
 import { Loader2, Check, Mail, AlertCircle } from "lucide-react";
 
@@ -13,32 +18,27 @@ function Footer() {
   const isLoggedIn =
     typeof window !== "undefined" && !!localStorage.getItem("token");
 
-  const [openSection, setOpenSection] = useState(null);
-
-  const toggleSection = (section) => {
-    setOpenSection(openSection === section ? null : section);
-  };
   // Updated socialLinks with responsive icon sizes
   const socialLinks = [
     {
       icon: <SiYoutube className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />,
       bgColor: "bg-[#ff0000]",
-      href: "https://www.youtube.com/channel/UCJzITNWKW5njk0AWkEZxSrw",
+      href: "https://www.youtube.com/channel/UCJzITNWKW5njk0AWkEZxSrw"
     },
     {
       icon: <SiInstagram className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />,
       bgColor: "bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]",
-      href: "https://www.instagram.com/uptoskills?utm_medium=copy_link",
+      href: "https://www.instagram.com/uptoskills?utm_medium=copy_link"
     },
     {
       icon: <SiLinkedin className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />,
       bgColor: "bg-[#0077b5]",
-      href: "https://www.linkedin.com/company/uptoskills/posts/?feedView=all",
+      href: "https://www.linkedin.com/company/uptoskills/posts/?feedView=all"
     },
     {
       icon: <SiFacebook className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />,
       bgColor: "bg-[#1877f2]",
-      href: "https://www.facebook.com/Uptoskills/",
+      href: "https://www.facebook.com/Uptoskills/"
     },
   ];
 
@@ -62,10 +62,8 @@ function Footer() {
   };
 
   // Responsive header and link styles
-  const headerStyle =
-    "text-[11px] sm:text-[13px] font-black uppercase tracking-wider text-[#1a2e52] mb-3 sm:mb-5 flex items-center gap-2";
-  const linkStyle =
-    "text-xs sm:text-sm text-gray-500 hover:text-[#e65100] transition-all duration-300 cursor-pointer flex items-center";
+  const headerStyle = "text-[11px] sm:text-[13px] font-black uppercase tracking-wider text-[#1a2e52] mb-3 sm:mb-5 flex items-center gap-2";
+  const linkStyle = "text-xs sm:text-sm text-gray-500 hover:text-[#e65100] transition-all duration-300 cursor-pointer flex items-center";
 
   return (
     <footer className="relative font-['Outfit'] bg-white border-t border-gray-100 overflow-hidden">
@@ -75,7 +73,8 @@ function Footer() {
 
       <div className="max-w-[1400px] mx-auto px-4 sm:px-8 pt-8 sm:pt-16 pb-6 sm:pb-10">
         {/* Mobile: 2 columns, Tablet: 3 columns, Desktop: 5 columns */}
-        <div className="grid grid-cols-1 gap-6 mb-8 sm:gap-10 sm:mb-12 md:grid-cols-3 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-6 mb-8 sm:gap-10 sm:mb-12 md:grid-cols-3 lg:grid-cols-5">
+
           {/* 1. BRAND & NEWSLETTER - Full width on mobile */}
           <div className="flex flex-col items-center md:items-start text-center md:text-left col-span-1 md:row-span-2 lg:row-span-1 h-full">  <img
               src={UpToSkillsImg}
@@ -84,10 +83,7 @@ function Footer() {
               onClick={() => navigate("/")}
             />
             <p className="text-[11px] sm:text-[13px] leading-relaxed text-gray-400 font-medium mb-4 sm:mb-6">
-              Empowering <span className="font-bold text-blue-500">skills</span>
-              , connecting{" "}
-              <span className="font-bold text-orange-500">talent</span>{" "}
-              worldwide.
+              Empowering <span className="font-bold text-blue-500">skills</span>, connecting <span className="font-bold text-orange-500">talent</span> worldwide.
             </p>
 
             {/* Social Icons with responsive sizing */}
@@ -110,18 +106,13 @@ function Footer() {
                 Stay Connected
               </h4>
 
-              <form
-                onSubmit={handleSubscribe}
-                className="relative max-w-[280px]"
-                noValidate
-              >
-                <div
-                  className={`
+              <form onSubmit={handleSubscribe} className="relative max-w-[280px]" noValidate>
+                <div className={`
                   flex items-center p-1.5 border rounded-xl transition-all duration-300 bg-gray-50
                   ${status === "error" ? "border-red-200 ring-2 ring-red-500/10" : "border-gray-200 focus-within:ring-2 focus-within:ring-[#0077cc]/10 focus-within:border-[#0077cc]"}
                   ${status === "success" ? "border-green-200 bg-green-50" : ""}
-                `}
-                >
+                `}>
+
                   {/* Icon */}
                   <div className="pl-2 text-gray-400">
                     {status === "success" ? (
@@ -141,9 +132,7 @@ function Footer() {
                       if (status === "error") setStatus("idle");
                     }}
                     disabled={status === "loading" || status === "success"}
-                    placeholder={
-                      status === "success" ? "Subscribed!" : "Enter your email"
-                    }
+                    placeholder={status === "success" ? "Subscribed!" : "Enter your email"}
                     className={`
                       w-full px-3 text-[12px] bg-transparent outline-none py-1.5 placeholder-gray-400 font-medium
                       ${status === "success" ? "text-green-700" : "text-gray-700"}
@@ -169,6 +158,7 @@ function Footer() {
                   </button>
                 </div>
 
+
                 {/* Status Message or Helper Text */}
                 {status === "error" ? (
                   <p className="mt-2 text-[10px] text-red-500 font-medium animate-in fade-in slide-in-from-top-1">
@@ -176,8 +166,7 @@ function Footer() {
                   </p>
                 ) : (
                   <p className="mt-2 text-[10px] text-gray-500">
-                    Get updates, templates, and new features.{" "}
-                    <span className="font-bold text-[#1a2e52]">No spam.</span>
+                    Get updates, templates, and new features. <span className="font-bold text-[#1a2e52]">No spam.</span>
                   </p>
                 )}
               </form>
@@ -186,45 +175,16 @@ function Footer() {
 
           {/* 2. RESUME - UPDATED */}
           <div className="flex flex-col h-full">
-            <div
-              onClick={() => toggleSection("resume")}
-              className={`${headerStyle} flex justify-between items-center cursor-pointer md:cursor-default`}
-            >
-              <span>Resume & CV</span>
-
-              <ChevronDown
-                size={18}
-                className={`transition-transform duration-300 md:hidden ${
-                  openSection === "resume" ? "rotate-180" : ""
-                }`}
-              />
-            </div>
-            <div
-              className={`
-    overflow-hidden transition-all duration-300
-    md:overflow-visible md:max-h-full md:opacity-100
-    ${openSection === "resume" ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}
-  `}
-            >
-              <ul className="space-y-2 sm:space-y-4 pt-2">
-                <li className={linkStyle}>
-                  <Link to="/score-checker">ATS Scorer</Link>
-                </li>
-                <li className={linkStyle}>
-                  <Link to="/#free-templates">Resume Templates</Link>
-                </li>
-                <li className={linkStyle}>
-                  <Link to="/resume-examples">Resume Examples</Link>
-                </li>
-                <li className={linkStyle}>
-                  <Link to="/how-to-write-a-resume">Writing a Resume</Link>
-                </li>
-                <li className={linkStyle}>
-                  <Link to="/cv">Professional CV Formatting</Link>
-                </li>
-              </ul>
-            </div>
+            <h4 className={headerStyle}>Resume & CV</h4>
+            <ul className="space-y-2 sm:space-y-4">
+              <li className={linkStyle}><Link to="/score-checker">ATS Scorer</Link></li>
+              <li className={linkStyle}><Link to="/#free-templates">Resume Templates</Link></li>
+              <li className={linkStyle}><Link to="/resume-examples">Resume Examples</Link></li>
+              <li className={linkStyle}><Link to="/how-to-write-a-resume">Writing a Resume</Link></li>
+              <li className={linkStyle}><Link to="/cv">Professional CV Formatting</Link></li>
+            </ul>
           </div>
+
           {/* 3. COVER LETTER - NEW CATEGORY */}
           <div className="flex flex-col h-full">
   <div

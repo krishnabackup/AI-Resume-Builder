@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Check, ToggleLeft, ToggleRight, Pencil, Plus, Trash2, GripVertical } from "lucide-react";
 import axiosInstance from "../../../api/axios";
 import { usePricing } from "../../../context/Pricingcontext";
-import { toast } from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 import {
   DndContext,
   closestCenter,
@@ -100,14 +100,26 @@ const AdminSubscription = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const usersResponse = await axiosInstance.get("/api/user");
+
+      // Fetch users, plans and stats concurrently
+      const [usersResponse, plansResponse, statsResponse] = await Promise.all([
+        axiosInstance.get("/api/user"),
+        axiosInstance.get("/api/plans"),
+        axiosInstance.get("/api/user/dashboard-stat"),
+      ]);
+
       const allUsers = usersResponse.data;
-      const pro = allUsers.filter(user => user.plan === "Pro" || user.plan === "Premium" || user.plan === "Ultra Pro");
-      const free = allUsers.filter(user => !user.plan || user.plan === "Free");
+      const allPlans = plansResponse.data;
+
+      const paidPlanNames = allPlans.filter(p => p.price > 0).map(p => p.name.toLowerCase());
+
+      const pro = allUsers.filter(user => user.plan && paidPlanNames.includes(user.plan.toLowerCase()));
+      const free = allUsers.filter(user => !user.plan || !paidPlanNames.includes(user.plan.toLowerCase()));
+
       setPaidUsers(pro);
       setFreeUsersCount(free.length);
-      const statsResponse = await axiosInstance.get("/api/user/dashboard-stat");
       setStats(statsResponse.data);
+
       setLoading(false);
     } catch (err) {
       console.error("Failed to fetch data", err);
@@ -127,6 +139,33 @@ const AdminSubscription = () => {
     setLocalPlans((prev) =>
       prev.map((plan) => (plan.id === id ? { ...plan, price: value } : plan))
     );
+  };
+
+  const updatePlanField = (id, field, value) => {
+    setLocalPlans((prev) =>
+      prev.map((plan) => (plan.id === id ? { ...plan, [field]: value } : plan))
+    );
+  };
+
+  const handleAddPlan = () => {
+    const newPlanId = Date.now(); // Using a large unique integer ID for the local backend requirements
+    setLocalPlans((prev) => [
+      ...prev,
+      {
+        id: newPlanId,
+        name: "New Plan",
+        price: 0,
+        active: true,
+        description: "Plan description",
+        features: [{ id: generateId(), text: "New Feature" }]
+      }
+    ]);
+  };
+
+  const handleRemovePlan = (planId) => {
+    if (window.confirm("Are you sure you want to delete this plan?")) {
+      setLocalPlans(prev => prev.filter(p => p.id !== planId));
+    }
   };
 
   const handleFeatureChange = (planId, featureId, newValue) => {
@@ -171,6 +210,7 @@ const AdminSubscription = () => {
 
   const handleDragEnd = (event, planId) => {
     const { active, over } = event;
+
     if (active.id !== over.id) {
       setLocalPlans((prev) =>
         prev.map(plan => {
@@ -190,36 +230,27 @@ const AdminSubscription = () => {
 
   const handleSaveChanges = async () => {
     setSaving(true);
+    // Convert back to string array for backend
     const plansToSave = localPlans.map(plan => ({
       ...plan,
       features: plan.features.map(f => f.text)
     }));
 
-    const resultPromise = savePlans(plansToSave);
+    const result = await savePlans(plansToSave);
+    setSaving(false);
 
-    toast.promise(resultPromise, {
-      loading: 'Saving pricing changes...',
-      success: (res) => {
-        if (res.success) {
-          fetchPlans();
-          return 'Pricing changes saved successfully!';
-        }
-        throw new Error(res.error || "Failed to save");
-      },
-      error: (err) => 'Failed to save changes: ' + (err.message || err.error || err)
-    });
-
-    try {
-      await resultPromise;
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setSaving(false);
+    if (result.success) {
+      toast.success('Pricing changes saved successfully! The changes will now be visible on the pricing page.');
+      await fetchPlans();
+    } else {
+      toast.error('Failed to save changes: ' + result.error);
     }
   };
 
   return (
     <div className="min-h-screen bg-slate-50 p-4 sm:p-6">
+      <Toaster position="top-right" />
+      {/* Header */}
       <div className="mb-6 sm:mb-10">
         <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
           Subscription Management
@@ -265,19 +296,36 @@ const AdminSubscription = () => {
             className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow h-full flex flex-col"
           >
             <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
-                {plan.name}
-              </h2>
-              <button onClick={() => togglePlan(plan.id)}>
-                {plan.active ? (
-                  <ToggleRight className="text-green-500" />
-                ) : (
-                  <ToggleLeft className="text-gray-400" />
-                )}
-              </button>
+              <input
+                type="text"
+                value={plan.name}
+                onChange={(e) => updatePlanField(plan.id, 'name', e.target.value)}
+                className="text-lg sm:text-xl font-semibold text-gray-900 bg-transparent border border-dashed border-transparent hover:border-gray-300 focus:border-blue-500 focus:outline-none rounded w-2/3 px-1.5 -ml-1.5 py-0.5"
+              />
+              <div className="flex items-center gap-1">
+                <button onClick={() => togglePlan(plan.id)}>
+                  {plan.active ? (
+                    <ToggleRight className="text-green-500 w-6 h-6" />
+                  ) : (
+                    <ToggleLeft className="text-gray-400 w-6 h-6" />
+                  )}
+                </button>
+                <button
+                  onClick={() => handleRemovePlan(plan.id)}
+                  className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"
+                  title="Delete Plan"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
-            <p className="text-sm text-gray-500">{plan.description}</p>
+            <textarea
+              value={plan.description}
+              onChange={(e) => updatePlanField(plan.id, 'description', e.target.value)}
+              className="text-sm text-gray-500 bg-transparent border border-dashed border-transparent hover:border-gray-300 focus:border-blue-500 focus:outline-none rounded w-full resize-none px-1.5 -ml-1.5 py-1"
+              rows={2}
+            />
 
             {/* Price Control */}
             <div className="mt-4">
@@ -341,6 +389,16 @@ const AdminSubscription = () => {
             </div>
           </div>
         ))}
+        {/* Add Plan Card */}
+        <div
+          onClick={handleAddPlan}
+          className="rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 p-4 sm:p-6 shadow h-full flex flex-col items-center justify-center cursor-pointer transition-colors min-h-[300px]"
+        >
+          <div className="flex flex-col items-center justify-center opacity-60">
+            <Plus className="w-10 h-10 text-gray-500 mb-2" />
+            <span className="text-gray-600 font-medium text-lg">Add New Plan</span>
+          </div>
+        </div>
       </div>
 
       {/* Save Button */}

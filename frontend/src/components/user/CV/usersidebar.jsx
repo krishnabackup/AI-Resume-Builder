@@ -8,7 +8,6 @@ import {
   FilePen,
   CheckCircle,
   FileStack,
-  Files,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -49,13 +48,6 @@ export default function UserSidebar() {
       icon: CheckCircle,
       label: "ATS Score Checker",
       path: "/user/ats-checker",
-    },
-
-    {
-      id: "myresumes",
-      icon: Files,
-      label: "My Resumes",
-      path: "/user/my-resumes",
     },
   ];
 

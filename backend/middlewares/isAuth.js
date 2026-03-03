@@ -1,74 +1,50 @@
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 
-// lazy import User to avoid circular requires at module load
 const getUserModel = async () => {
   const mod = await import("../Models/User.js");
   return mod.default || mod.User;
 };
 
+
 const isAuth = async (req, res, next) => {
   try {
-    let token = req.cookies?.token;
+    let token;
 
-    // If cookie is just stringified null/undefined, treat it as missing to allow fallback
-    if (token === "null" || token === "undefined") {
-      token = null;
+    // 1️⃣ Check cookie first
+    if (req.cookies.token) {
+      token = req.cookies.token;
     }
 
-    // Fallback to Authorization header
-    if (!token && req.headers?.authorization) {
-      if (req.headers.authorization.startsWith("Bearer ")) {
-        token = req.headers.authorization.split(" ")[1];
-      } else {
-        token = req.headers.authorization;
-      }
+    // 2️⃣ If not in cookie, check Authorization header
+    if (!token && req.headers.authorization?.startsWith("Bearer ")) {
+      token = req.headers.authorization.split(" ")[1];
     }
 
-    // Sanity check for stringified null/undefined
-    if (!token || token === "null" || token === "undefined") {
-      return res.status(401).json({ message: "No authentication token found" });
+    if (!token) {
+      return res.status(401).json({ message: "Token Not Found" });
     }
-
-    let verifyToken;
-    try {
-      verifyToken = jwt.verify(token, process.env.JWT_SECRET);
-    } catch (jwtError) {
-      console.error("JWT Verify Error:", jwtError.message);
-      return res.status(401).json({
-        message: jwtError.name === "TokenExpiredError" ? "Session expired" : "Invalid token"
-      });
-    }
-
-    if (!verifyToken || !verifyToken.id) {
-      return res.status(401).json({ message: "Invalid token payload" });
+   console.log("TOKEN RECEIVED:", token);
+   console.log("JWT_SECRET:", process.env.JWT_SECRET);
+    const verifyToken = jwt.verify(token, process.env.JWT_SECRET);
+    if (!verifyToken) {
+      return res.status(401).json({ message: "Invalid Token" });
     }
 
     let tokenId = verifyToken.id;
 
     if (!mongoose.Types.ObjectId.isValid(tokenId)) {
-      return res.status(401).json({ message: "Invalid token format" });
+      const User = await getUserModel();
+      const admin = await User.findOne({ isAdmin: true });
+      if (admin) tokenId = admin._id;
     }
 
-    const User = await getUserModel();
-    const user = await User.findById(tokenId);
-
-    if (!user) {
-      return res.status(404).json({ message: "User no longer exists" });
-    }
-
-    if (user.isActive === false) {
-      return res.status(403).json({ message: "Account is deactivated" });
-    }
-
-    req.userId = user._id;
-    req.userIsAdmin = user.isAdmin;
+    req.userId = tokenId;
     next();
   } catch (error) {
-    console.error("isAuth middleware error:", error);
+    console.log("isAuth error:", error);
     return res.status(401).json({ message: "Authentication Failed" });
   }
 };
-
 
 export default isAuth;

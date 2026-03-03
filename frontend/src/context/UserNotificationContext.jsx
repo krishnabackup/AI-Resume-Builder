@@ -23,9 +23,9 @@ export const UserNotificationProvider = ({ children }) => {
         try {
             console.log('Fetching user notifications from /api/notifications/user');
             const response = await axiosInstance.get('/api/notifications/user');
-
+            
             console.log('User notification response:', response.data);
-
+            
             if (response.data.success && response.data.data) {
                 // Transform backend data to UI format
                 const transformedNotifications = response.data.data.map((notif) => {
@@ -56,12 +56,11 @@ export const UserNotificationProvider = ({ children }) => {
                         'SECURITY_ALERT': 'warning',
                         'SYSTEM_ALERT': 'warning',
                         'TEMPLATE_APPROVED': 'success',
-                        'ROLE_CHANGED': 'warning',
                     };
 
                     // Get username
-                    const username = typeof notif.userId === 'object'
-                        ? notif.userId?.username
+                    const username = typeof notif.userId === 'object' 
+                        ? notif.userId?.username 
                         : 'System';
 
                     return {

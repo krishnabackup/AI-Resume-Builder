@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
     User,
     Mail,
@@ -13,12 +13,10 @@ import {
 import "./AdminProfile.css";
 import logo from "../../../assets/UptoSkills.webp";
 import axios from "../../../api/axios";
-import { toast } from "react-hot-toast";
+import toast from "react-hot-toast";
 
 const AdminProfile = () => {
     const navigate = useNavigate();
-    const outletContext = useOutletContext() || {};
-    const { adminUser, refreshAdminData, setAdminUser } = outletContext;
 
     const [formData, setFormData] = useState({
         fullName: "",
@@ -32,82 +30,48 @@ const AdminProfile = () => {
     });
     const [loading, setLoading] = useState(false);
     const [fetchingProfile, setFetchingProfile] = useState(true);
-    const [isInitialized, setIsInitialized] = useState(false);
 
-    // Initial load logic
     useEffect(() => {
-        console.log("AdminProfile mounted");
-
-        const initData = (user) => {
-            setFormData({
-                fullName: user.fullName || "",
-                email: user.email || "",
-                phone: user.phone || "",
-                location: user.location || "",
-                username: user.username || "",
-                bio: user.bio || "",
-                github: user.github || "",
-                linkedin: user.linkedin || "",
-            });
-            setIsInitialized(true);
-            setFetchingProfile(false);
-        };
-
         const fetchProfile = async () => {
             try {
-                if (adminUser && !isInitialized) {
-                    initData(adminUser);
-                }
-
                 const res = await axios.get("/api/user/profile");
                 if (res.data?.user) {
-                    const u = res.data.user;
-                    if (!isInitialized) {
-                        initData(u);
-                    }
-                    if (setAdminUser) setAdminUser(u);
+                    setFormData({
+                        fullName: res.data.user.fullName || "",
+                        email: res.data.user.email || "",
+                        phone: res.data.user.phone || "",
+                        location: res.data.user.location || "",
+                        username: res.data.user.username || "",
+                        bio: res.data.user.bio || "",
+                        github: res.data.user.github || "",
+                        linkedin: res.data.user.linkedin || "",
+                    });
                 }
             } catch (err) {
-                console.error("Profile fetch error:", err);
-                if (!adminUser && !isInitialized) {
-                    toast.error("Failed to load profile", { id: "profile-fetch-error" });
-                }
+                console.error(err);
+                toast.error("Failed to load profile");
             } finally {
                 setFetchingProfile(false);
             }
         };
-
         fetchProfile();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []); // Only run on mount
-
+    }, []);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
     const handleSave = async () => {
-        if (loading) return;
-        setLoading(true);
-
-        const promise = axios.put("/api/user/profile", formData);
-
-        toast.promise(promise, {
-            loading: 'Updating profile...',
-            success: (res) => {
-                setLoading(false);
-                if (res.data?.user && setAdminUser) {
-                    setAdminUser(res.data.user);
-                }
-                return res.data?.message || "Profile updated successfully";
-            },
-            error: (err) => {
-                setLoading(false);
-                return err?.response?.data?.message || "Update failed";
-            }
-        }, {
-            id: 'admin-profile-update', // Constant ID ensures we don't stack multiple update toasts
-        });
+        try {
+            setLoading(true);
+            const res = await axios.put("/api/user/profile", formData);
+            toast.success(res.data?.message || "Profile updated");
+        } catch (err) {
+            console.error(err);
+            toast.error(err?.response?.data?.message || "Update failed");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (

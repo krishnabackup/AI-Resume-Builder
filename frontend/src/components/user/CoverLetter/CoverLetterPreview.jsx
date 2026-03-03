@@ -21,7 +21,7 @@ import {
   Circle,
   Menu,
   X,
-  EyeOff
+  EyeOff,
 } from "lucide-react";
 import PaginatedPreview from "../CV/PaginatedPreview";
 
@@ -159,7 +159,14 @@ const PagePill = ({ current, total }) => (
   </div>
 );
 
-const CoverLetterPreview = ({ formData = {}, exportDate = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) }) => {
+const CoverLetterPreview = ({
+  formData = {},
+  exportDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }),
+}) => {
   const rootRef = useRef(null);
   const containerRef = useRef(null);
   const rootWidth = useElementWidth(rootRef);
@@ -177,7 +184,7 @@ const CoverLetterPreview = ({ formData = {}, exportDate = new Date().toLocaleDat
   const [isMaximized, setIsMaximized] = useState(false);
 
   const isUserData = useMemo(() => {
-    return Object.values(formData).some(val => val && String(val).trim());
+    return Object.values(formData).some((val) => val && String(val).trim());
   }, [formData]);
 
   const {
@@ -223,183 +230,234 @@ const CoverLetterPreview = ({ formData = {}, exportDate = new Date().toLocaleDat
         }}
       >
         {/* CONTACT INFO */}
-        <div style={{
-          textAlign: "right",
-          marginBottom: "18pt",
-          fontSize: "11pt",
-          padding: "6pt 0"
-        }}>
-          <div style={{
-            fontWeight: "bold",
-            fontSize: "12pt",
-            marginBottom: "2pt"
-          }}>
+        <div
+          style={{
+            textAlign: "right",
+            marginBottom: "18pt",
+            fontSize: "11pt",
+            padding: "6pt 0",
+          }}
+        >
+          <div
+            style={{
+              fontWeight: "bold",
+              fontSize: "12pt",
+              marginBottom: "2pt",
+            }}
+          >
             {fullName || "Your Name"}
           </div>
-          {address && address.split('\n').filter(Boolean).map((line, i) => (
-            <div key={`addr-${i}`} style={{ marginBottom: "2pt" }}>{line}</div>
-          ))}
-          <div style={{
-            fontSize: "9pt",
-            lineHeight: "1.2",
-            marginBottom: "4pt"
-          }}>
+          {address &&
+            address
+              .split("\n")
+              .filter(Boolean)
+              .map((line, i) => (
+                <div key={`addr-${i}`} style={{ marginBottom: "2pt" }}>
+                  {line}
+                </div>
+              ))}
+          <div
+            style={{
+              fontSize: "9pt",
+              lineHeight: "1.2",
+              marginBottom: "4pt",
+            }}
+          >
             {email && <div>{email}</div>}
             {phone && <div>{phone}</div>}
             {linkedin && <div>{linkedin}</div>}
           </div>
-          <div style={{
-            fontSize: "11pt",
-            marginTop: "4pt"
-          }}>
+          <div
+            style={{
+              fontSize: "11pt",
+              marginTop: "4pt",
+            }}
+          >
             {exportDate}
           </div>
         </div>
 
         {/* JOB REFERENCE */}
-        {
-          (jobTitle || jobReference) && (
-            <div style={{
+        {(jobTitle || jobReference) && (
+          <div
+            style={{
               textAlign: "center",
               margin: "12pt 0",
-              fontSize: "10pt"
-            }}>
-              {jobTitle && (
-                <div style={{
+              fontSize: "10pt",
+            }}
+          >
+            {jobTitle && (
+              <div
+                style={{
                   fontWeight: "bold",
                   fontSize: "10pt",
-                  textTransform: "uppercase"
-                }}>
-                  RE: {jobTitle.toUpperCase()}
-                </div>
-              )}
-              {jobReference && (
-                <div style={{
+                  textTransform: "uppercase",
+                }}
+              >
+                RE: {jobTitle.toUpperCase()}
+              </div>
+            )}
+            {jobReference && (
+              <div
+                style={{
                   fontSize: "9pt",
-                  marginTop: "1pt"
-                }}>
-                  Ref: {jobReference}
-                </div>
-              )}
-            </div>
-          )
-        }
+                  marginTop: "1pt",
+                }}
+              >
+                Ref: {jobReference}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* JOB DETAILS */}
-        {
-          (jobSummary || jobDescription) && (
-            <div style={{
+        {(jobSummary || jobDescription) && (
+          <div
+            style={{
               marginBottom: "12pt",
               fontSize: "10pt",
               fontStyle: "italic",
               padding: "6pt 0",
               borderLeft: "2px solid #666",
-              paddingLeft: "12pt"
-            }}>
-              {jobSummary && (
-                <div><strong>Job Summary:</strong> {jobSummary}</div>
-              )}
-              {jobDescription && (
-                <div style={{ marginTop: "6pt" }}>
-                  <strong>Key Responsibilities:</strong> {jobDescription}
-                </div>
-              )}
-            </div>
-          )
-        }
+              paddingLeft: "12pt",
+            }}
+          >
+            {jobSummary && (
+              <div>
+                <strong>Job Summary:</strong> {jobSummary}
+              </div>
+            )}
+            {jobDescription && (
+              <div style={{ marginTop: "6pt" }}>
+                <strong>Key Responsibilities:</strong> {jobDescription}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* RECIPIENT INFO */}
-        <div style={{
-          marginBottom: "24pt",
-          maxWidth: "4in",
-          fontSize: "10pt",
-          paddingLeft: "6pt"
-        }}>
-          <div style={{
-            fontWeight: "bold",
-            marginBottom: "2pt"
-          }}>
+        <div
+          style={{
+            marginBottom: "24pt",
+            maxWidth: "4in",
+            fontSize: "10pt",
+            paddingLeft: "6pt",
+          }}
+        >
+          <div
+            style={{
+              fontWeight: "bold",
+              marginBottom: "2pt",
+            }}
+          >
             {recipientName}
           </div>
-          {recipientTitle && <div style={{ marginBottom: "2pt" }}>{recipientTitle}</div>}
+          {recipientTitle && (
+            <div style={{ marginBottom: "2pt" }}>{recipientTitle}</div>
+          )}
           {companyName && (
-            <div style={{
-              fontWeight: "bold",
-              marginBottom: "2pt"
-            }}>
+            <div
+              style={{
+                fontWeight: "bold",
+                marginBottom: "2pt",
+              }}
+            >
               {companyName}
             </div>
           )}
-          {companyAddress && companyAddress.split('\n').filter(Boolean).map((line, i) => (
-            <div key={`caddr-${i}`} style={{ marginBottom: "2pt", lineHeight: "1.2" }}>
-              {line}
-            </div>
-          ))}
-        </div >
+          {companyAddress &&
+            companyAddress
+              .split("\n")
+              .filter(Boolean)
+              .map((line, i) => (
+                <div
+                  key={`caddr-${i}`}
+                  style={{ marginBottom: "2pt", lineHeight: "1.2" }}
+                >
+                  {line}
+                </div>
+              ))}
+        </div>
 
         {/* SALUTATION */}
-        < div style={{
-          fontWeight: "bold",
-          fontSize: "12pt",
-          margin: "6pt 0 12pt 0"
-        }}>
+        <div
+          style={{
+            fontWeight: "bold",
+            fontSize: "12pt",
+            margin: "6pt 0 12pt 0",
+          }}
+        >
           Dear {recipientName || "Hiring Manager"},
-        </div >
+        </div>
 
         {/* BODY PARAGRAPHS */}
-        < div style={{
-          textIndent: "0.2in",
-          marginBottom: "10pt",
-          lineHeight: "1.4",
-          fontSize: "12pt"
-        }}>
+        <div
+          style={{
+            textIndent: "0.2in",
+            marginBottom: "10pt",
+            lineHeight: "1.4",
+            fontSize: "12pt",
+          }}
+        >
           {openingParagraph || "I'm excited to apply for this position..."}
-        </div >
-        <div style={{
-          textIndent: "0.2in",
-          marginBottom: "10pt",
-          lineHeight: "1.4",
-          fontSize: "12pt"
-        }}>
+        </div>
+        <div
+          style={{
+            textIndent: "0.2in",
+            marginBottom: "10pt",
+            lineHeight: "1.4",
+            fontSize: "12pt",
+          }}
+        >
           {bodyParagraph1 || "In my previous role..."}
         </div>
-        <div style={{
-          textIndent: "0.2in",
-          marginBottom: "10pt",
-          lineHeight: "1.4",
-          fontSize: "12pt"
-        }}>
+        <div
+          style={{
+            textIndent: "0.2in",
+            marginBottom: "10pt",
+            lineHeight: "1.4",
+            fontSize: "12pt",
+          }}
+        >
           {bodyParagraph2 || "My technical skills include..."}
         </div>
-        <div style={{
-          textIndent: "0.2in",
-          marginBottom: "24pt",
-          lineHeight: "1.4",
-          fontSize: "12pt"
-        }}>
+        <div
+          style={{
+            textIndent: "0.2in",
+            marginBottom: "24pt",
+            lineHeight: "1.4",
+            fontSize: "12pt",
+          }}
+        >
           {closingParagraph || "I'm particularly drawn to your company..."}
         </div>
 
         {/* SIGNATURE */}
-        <div style={{
-          marginTop: "24pt",
-          textAlign: "right"
-        }}>
-          <div style={{
-            marginBottom: "6pt",
-            fontSize: "11pt",
-            fontStyle: "italic"
-          }}>
+        <div
+          style={{
+            marginTop: "24pt",
+            textAlign: "right",
+          }}
+        >
+          <div
+            style={{
+              marginBottom: "6pt",
+              fontSize: "11pt",
+              fontStyle: "italic",
+            }}
+          >
             {customSalutation || salutation}
           </div>
-          <div style={{
-            fontWeight: "bold",
-            fontSize: "11pt"
-          }}>
+          <div
+            style={{
+              fontWeight: "bold",
+              fontSize: "11pt",
+            }}
+          >
             {fullName || "Your Name"}
           </div>
         </div>
-      </div >
+      </div>
     );
   };
 
@@ -418,28 +476,32 @@ const CoverLetterPreview = ({ formData = {}, exportDate = new Date().toLocaleDat
 
   const effectiveZoom = useMemo(
     () => clamp(manualZoom * fitZoom, ZOOM_MIN, ZOOM_MAX),
-    [manualZoom, fitZoom]
+    [manualZoom, fitZoom],
   );
 
   /* ── zoom / nav ───────────────────────────────────────────────────────── */
   const zoomIn = useCallback(
     () =>
-      setManualZoom((z) => clamp(+(z + ZOOM_STEP).toFixed(2), ZOOM_MIN, ZOOM_MAX)),
-    []
+      setManualZoom((z) =>
+        clamp(+(z + ZOOM_STEP).toFixed(2), ZOOM_MIN, ZOOM_MAX),
+      ),
+    [],
   );
   const zoomOut = useCallback(
     () =>
-      setManualZoom((z) => clamp(+(z - ZOOM_STEP).toFixed(2), ZOOM_MIN, ZOOM_MAX)),
-    []
+      setManualZoom((z) =>
+        clamp(+(z - ZOOM_STEP).toFixed(2), ZOOM_MIN, ZOOM_MAX),
+      ),
+    [],
   );
   const resetZoom = useCallback(() => setManualZoom(1), []);
   const goPrev = useCallback(
     () => setCurrentPage((p) => Math.max(1, p - 1)),
-    []
+    [],
   );
   const goNext = useCallback(
     () => setCurrentPage((p) => Math.min(totalPages, p + 1)),
-    [totalPages]
+    [totalPages],
   );
 
   useEffect(() => {
@@ -816,7 +878,7 @@ const CoverLetterPreview = ({ formData = {}, exportDate = new Date().toLocaleDat
       >
         {inner}
       </div>,
-      document.body
+      document.body,
     );
   }
 

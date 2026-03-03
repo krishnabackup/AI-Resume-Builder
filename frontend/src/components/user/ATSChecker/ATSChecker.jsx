@@ -1,3 +1,4 @@
+import "./ATSChecker.css";
 import ATSPdfPreview from "./ATSPdfPreview";
 import UserNavBar from "../UserNavBar/UserNavBar";
 import {
@@ -5,16 +6,18 @@ import {
   FileText,
   ChevronDown,
   CheckCircle2,
+  XCircle,
   AlertTriangle,
-  AlertCircle,
-  Loader2,
   Sparkles,
-  ShieldCheck,
-  ScanText,
+  Target,
+  Shield,
+  Zap,
 } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { pdfjs } from "react-pdf";
+import "../../../styles/react-pdf/TextLayer.css";
+import "../../../styles/react-pdf/AnnotationLayer.css";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -23,726 +26,292 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 
 const SESSION_KEY = "ats_preview_pdf";
 
-export default function ATSChecker({ onSidebarToggle }) {
+/* ─── Drag-and-Drop Upload Zone ─── */
+function UploadZone({ onFileChange }) {
   const fileInputRef = useRef(null);
-  const dropZoneRef = useRef(null);
-
-  const [isMobilePreviewExpanded, setIsMobilePreviewExpanded] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
-  const [analysisResult, setAnalysisResult] = useState(null);
-  const [spellingErrors, setSpellingErrors] = useState([]);
-  const [pronounErrors, setPronounErrors] = useState([]);
-  const [activeError, setActiveError] = useState(null);
-  const [pdfInstance, setPdfInstance] = useState(null);
-  const [animatedScore, setAnimatedScore] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (analysisResult?.overallScore >= 0) {
-      let n = 0;
-      const end = Number(analysisResult.overallScore);
-      const step = end / (1000 / 15);
-      const t = setInterval(() => {
-        n += step;
-        if (n >= end) {
-          n = end;
-          clearInterval(t);
-        }
-        setAnimatedScore(Math.floor(n));
-      }, 15);
-      return () => clearInterval(t);
-    }
-  }, [analysisResult]);
-
-  useEffect(
-    () => () => {
-      if (previewUrl?.startsWith("blob:")) URL.revokeObjectURL(previewUrl);
-    },
-    [],
-  );
-
-  useEffect(() => {
-    if (!pdfInstance || !analysisResult?.misspelledWords?.length) return;
-    buildErrorLocationsFromPdf(
-      pdfInstance,
-      analysisResult.misspelledWords,
-    ).then(setSpellingErrors);
-  }, [pdfInstance, analysisResult]);
-
-  useEffect(() => {
-    const fn = () => setIsMobile(window.innerWidth < 768);
-    fn();
-    window.addEventListener("resize", fn);
-    return () => window.removeEventListener("resize", fn);
-  }, []);
-
-  useEffect(() => {
-    const spans = document.querySelectorAll(
-      ".react-pdf__Page__textContent span",
-    );
-    spans.forEach((s) => {
-      s.style.background = "";
-      s.style.borderBottom = "";
-    });
-    if (!activeError) return;
-    const match = Array.from(spans).filter((s) => {
-      const clean = s.textContent?.toLowerCase().replace(/[^a-z]/g, "");
-      const page = s
-        .closest(".react-pdf__Page")
-        ?.getAttribute("data-page-number");
-      return clean === activeError.word && Number(page) === activeError.page;
-    })[activeError.index || 0];
-    if (!match) return;
-    const isPronoun = ["i", "we", "us", "our", "my"].includes(activeError.word);
-    match.style.background = isPronoun ? "#fef3c7" : "#fef9c3";
-    match.style.borderBottom = isPronoun
-      ? "2px solid #f59e0b"
-      : "2px solid #ef4444";
-    match.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [activeError]);
-
-  const processFile = async (file) => {
-    if (!file) return;
-    setUploadedFile(file);
-    if (file.type !== "application/pdf") {
-      setPreviewUrl(null);
-      setAnalysisResult(null);
-      return;
-    }
-    const url = URL.createObjectURL(file);
-    setPreviewUrl(url);
-    const formData = new FormData();
-    formData.append("resume", file);
-    formData.append("jobTitle", "Placeholder title");
-    formData.append("templateId", "63f1c4e2a3b4d5f678901234");
-    formData.append("resumeprofileId", "63f1c4e2a3b4d5f678901235");
-    try {
-      setIsLoading(true);
-      const token =
-        localStorage.getItem("token") || sessionStorage.getItem("token");
-      const res = await fetch("http://localhost:5000/api/resume/upload", {
-        method: "POST",
-        body: formData,
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      const data = await res.json();
-      if (data.success) {
-        setAnalysisResult(data.data);
-        if (data.data.pronounAnalysis?.detected)
-          setPronounErrors(data.data.pronounAnalysis.detected);
-      }
-    } catch (e) {
-      console.error("ATS failed", e);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleFileChange = (e) => processFile(e.target.files?.[0]);
   const handleDragOver = (e) => {
     e.preventDefault();
     setIsDragging(true);
   };
-  const handleDragLeave = (e) => {
-    if (!dropZoneRef.current?.contains(e.relatedTarget)) setIsDragging(false);
-  };
+  const handleDragLeave = () => setIsDragging(false);
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragging(false);
-    processFile(e.dataTransfer.files[0]);
+    const file = e.dataTransfer.files[0];
+    if (file) onFileChange({ target: { files: [file] } });
   };
 
-  useEffect(() => {
-    sessionStorage.removeItem(SESSION_KEY);
-    sessionStorage.removeItem("ats_analysis_result");
-  }, []);
-
-  const sc = (s) =>
-    s >= 70 ? "text-emerald-500" : s >= 50 ? "text-amber-500" : "text-red-500";
-  const sr = (s) => (s >= 70 ? "#10b981" : s >= 50 ? "#f59e0b" : "#ef4444");
-  const sl = (s) =>
-    s >= 70 ? "ATS Friendly" : s >= 50 ? "Needs Work" : "Poor Match";
-  const sb = (s) =>
-    s >= 70
-      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-      : s >= 50
-        ? "bg-amber-50 text-amber-700 border-amber-200"
-        : "bg-red-50 text-red-600 border-red-200";
-
   return (
-    <div className="min-h-screen bg-stone-50">
-      <UserNavBar onMenuClick={onSidebarToggle || (() => {})} />
-
-      {/* ── Page header ── */}
-      <div className="max-w-7xl mx-auto px-5 pt-8 pb-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
-            ATS Checker
-          </h1>
-          <p className="text-sm text-zinc-400 mt-0.5">
-            Optimize your resume for applicant tracking systems
+    <div className="flex-1 flex items-center justify-center p-8">
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="w-full max-w-lg"
+      >
+        {/* Header text */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-xs font-semibold uppercase tracking-widest mb-4">
+            <Sparkles size={12} />
+            AI-Powered Analysis
+          </div>
+          <h2
+            className="text-3xl font-bold text-slate-900 mb-2"
+            style={{ fontFamily: "'Outfit', sans-serif" }}
+          >
+            Check Your ATS Score
+          </h2>
+          <p className="text-slate-500 text-sm">
+            Upload your resume and get an instant score with actionable feedback
           </p>
         </div>
-        <button
+
+        {/* Drop Zone */}
+        <div
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
           onClick={() => fileInputRef.current.click()}
-          className="flex items-center gap-2 bg-zinc-900 hover:bg-zinc-700 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition-colors duration-150"
+          className={`relative cursor-pointer rounded-2xl border-2 border-dashed transition-all duration-300 p-12 text-center group
+            ${
+              isDragging
+                ? "border-blue-500 bg-blue-50 scale-[1.02] shadow-lg shadow-blue-100"
+                : "border-slate-200 bg-slate-50/50 hover:border-blue-400 hover:bg-blue-50/30 hover:shadow-md"
+            }`}
         >
-          <Upload size={15} />
-          Upload Resume
           <input
             type="file"
             ref={fileInputRef}
             hidden
             accept=".pdf,.doc,.docx"
-            onChange={handleFileChange}
+            onChange={onFileChange}
           />
-        </button>
-      </div>
 
-      {/* ── Main layout ── */}
-      <div className="max-w-7xl mx-auto px-5 pb-12 flex flex-col md:flex-row gap-5">
-        {/* ══ LEFT PANEL ══ */}
-        <div className="w-full md:w-80 lg:w-96 shrink-0 flex flex-col gap-4">
-          <div className="flex items-center justify-between h-5">
-            <p className="text-[10px] font-bold tracking-widest text-zinc-400 uppercase">
-              Analysis Results
-            </p>
-            {analysisResult && (
-              <span
-                className={`text-[10px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full border ${sb(animatedScore)}`}
-              >
-                {sl(animatedScore)}
-              </span>
-            )}
-          </div>
-
-          {/* Score card */}
-          {(analysisResult || isLoading) && (
-            <div className="bg-white border border-zinc-200 rounded-2xl p-5">
-              {isLoading ? (
-                <div className="flex items-center gap-3 text-sm text-zinc-400 py-1">
-                  <Loader2 size={18} className="animate-spin text-indigo-500" />
-                  Analyzing your resume…
-                </div>
-              ) : (
-                <div className="flex items-center gap-5">
-                  <div className="relative w-20 h-20 shrink-0">
-                    <svg
-                      viewBox="0 0 36 36"
-                      className="w-full h-full -rotate-90"
-                    >
-                      <path
-                        d="M18 2.0845 a15.9155 15.9155 0 0 1 0 31.831 a15.9155 15.9155 0 0 1 0-31.831"
-                        fill="none"
-                        stroke="#f3f4f6"
-                        strokeWidth="2.8"
-                      />
-                      <path
-                        d="M18 2.0845 a15.9155 15.9155 0 0 1 0 31.831 a15.9155 15.9155 0 0 1 0-31.831"
-                        fill="none"
-                        stroke={sr(animatedScore)}
-                        strokeWidth="2.8"
-                        strokeDasharray="100"
-                        strokeDashoffset={100 - animatedScore}
-                        strokeLinecap="round"
-                        style={{
-                          transition: "stroke-dashoffset 1s ease, stroke 0.4s",
-                        }}
-                      />
-                    </svg>
-                    <span
-                      className={`absolute inset-0 flex items-center justify-center text-lg font-bold font-mono ${sc(animatedScore)}`}
-                    >
-                      {animatedScore}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-3xl font-bold font-mono text-zinc-900 leading-none">
-                      {animatedScore}
-                      <span className="text-base font-normal text-zinc-400">
-                        {" "}
-                        /100
-                      </span>
-                    </p>
-                    <span
-                      className={`inline-block mt-2 text-[10px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full border ${sb(animatedScore)}`}
-                    >
-                      {sl(animatedScore)}
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ── Empty left panel — compact upload CTA + feature hints ── */}
-          {!analysisResult && !isLoading && (
-            <div className="bg-white border border-zinc-200 rounded-2xl overflow-hidden">
-              {/* Mini upload row */}
-              <button
-                onClick={() => fileInputRef.current.click()}
-                className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-zinc-50 transition-colors duration-150 group border-b border-zinc-100"
-              >
-                <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0 group-hover:bg-indigo-100 transition-colors">
-                  <Upload size={14} className="text-indigo-500" />
-                </div>
-                <div className="text-left min-w-0">
-                  <p className="text-xs font-semibold text-zinc-700">
-                    Upload your resume
-                  </p>
-                  <p className="text-[11px] text-zinc-400">
-                    PDF, DOC, DOCX · max 5 MB
-                  </p>
-                </div>
-              </button>
-
-              {/* Feature hints */}
-              <div className="px-4 py-3.5 flex flex-col gap-3">
-                <p className="text-[10px] font-bold tracking-widest text-zinc-400 uppercase">
-                  What you'll get
-                </p>
-                {[
-                  {
-                    icon: (
-                      <ShieldCheck size={13} className="text-emerald-500" />
-                    ),
-                    bg: "bg-emerald-50",
-                    label: "ATS compatibility score",
-                    desc: "See how well you'll pass filters",
-                  },
-                  {
-                    icon: <ScanText size={13} className="text-indigo-500" />,
-                    bg: "bg-indigo-50",
-                    label: "Section-by-section breakdown",
-                    desc: "Find weak spots instantly",
-                  },
-                  {
-                    icon: <Sparkles size={13} className="text-amber-500" />,
-                    bg: "bg-amber-50",
-                    label: "Spelling & pronoun check",
-                    desc: "Catch errors before recruiters do",
-                  },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-start gap-2.5">
-                    <div
-                      className={`w-6 h-6 rounded-md ${item.bg} flex items-center justify-center shrink-0 mt-0.5`}
-                    >
-                      {item.icon}
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium text-zinc-700 leading-tight">
-                        {item.label}
-                      </p>
-                      <p className="text-[11px] text-zinc-400 leading-tight mt-0.5">
-                        {item.desc}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Section scores */}
-          {analysisResult?.sectionScores?.length > 0 && (
-            <div className="bg-white border border-zinc-200 rounded-2xl p-5">
-              <p className="text-[10px] font-bold tracking-widest text-zinc-400 uppercase mb-4">
-                Section Breakdown
-              </p>
-              <div className="flex flex-col gap-4">
-                {analysisResult.sectionScores.map((s, i) => (
-                  <SectionRow key={i} section={s} delay={i * 0.06} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {spellingErrors.length > 0 && (
-            <ErrorTable
-              title="Spelling Errors"
-              icon={<AlertCircle size={13} />}
-              variant="red"
-              errors={spellingErrors}
-              activeError={activeError}
-              onSelect={setActiveError}
-            />
-          )}
-          {pronounErrors.length > 0 && (
-            <ErrorTable
-              title="Personal Pronouns"
-              subtitle="Avoid in resumes"
-              icon={<AlertTriangle size={13} />}
-              variant="amber"
-              errors={pronounErrors}
-              activeError={activeError}
-              onSelect={setActiveError}
-            />
-          )}
-        </div>
-
-        {/* ══ RIGHT PANEL ══ */}
-        <div className="flex-1 min-w-0 flex flex-col">
-          <button
-            className="md:hidden flex items-center justify-between w-full px-4 py-3.5 mb-3 bg-white border border-zinc-200 rounded-xl text-sm font-medium text-zinc-700"
-            onClick={() => setIsMobilePreviewExpanded((p) => !p)}
+          {/* Animated upload icon */}
+          <motion.div
+            animate={isDragging ? { scale: 1.15, y: -4 } : { scale: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 300 }}
+            className={`mx-auto mb-5 w-16 h-16 rounded-2xl flex items-center justify-center transition-colors duration-300
+              ${isDragging ? "bg-blue-500 text-white" : "bg-white text-slate-400 group-hover:bg-blue-500 group-hover:text-white shadow-sm"}`}
           >
-            <span className="flex items-center gap-2.5">
-              <FileText size={16} />
-              Document Preview
+            <Upload size={28} />
+          </motion.div>
+
+          <p className="text-base font-semibold text-slate-700 mb-1">
+            {isDragging ? "Drop it here!" : "Drag & drop your resume"}
+          </p>
+          <p className="text-sm text-slate-400 mb-5">
+            or{" "}
+            <span className="text-blue-500 font-medium">
+              click to browse files
             </span>
-            <ChevronDown
-              size={14}
-              className={`transition-transform duration-200 ${isMobilePreviewExpanded ? "rotate-180" : ""}`}
-            />
-          </button>
+          </p>
 
-          <AnimatePresence initial={false}>
-            {(isMobilePreviewExpanded || !isMobile) && (
-              <motion.div
-                initial={isMobile ? { height: 0, opacity: 0 } : false}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.25 }}
-                className="flex-1"
+          <div className="flex justify-center gap-2">
+            {["PDF", "DOC", "DOCX"].map((fmt) => (
+              <span
+                key={fmt}
+                className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-lg bg-white border border-slate-200 text-slate-400"
               >
-                {previewUrl ? (
-                  <div className="bg-white border border-zinc-200 rounded-2xl overflow-hidden h-[85%]">
-                    <ATSPdfPreview
-                      pdfUrl={previewUrl}
-                      onLoadSuccess={(pdf) => setPdfInstance(pdf)}
-                    />
-                  </div>
-                ) : (
-                  /* ══ EMPTY DROP ZONE ══ */
-                  <div
-                    ref={dropZoneRef}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDrop={handleDrop}
-                    onClick={() => fileInputRef.current.click()}
-                    className={`
-                      relative h-[88vh] rounded-2xl border-2 border-dashed cursor-pointer
-                      flex flex-col items-center justify-center overflow-hidden
-                      transition-all duration-300 select-none group
-                      ${isDragging ? "border-indigo-400 bg-indigo-50/50" : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50/50"}
-                    `}
-                  >
-                    {/* Dot-grid background */}
-                    <div
-                      className="absolute inset-0 pointer-events-none"
-                      style={{
-                        backgroundImage: `radial-gradient(circle, #d4d4d8 1px, transparent 1px)`,
-                        backgroundSize: "28px 28px",
-                        opacity: isDragging ? 0.25 : 0.4,
-                        transition: "opacity 0.3s",
-                      }}
-                    />
-
-                    {/* Soft glow on drag */}
-                    <AnimatePresence>
-                      {isDragging && (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.6 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.6 }}
-                          transition={{ duration: 0.4, ease: "easeOut" }}
-                          className="absolute w-96 h-96 rounded-full pointer-events-none"
-                          style={{
-                            background:
-                              "radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)",
-                          }}
-                        />
-                      )}
-                    </AnimatePresence>
-
-                    <div className="relative z-10 flex flex-col items-center gap-6 px-8 text-center max-w-md">
-                      {/* Floating icon */}
-                      <motion.div
-                        animate={
-                          isDragging
-                            ? { y: -10, scale: 1.1, rotate: -3 }
-                            : { y: 0, scale: 1, rotate: 0 }
-                        }
-                        transition={{
-                          type: "spring",
-                          stiffness: 260,
-                          damping: 18,
-                        }}
-                        className={`
-                          w-24 h-24 rounded-3xl flex items-center justify-center
-                          shadow-lg transition-colors duration-300 relative
-                          ${isDragging ? "bg-indigo-500 text-white shadow-indigo-200" : "bg-white text-zinc-400 group-hover:text-zinc-500 shadow-zinc-200/80"}
-                        `}
-                      >
-                        <Upload size={34} strokeWidth={1.4} />
-                        <AnimatePresence>
-                          {isDragging && (
-                            <motion.span
-                              initial={{ opacity: 0.6, scale: 1 }}
-                              animate={{ opacity: 0, scale: 1.9 }}
-                              exit={{ opacity: 0 }}
-                              transition={{
-                                duration: 1.2,
-                                repeat: Infinity,
-                                ease: "easeOut",
-                              }}
-                              className="absolute inset-0 rounded-3xl border-2 border-indigo-400 pointer-events-none"
-                            />
-                          )}
-                        </AnimatePresence>
-                      </motion.div>
-
-                      <div className="space-y-2">
-                        <motion.p
-                          animate={{ scale: isDragging ? 1.03 : 1 }}
-                          transition={{ duration: 0.2 }}
-                          className={`text-xl font-semibold tracking-tight transition-colors duration-200 ${isDragging ? "text-indigo-600" : "text-zinc-700"}`}
-                        >
-                          {isDragging
-                            ? "Release to upload"
-                            : "Drop your resume here"}
-                        </motion.p>
-                        <p
-                          className={`text-sm transition-colors duration-200 ${isDragging ? "text-indigo-400" : "text-zinc-400"}`}
-                        >
-                          {isDragging
-                            ? "We'll start analyzing it right away"
-                            : "or click to browse your files"}
-                        </p>
-                      </div>
-
-                      {/* Format chips */}
-                      <motion.div
-                        animate={{
-                          opacity: isDragging ? 0 : 1,
-                          y: isDragging ? 4 : 0,
-                        }}
-                        transition={{ duration: 0.2 }}
-                        className="flex items-center gap-2"
-                      >
-                        {["PDF", "DOC", "DOCX"].map((f) => (
-                          <span
-                            key={f}
-                            className="text-[10px] font-bold tracking-widest uppercase text-zinc-400 bg-zinc-100 px-2.5 py-1 rounded-lg"
-                          >
-                            {f}
-                          </span>
-                        ))}
-                        <span className="text-[11px] text-zinc-300">
-                          · max 5 MB
-                        </span>
-                      </motion.div>
-
-                      {/* Info cards — fade out on drag */}
-                      <motion.div
-                        animate={{
-                          opacity: isDragging ? 0 : 1,
-                          y: isDragging ? 6 : 0,
-                        }}
-                        transition={{ duration: 0.2 }}
-                        className="w-full flex flex-col gap-2.5"
-                      >
-                        {/* Tip */}
-                        <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 text-left">
-                          <AlertCircle
-                            size={13}
-                            className="text-amber-500 mt-0.5 shrink-0"
-                          />
-                          <p className="text-xs text-amber-700 leading-relaxed">
-                            Use a{" "}
-                            <span className="font-semibold">
-                              text-based PDF
-                            </span>{" "}
-                            for best ATS results — scanned images won't be
-                            parsed.
-                          </p>
-                        </div>
-
-                        {/* What happens next */}
-                        <div className="bg-zinc-50 border border-zinc-100 rounded-xl px-4 py-3.5 text-left">
-                          <p className="text-[10px] font-bold tracking-widest text-zinc-400 uppercase mb-3">
-                            What happens next
-                          </p>
-                          <div className="flex flex-col gap-2.5">
-                            {[
-                              {
-                                step: "1",
-                                text: "Your resume is parsed and scored against ATS criteria",
-                              },
-                              {
-                                step: "2",
-                                text: "Each section gets an individual score with improvement tips",
-                              },
-                              {
-                                step: "3",
-                                text: "Spelling errors and personal pronouns are flagged for review",
-                              },
-                            ].map((item) => (
-                              <div
-                                key={item.step}
-                                className="flex items-start gap-2.5"
-                              >
-                                <span className="w-4 h-4 rounded-full bg-zinc-200 text-zinc-500 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
-                                  {item.step}
-                                </span>
-                                <p className="text-xs text-zinc-500 leading-relaxed">
-                                  {item.text}
-                                </p>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </motion.div>
-                    </div>
-
-                    {/* Corner decorations */}
-                    <span
-                      className={`absolute top-5 left-5 w-5 h-5 border-l-2 border-t-2 rounded-tl-lg transition-colors duration-300 ${isDragging ? "border-indigo-300" : "border-zinc-200"}`}
-                    />
-                    <span
-                      className={`absolute top-5 right-5 w-5 h-5 border-r-2 border-t-2 rounded-tr-lg transition-colors duration-300 ${isDragging ? "border-indigo-300" : "border-zinc-200"}`}
-                    />
-                    <span
-                      className={`absolute bottom-5 left-5 w-5 h-5 border-l-2 border-b-2 rounded-bl-lg transition-colors duration-300 ${isDragging ? "border-indigo-300" : "border-zinc-200"}`}
-                    />
-                    <span
-                      className={`absolute bottom-5 right-5 w-5 h-5 border-r-2 border-b-2 rounded-br-lg transition-colors duration-300 ${isDragging ? "border-indigo-300" : "border-zinc-200"}`}
-                    />
-                  </div>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
+                {fmt}
+              </span>
+            ))}
+          </div>
         </div>
+
+        {/* Feature pills */}
+        <div className="mt-6 grid grid-cols-3 gap-3">
+          {[
+            {
+              icon: <Target size={14} />,
+              label: "ATS Scoring",
+              color: "text-blue-600 bg-blue-50",
+            },
+            {
+              icon: <Shield size={14} />,
+              label: "Spell Check",
+              color: "text-emerald-600 bg-emerald-50",
+            },
+            {
+              icon: <Zap size={14} />,
+              label: "Instant Results",
+              color: "text-amber-600 bg-amber-50",
+            },
+          ].map((f) => (
+            <div
+              key={f.label}
+              className={`flex flex-col items-center gap-1.5 p-3 rounded-xl ${f.color} text-xs font-semibold`}
+            >
+              {f.icon}
+              {f.label}
+            </div>
+          ))}
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+/* ─── Score Ring ─── */
+function ScoreRing({ score, animated }) {
+  const color =
+    animated >= 70 ? "#10b981" : animated >= 50 ? "#f59e0b" : "#ef4444";
+  const label =
+    animated >= 70
+      ? "ATS Friendly"
+      : animated >= 50
+        ? "Needs Work"
+        : "Poor Match";
+  const labelColor =
+    animated >= 70
+      ? "text-emerald-600 bg-emerald-50"
+      : animated >= 50
+        ? "text-amber-600 bg-amber-50"
+        : "text-red-600 bg-red-50";
+
+  return (
+    <div className="flex items-center gap-5 p-5 rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-slate-100">
+      <div className="relative w-24 h-24 flex-shrink-0">
+        <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+          <path
+            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+            fill="none"
+            stroke="#f1f5f9"
+            strokeWidth="3"
+          />
+          <path
+            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+            fill="none"
+            stroke={color}
+            strokeWidth="3"
+            strokeDasharray="100"
+            strokeDashoffset={100 - animated}
+            strokeLinecap="round"
+            style={{
+              transition: "stroke-dashoffset 1s ease, stroke 0.5s ease",
+            }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-2xl font-extrabold text-slate-800">
+            {score ? animated : "–"}
+          </span>
+        </div>
+      </div>
+      <div>
+        <p className="text-xs uppercase tracking-widest text-slate-400 font-semibold mb-1">
+          ATS Score
+        </p>
+        <p className="text-3xl font-extrabold text-slate-900">
+          {score ? animated : "–"}
+          <span className="text-lg text-slate-300 font-normal">/100</span>
+        </p>
+        {score && (
+          <span
+            className={`mt-1.5 inline-block px-2 py-0.5 rounded-full text-xs font-bold ${labelColor}`}
+          >
+            {label}
+          </span>
+        )}
       </div>
     </div>
   );
 }
 
-/* ═══════════════════════ SECTION ROW ═══════════════════════ */
-function SectionRow({ section, delay }) {
-  const ok = section.status === "ok";
-  const warn = section.status === "warn";
-  const pct = Math.round((section.score / 20) * 100);
-  const iconColor = ok
-    ? "text-emerald-500"
-    : warn
-      ? "text-amber-500"
-      : "text-red-500";
-  const barColor = ok ? "bg-emerald-500" : warn ? "bg-amber-400" : "bg-red-500";
-  const scoreColor = ok
-    ? "text-emerald-600"
-    : warn
-      ? "text-amber-600"
-      : "text-red-500";
-  const Icon = ok ? CheckCircle2 : warn ? AlertTriangle : AlertCircle;
+/* ─── Section Score Card ─── */
+function SectionCard({ section }) {
+  const isOk = section.status === "ok";
+  const isWarn = section.status === "warn";
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.3 }}
+    <div
+      className={`rounded-xl border p-3.5 mb-2 transition-all
+      ${isOk ? "border-emerald-100 bg-emerald-50/60" : isWarn ? "border-amber-100 bg-amber-50/60" : "border-red-100 bg-red-50/60"}`}
     >
-      <div className="flex items-center justify-between mb-1.5">
-        <span className="flex items-center gap-1.5 text-xs font-medium text-zinc-700">
-          <Icon size={12} className={iconColor} />
+      <div className="flex items-center gap-2 mb-1">
+        {isOk ? (
+          <CheckCircle2 size={14} className="text-emerald-500 flex-shrink-0" />
+        ) : isWarn ? (
+          <AlertTriangle size={14} className="text-amber-500 flex-shrink-0" />
+        ) : (
+          <XCircle size={14} className="text-red-500 flex-shrink-0" />
+        )}
+        <span className="text-sm font-semibold text-slate-800">
           {section.sectionName}
         </span>
-        <span className={`text-xs font-semibold font-mono ${scoreColor}`}>
+        <span
+          className={`ml-auto text-xs font-bold px-2 py-0.5 rounded-full
+          ${isOk ? "bg-emerald-100 text-emerald-700" : isWarn ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}`}
+        >
           {section.score}/20
         </span>
       </div>
-      <div className="h-1 bg-zinc-100 rounded-full overflow-hidden">
-        <motion.div
-          className={`h-full rounded-full ${barColor}`}
-          initial={{ width: 0 }}
-          animate={{ width: `${pct}%` }}
-          transition={{ delay: delay + 0.1, duration: 0.7, ease: "easeOut" }}
-        />
-      </div>
       {section.suggestions?.length > 0 && (
-        <ul className="mt-1.5 ml-4 list-disc space-y-0.5">
+        <ul className="mt-2 space-y-1 pl-5">
           {section.suggestions.map((s, i) => (
-            <li key={i} className="text-[11px] text-zinc-500 leading-relaxed">
+            <li key={i} className="text-xs text-slate-600 list-disc">
               {s}
             </li>
           ))}
         </ul>
       )}
-    </motion.div>
+    </div>
   );
 }
 
-/* ═══════════════════════ ERROR TABLE ═══════════════════════ */
-function ErrorTable({
-  title,
-  subtitle,
-  icon,
-  variant,
-  errors,
-  activeError,
-  onSelect,
-}) {
-  const v = {
-    red: {
-      wrap: "bg-red-50 border-red-100",
-      header: "text-red-600",
-      word: "text-red-600",
-      hover: "hover:bg-red-100/60",
-      active: "bg-red-100",
-    },
-    amber: {
-      wrap: "bg-amber-50 border-amber-100",
-      header: "text-amber-700",
-      word: "text-amber-700",
-      hover: "hover:bg-amber-100/60",
-      active: "bg-amber-100",
-    },
-  }[variant];
-
+/* ─── Error Table ─── */
+function ErrorTable({ errors, type, onSelect }) {
+  const isSpell = type === "spell";
   return (
-    <div className={`border rounded-2xl overflow-hidden ${v.wrap}`}>
+    <div
+      className={`mt-4 rounded-xl border overflow-hidden
+      ${isSpell ? "border-red-100" : "border-amber-100"}`}
+    >
       <div
-        className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold border-b border-black/5 ${v.header}`}
+        className={`px-4 py-3 flex items-center gap-2 text-sm font-semibold
+        ${isSpell ? "bg-red-50 text-red-700" : "bg-amber-50 text-amber-700"}`}
       >
-        {icon}
-        <span>{title}</span>
-        {subtitle && (
-          <span className="font-normal opacity-60 text-[11px]">
-            — {subtitle}
-          </span>
-        )}
+        {isSpell ? <XCircle size={15} /> : <AlertTriangle size={15} />}
+        {isSpell ? "Spelling Errors" : "Personal Pronouns Detected"}
+        <span
+          className={`ml-auto text-xs px-2 py-0.5 rounded-full font-bold
+          ${isSpell ? "bg-red-100" : "bg-amber-100"}`}
+        >
+          {errors.length}
+        </span>
       </div>
-      <div className="max-h-52 overflow-y-auto">
+      <div className="overflow-auto max-h-48">
         <table className="w-full text-xs">
           <thead>
-            <tr className="border-b border-black/5">
-              <th className="text-left px-4 py-2 text-[10px] font-bold tracking-wider text-zinc-400 uppercase">
+            <tr className="border-b border-slate-100 bg-white">
+              <th className="py-2 px-4 text-left font-semibold text-slate-500">
                 Word
               </th>
-              <th className="text-left px-2 py-2 text-[10px] font-bold tracking-wider text-zinc-400 uppercase">
-                Pg
+              <th className="py-2 px-3 text-left font-semibold text-slate-500">
+                Page
               </th>
-              <th className="text-left px-2 py-2 text-[10px] font-bold tracking-wider text-zinc-400 uppercase">
-                Ln
+              <th className="py-2 px-3 text-left font-semibold text-slate-500">
+                Line
               </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="bg-white">
             {errors.map((e, i) => (
               <tr
                 key={i}
                 onClick={() => onSelect(e)}
-                className={`cursor-pointer border-b border-black/[0.04] transition-colors last:border-0 ${activeError === e ? v.active : v.hover}`}
+                className={`border-b border-slate-50 cursor-pointer transition-colors
+                  ${isSpell ? "hover:bg-red-50" : "hover:bg-amber-50"}`}
               >
-                <td className={`px-4 py-2 font-semibold ${v.word}`}>
+                <td
+                  className={`py-2 px-4 font-semibold ${isSpell ? "text-red-600" : "text-amber-600"}`}
+                >
                   {e.word}
                 </td>
-                <td className="px-2 py-2 font-mono text-zinc-500">{e.page}</td>
-                <td className="px-2 py-2 font-mono text-zinc-500">{e.line}</td>
+                <td className="py-2 px-3 text-slate-500">{e.page}</td>
+                <td className="py-2 px-3 text-slate-500">{e.line}</td>
               </tr>
             ))}
           </tbody>
@@ -752,29 +321,413 @@ function ErrorTable({
   );
 }
 
-/* ── Utility ── */
-async function buildErrorLocationsFromPdf(pdf, wrongWords) {
-  if (!pdf || !wrongWords?.length) return [];
-  const errors = [];
-  const wc = {};
-  for (let p = 1; p <= pdf.numPages; p++) {
-    const page = await pdf.getPage(p);
-    const content = await page.getTextContent();
-    const text = content.items.map((i) => i.str).join(" ");
-    text.split(/\s{2,}|\n/).forEach((line, li) => {
-      line.split(/\s+/).forEach((token) => {
-        const clean = token.toLowerCase().replace(/[^a-z]/g, "");
-        if (wrongWords.includes(clean)) {
-          wc[clean] = (wc[clean] || 0) + 1;
-          errors.push({
-            word: clean,
-            page: p,
-            line: li + 1,
-            index: wc[clean] - 1,
-          });
+/* ═══════════════════ MAIN COMPONENT ═══════════════════ */
+const PANEL_HEIGHT = "calc(100vh - 180px)";
+
+const ATSChecker = ({ onSidebarToggle }) => {
+  const fileInputRef = useRef(null);
+  const [isMobilePreviewExpanded, setIsMobilePreviewExpanded] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [analysisResult, setAnalysisResult] = useState(null);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [resumeText, setResumeText] = useState("");
+  const [spellingErrors, setSpellingErrors] = useState([]);
+  const [pronounErrors, setPronounErrors] = useState([]);
+  const [activeError, setActiveError] = useState(null);
+  const [numPages, setNumPages] = useState(null);
+  const [pdfInstance, setPdfInstance] = useState(null);
+  const [animatedScore, setAnimatedScore] = useState(0);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  /* ── Score animation ── */
+  useEffect(() => {
+    if (analysisResult?.overallScore >= 0) {
+      let start = 0;
+      const end = Number(analysisResult.overallScore);
+      const step = end / (1000 / 15);
+      const counter = setInterval(() => {
+        start += step;
+        if (start >= end) {
+          start = end;
+          clearInterval(counter);
         }
-      });
+        setAnimatedScore(Math.floor(start));
+      }, 15);
+      return () => clearInterval(counter);
+    }
+  }, [analysisResult]);
+
+  /* ── Revoke blob on unmount ── */
+  useEffect(() => {
+    return () => {
+      if (previewUrl?.startsWith("blob:")) URL.revokeObjectURL(previewUrl);
+    };
+  }, []);
+
+  /* ── Mobile detection ── */
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  /* ── Resize ── */
+  useEffect(() => {
+    const h = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", h);
+    return () => window.removeEventListener("resize", h);
+  }, []);
+
+  /* ── Clear session on mount ── */
+  useEffect(() => {
+    sessionStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem("ats_analysis_result");
+  }, []);
+
+  /* ── Spell locator ── */
+  useEffect(() => {
+    const run = async () => {
+      if (pdfInstance && analysisResult?.misspelledWords?.length) {
+        const located = await buildErrorLocationsFromPdf(
+          pdfInstance,
+          analysisResult.misspelledWords,
+        );
+        setSpellingErrors(located);
+      }
+    };
+    run();
+  }, [pdfInstance, analysisResult]);
+
+  /* ── Highlight active error ── */
+  const applyHighlights = () => {
+    const spans = document.querySelectorAll(
+      ".react-pdf__Page__textContent span",
+    );
+    spans.forEach((span) => {
+      span.style.background = "";
+      span.style.borderBottom = "";
     });
-  }
-  return errors;
-}
+    if (!activeError) return;
+    const matching = Array.from(spans).filter((span) => {
+      const clean = span.textContent?.toLowerCase().replace(/[^a-z]/g, "");
+      const pg = span
+        .closest(".react-pdf__Page")
+        ?.getAttribute("data-page-number");
+      return clean === activeError.word && Number(pg) === activeError.page;
+    });
+    const target = matching[activeError.index || 0];
+    if (!target) return;
+    const isPronouns = ["i", "we", "us", "our", "my"].includes(
+      activeError.word,
+    );
+    target.style.background = isPronouns ? "#fff3cd" : "yellow";
+    target.style.borderBottom = `3px solid ${isPronouns ? "#f59e0b" : "red"}`;
+    target.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+  useEffect(() => {
+    applyHighlights();
+  }, [activeError]);
+
+  /* ── File change ── */
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadedFile(file);
+    setIsAnalyzing(true);
+
+    if (file.type === "application/pdf") {
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+      sessionStorage.setItem(SESSION_KEY, url);
+
+      const formData = new FormData();
+      formData.append("resume", file);
+      formData.append("jobTitle", "Placeholder title");
+      formData.append("templateId", "63f1c4e2a3b4d5f678901234");
+      formData.append("resumeprofileId", "63f1c4e2a3b4d5f678901235");
+
+      try {
+        const token =
+          localStorage.getItem("token") || sessionStorage.getItem("token");
+        const res = await fetch("http://localhost:5000/api/resume/upload", {
+          method: "POST",
+          body: formData,
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+
+        const rawText = await res.text();
+
+        if (!res.ok) {
+          console.error(`Server error [${res.status}]:`, rawText.slice(0, 500));
+          return;
+        }
+
+        let data;
+        try {
+          data = JSON.parse(rawText);
+        } catch {
+          console.error("Expected JSON but got:", rawText.slice(0, 300));
+          return;
+        }
+
+        if (data.success) {
+          setAnalysisResult(data.data);
+          if (data.data.pronounAnalysis?.detected)
+            setPronounErrors(data.data.pronounAnalysis.detected);
+          setResumeText(data?.data?.text || "");
+          sessionStorage.setItem(
+            "ats_analysis_result",
+            JSON.stringify(data.data),
+          );
+        } else {
+          console.error("API returned success: false →", data?.message || data);
+        }
+      } catch (err) {
+        console.error(
+          "ATS fetch failed — is the backend running on port 5000?",
+          err,
+        );
+      } finally {
+        setIsAnalyzing(false);
+      }
+    } else {
+      setPreviewUrl(null);
+      sessionStorage.removeItem(SESSION_KEY);
+      setAnalysisResult(null);
+      sessionStorage.removeItem("ats_analysis_result");
+      setIsAnalyzing(false);
+    }
+  };
+
+  const buildErrorLocationsFromPdf = async (pdf, wrongWords) => {
+    if (!pdf || !wrongWords?.length) return [];
+    const errors = [];
+    const wordCount = {};
+    for (let p = 1; p <= pdf.numPages; p++) {
+      const page = await pdf.getPage(p);
+      const content = await page.getTextContent();
+      const text = content.items.map((i) => i.str).join(" ");
+      const lines = text.split(/\s{2,}|\n/);
+      lines.forEach((line, li) => {
+        line.split(/\s+/).forEach((token) => {
+          const clean = token.toLowerCase().replace(/[^a-z]/g, "");
+          if (wrongWords.includes(clean)) {
+            wordCount[clean] = (wordCount[clean] || 0) + 1;
+            errors.push({
+              word: clean,
+              page: p,
+              line: li + 1,
+              index: wordCount[clean] - 1,
+            });
+          }
+        });
+      });
+    }
+    return errors;
+  };
+
+  return (
+    <div className="ats-checker-page user-page min-h-screen bg-[#f8f9fc]">
+      <UserNavBar onMenuClick={onSidebarToggle || (() => {})} />
+
+      {/* ── Page Header ── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-2">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1
+              className="text-2xl font-extrabold text-slate-900"
+              style={{ fontFamily: "'Outfit', sans-serif" }}
+            >
+              ATS Resume Checker
+            </h1>
+            <p className="text-slate-500 text-sm mt-0.5">
+              Instant AI-powered resume analysis & optimization
+            </p>
+          </div>
+          <button
+            onClick={() => fileInputRef.current.click()}
+            className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-700 text-white text-sm font-semibold rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
+          >
+            <Upload size={16} />
+            Upload Resume
+          </button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            hidden
+            accept=".pdf,.doc,.docx"
+            onChange={handleFileChange}
+          />
+        </div>
+      </div>
+
+      {/* ── Two-column layout ── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col md:flex-row gap-5 items-stretch">
+        {/* ── LEFT PANEL: Analysis ── */}
+        <div
+          className="w-full md:w-[340px] flex-shrink-0 flex flex-col gap-4 order-2 md:order-1"
+          style={{ minHeight: PANEL_HEIGHT }}
+        >
+          <div
+            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col"
+            style={{ minHeight: PANEL_HEIGHT }}
+          >
+            {/* Panel header */}
+            <div className="px-5 pt-5 pb-4 border-b border-slate-100 flex-shrink-0">
+              <div className="flex items-center justify-between">
+                <h2 className="font-bold text-slate-900 text-base">
+                  Analysis Results
+                </h2>
+                {isAnalyzing && (
+                  <span className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">
+                    <motion.span
+                      animate={{ rotate: 360 }}
+                      transition={{
+                        duration: 1,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
+                      className="inline-block w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full"
+                    />
+                    Analyzing…
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="p-5 flex-1 flex flex-col">
+              {/* Score Ring */}
+              {analysisResult ? (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <ScoreRing score={analysisResult} animated={animatedScore} />
+                </motion.div>
+              ) : (
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="rounded-2xl border-2 border-dashed border-slate-100 p-8 text-center w-full">
+                    <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-3">
+                      <Target size={28} className="text-slate-200" />
+                    </div>
+                    <p className="text-sm font-semibold text-slate-400 mb-1">
+                      No resume uploaded yet
+                    </p>
+                    <p className="text-xs text-slate-300">
+                      Upload a resume on the right to see your ATS score here
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Section Scores */}
+              {analysisResult?.sectionScores?.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="mt-5"
+                >
+                  <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">
+                    Section Breakdown
+                  </p>
+                  {analysisResult.sectionScores.map((s, i) => (
+                    <SectionCard key={i} section={s} />
+                  ))}
+                </motion.div>
+              )}
+
+              {/* Error Tables */}
+              <AnimatePresence>
+                {spellingErrors.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                  >
+                    <ErrorTable
+                      errors={spellingErrors}
+                      type="spell"
+                      onSelect={setActiveError}
+                    />
+                  </motion.div>
+                )}
+                {pronounErrors.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                  >
+                    <ErrorTable
+                      errors={pronounErrors}
+                      type="pronoun"
+                      onSelect={setActiveError}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+        </div>
+
+        {/* ── RIGHT PANEL: Preview ── */}
+        <div className="flex-1 flex flex-col gap-4 order-1 md:order-2">
+          {/* Mobile toggle */}
+          <button
+            className="md:hidden flex items-center justify-between px-4 py-3.5 bg-white border border-slate-100 rounded-xl shadow-sm"
+            onClick={() => setIsMobilePreviewExpanded((v) => !v)}
+          >
+            <div className="flex items-center gap-2.5 text-sm font-semibold text-slate-700">
+              <FileText size={18} className="text-blue-500" />
+              Document Preview
+            </div>
+            <ChevronDown
+              size={16}
+              className={`text-slate-400 transition-transform ${isMobilePreviewExpanded ? "rotate-180" : ""}`}
+            />
+          </button>
+
+          <AnimatePresence initial={false}>
+            {(isMobilePreviewExpanded || !isMobile) && (
+              <motion.div
+                initial={isMobile ? { height: 0, opacity: 0 } : false}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col"
+                style={{ minHeight: PANEL_HEIGHT }}
+              >
+                {previewUrl ? (
+                  <div
+                    className="w-full flex-1"
+                    style={{ minHeight: PANEL_HEIGHT }}
+                  >
+                    <ATSPdfPreview
+                      pdfUrl={previewUrl}
+                      onLoadSuccess={(pdf) => {
+                        setNumPages(pdf.numPages);
+                        setPdfInstance(pdf);
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <UploadZone onFileChange={handleFileChange} />
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      <footer className="mt-auto text-center py-4 bg-white border-t text-sm text-gray-600">
+        © {new Date().getFullYear()} ResumeAI Inc. All rights reserved.
+      </footer>
+    </div>
+  );
+};
+
+export default ATSChecker;

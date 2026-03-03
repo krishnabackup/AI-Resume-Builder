@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import UptoSkillsLogo from "../../../assets/UptoSkills.webp";
 import { useNotifications } from "../../../context/NotificationContext";
+import axiosInstance from "../../../api/axios";
 
 // Notification type configurations - simple, soft colors
 const NOTIFICATION_TYPES = {
@@ -23,21 +24,46 @@ const NOTIFICATION_TYPES = {
   resume_downloaded: { icon: Download, color: "text-cyan-600", bg: "bg-cyan-50", label: "Download" }
 };
 
-export default function AdminNavbar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMobileOpen, adminUser }) {
+export default function AdminNavbar({ isCollapsed, setIsCollapsed, isMobileOpen, setIsMobileOpen }) {
   const navigate = useNavigate();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [userData, setUserData] = useState({
+    name: "Admin User",
+    role: "Admin",
+    email: "",
+    initials: "AU"
+  });
   const profileRef = useRef(null);
 
-  const adminData = {
-    name: adminUser?.fullName || adminUser?.username || "Admin User",
-    role: adminUser?.isAdmin ? "Super Admin" : "Admin",
-    email: adminUser?.email || "admin@uptoskills.com",
-    initials: adminUser?.fullName
-      ? adminUser.fullName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
-      : (adminUser?.username ? adminUser.username[0].toUpperCase() : "AU")
-  };
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await axiosInstance.get("/api/user/profile");
+        const user = response.data.user;
+
+        const name = user.fullName || user.username || "Admin User";
+        const initials = name
+          .split(" ")
+          .map(n => n[0])
+          .join("")
+          .toUpperCase()
+          .substring(0, 2);
+
+        setUserData({
+          name: name,
+          role: user.username === "Super Admin" ? "Super Admin" : "Admin",
+          email: user.email,
+          initials: initials
+        });
+      } catch (error) {
+        console.error("Error fetching admin profile:", error);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   // Use shared notification context
   const { notifications, unreadCount, markAsRead } = useNotifications();
@@ -237,11 +263,11 @@ export default function AdminNavbar({ isCollapsed, setIsCollapsed, isMobileOpen,
               whileTap={{ scale: 0.98 }}
             >
               <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white shadow-md group-hover:shadow-lg transition-all font-bold">
-                {adminData.initials}
+                {userData.initials}
               </div>
-              <div className="hidden md:flex flex-col items-start min-w-[100px]">
-                <span className="text-sm font-bold text-slate-800 leading-none">{adminData.name}</span>
-                <span className="text-[10px] font-medium text-slate-500">{adminData.role}</span>
+              <div className="hidden md:flex flex-col items-start" style={{ minWidth: 'max-content' }}>
+                <span className="text-sm font-bold text-slate-800 leading-none whitespace-nowrap" style={{ display: 'inline-block', width: 'max-content' }}>{userData.name}</span>
+                <span className="text-[10px] font-medium text-slate-500 whitespace-nowrap" style={{ display: 'inline-block', width: 'max-content' }}>{userData.role}</span>
               </div>
               <ChevronDown
                 size={16}
@@ -261,16 +287,16 @@ export default function AdminNavbar({ isCollapsed, setIsCollapsed, isMobileOpen,
                   {/* Header */}
                   <div className="px-4 py-3 flex gap-3 items-center border-b">
                     <div className="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-lg">
-                      {adminData.initials}
+                      {userData.initials}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <p className="font-semibold text-slate-900">{adminData.name}</p>
-                        <span className="text-xs bg-emerald-100 text-emerald-700 px-10 py-0.5 rounded-full">
-                          {adminData.role}
+                        <p className="font-semibold text-slate-900 whitespace-nowrap" style={{ display: 'inline-block', width: 'max-content' }}>{userData.name}</p>
+                        <span className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-bold whitespace-nowrap border border-indigo-100" style={{ display: 'inline-block', width: 'max-content' }}>
+                          {userData.role}
                         </span>
                       </div>
-                      <p className="text-sm text-slate-500 truncate">{adminData.email}</p>
+                      <p className="text-sm text-slate-500 truncate">{userData.email}</p>
                     </div>
                   </div>
 

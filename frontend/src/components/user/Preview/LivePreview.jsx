@@ -342,23 +342,45 @@ const LivePreview = forwardRef((props, ref) => {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [zoomIn, zoomOut, resetZoom, goPrev, goNext, isExpanded, onExpand, onCollapse]);
+  }, [
+    zoomIn,
+    zoomOut,
+    resetZoom,
+    goPrev,
+    goNext,
+    isExpanded,
+    onExpand,
+    onCollapse,
+  ]);
 
   /* ── default layout fallback ───────────────────────────────────────────────────────── */
   const {
-    fullName, email, phone, location, linkedin, website, summary,
-    experience = [], education = [], skills = {}, projects = [], certifications = []
+    fullName,
+    email,
+    phone,
+    location,
+    linkedin,
+    website,
+    summary,
+    experience = [],
+    education = [],
+    skills = {},
+    projects = [],
+    certifications = [],
   } = formData;
 
   const isUserData = Object.values(formData).some((v) => {
     if (Array.isArray(v)) return v.length > 0 && Object.keys(v[0]).length > 1; // Assuming array of objects
-    if (typeof v === "object" && v !== null) return Object.values(v).some(arr => arr?.length > 0); // For skills arrays
+    if (typeof v === "object" && v !== null)
+      return Object.values(v).some((arr) => arr?.length > 0); // For skills arrays
     return v !== "" && v !== undefined && v !== null;
   });
 
   const PreviewContent = () => {
     const templateId = currentTemplate?.id || currentTemplate;
-    const TemplateComponent = templateId ? getTemplateComponent(templateId) : null;
+    const TemplateComponent = templateId
+      ? getTemplateComponent(templateId)
+      : null;
 
     if (TemplateComponent) {
       return (
@@ -370,7 +392,10 @@ const LivePreview = forwardRef((props, ref) => {
 
     // Default Layout logic from before
     return (
-      <div ref={resume_doc} className="w-full text-slate-800 text-sm leading-relaxed relative bg-white min-h-[1123px] p-12 overflow-hidden box-border">
+      <div
+        ref={resume_doc}
+        className="w-full text-slate-800 text-sm leading-relaxed relative bg-white min-h-[1123px] p-12 overflow-hidden box-border"
+      >
         <div className="pb-6 w-full">
           {fullName && (
             <h1 className="text-3xl font-semibold text-gray-900 mb-1 tracking-tight">
@@ -405,12 +430,9 @@ const LivePreview = forwardRef((props, ref) => {
             )}
           </div>
 
-          {(fullName ||
-            email ||
-            phone ||
-            location ||
-            linkedin ||
-            website) && <hr className="text-slate-200 mt-4" />}
+          {(fullName || email || phone || location || linkedin || website) && (
+            <hr className="text-slate-200 mt-4" />
+          )}
         </div>
 
         {summary && (
@@ -428,42 +450,42 @@ const LivePreview = forwardRef((props, ref) => {
             edu.graduationDate ||
             edu.location,
         ) && (
-            <Section title="Education">
-              {education.map(
-                (edu) =>
-                  (edu?.degree ||
-                    edu?.startDate ||
-                    edu?.graduationDate ||
-                    edu?.school ||
-                    edu?.gpa) && (
-                    <div
-                      key={edu?.id}
-                      className="border-l-2 border-slate-200 pl-4 mb-2"
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-                        <h3 className="font-medium text-slate-900">
-                          {edu?.degree}
-                        </h3>
-                        {edu?.startDate && edu?.graduationDate && (
-                          <span className="text-sm text-slate-500">
-                            {formatMonthYear(edu?.startDate)} -{" "}
-                            {formatMonthYear(edu?.graduationDate)}
-                          </span>
-                        )}
-                      </div>
-
-                      <p className="text-sm text-slate-600">{edu?.school}</p>
-
-                      {edu?.gpa && (
-                        <p className="text-sm text-slate-500">
-                          GPA: {edu?.gpa} / 10.0
-                        </p>
+          <Section title="Education">
+            {education.map(
+              (edu) =>
+                (edu?.degree ||
+                  edu?.startDate ||
+                  edu?.graduationDate ||
+                  edu?.school ||
+                  edu?.gpa) && (
+                  <div
+                    key={edu?.id}
+                    className="border-l-2 border-slate-200 pl-4 mb-2"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                      <h3 className="font-medium text-slate-900">
+                        {edu?.degree}
+                      </h3>
+                      {edu?.startDate && edu?.graduationDate && (
+                        <span className="text-sm text-slate-500">
+                          {formatMonthYear(edu?.startDate)} -{" "}
+                          {formatMonthYear(edu?.graduationDate)}
+                        </span>
                       )}
                     </div>
-                  ),
-              )}
-            </Section>
-          )}
+
+                    <p className="text-sm text-slate-600">{edu?.school}</p>
+
+                    {edu?.gpa && (
+                      <p className="text-sm text-slate-500">
+                        GPA: {edu?.gpa} / 10.0
+                      </p>
+                    )}
+                  </div>
+                ),
+            )}
+          </Section>
+        )}
 
         {experience?.some(
           (exp) =>
@@ -474,39 +496,39 @@ const LivePreview = forwardRef((props, ref) => {
             exp.endDate ||
             exp.location,
         ) && (
-            <Section title="Experience">
-              {experience.map(
-                (exp) =>
-                  (exp?.title ||
-                    exp?.company ||
-                    exp?.startDate ||
-                    exp?.endDate ||
-                    exp?.description) && (
-                    <div key={exp?.id}>
-                      <div className="mb-6">
-                        <div className="flex justify-between items-start mb-1">
-                          <div>
-                            <h3 className="text-sm font-semibold text-slate-900">
-                              {exp?.title}
-                            </h3>
-                            <p className="text-xs text-slate-500">
-                              {exp?.company}
-                            </p>
-                          </div>
-                          <span className="text-xs text-slate-500 whitespace-nowrap">
-                            {formatMonthYear(exp?.startDate)} -{" "}
-                            {!/[a-zA-Z]/.test(exp?.endDate)
-                              ? formatMonthYear(exp?.endDate)
-                              : exp?.endDate}
-                          </span>
+          <Section title="Experience">
+            {experience.map(
+              (exp) =>
+                (exp?.title ||
+                  exp?.company ||
+                  exp?.startDate ||
+                  exp?.endDate ||
+                  exp?.description) && (
+                  <div key={exp?.id}>
+                    <div className="mb-6">
+                      <div className="flex justify-between items-start mb-1">
+                        <div>
+                          <h3 className="text-sm font-semibold text-slate-900">
+                            {exp?.title}
+                          </h3>
+                          <p className="text-xs text-slate-500">
+                            {exp?.company}
+                          </p>
                         </div>
-                        <p className="mt-2 break-words">{exp.description}</p>
+                        <span className="text-xs text-slate-500 whitespace-nowrap">
+                          {formatMonthYear(exp?.startDate)} -{" "}
+                          {!/[a-zA-Z]/.test(exp?.endDate)
+                            ? formatMonthYear(exp?.endDate)
+                            : exp?.endDate}
+                        </span>
                       </div>
+                      <p className="mt-2 break-words">{exp.description}</p>
                     </div>
-                  ),
-              )}
-            </Section>
-          )}
+                  </div>
+                ),
+            )}
+          </Section>
+        )}
 
         {projects?.some(
           (project) =>
@@ -517,106 +539,106 @@ const LivePreview = forwardRef((props, ref) => {
             project?.link?.liveLink ||
             project?.link?.other,
         ) && (
-            <Section title="Projects">
-              {projects.map(
-                (prj) =>
-                  (prj?.name ||
-                    prj?.link?.github ||
-                    prj?.link?.liveLink ||
-                    prj?.link?.other ||
-                    prj?.technologies ||
-                    prj?.description) && (
-                    <div key={prj?.id} className="space-y-4">
-                      {/* Project Item */}
-                      <div className="space-y-1">
-                        <div className="flex items-start justify-between gap-4">
-                          <h3 className="font-bold text-slate-900">
-                            {prj?.name}
-                          </h3>
+          <Section title="Projects">
+            {projects.map(
+              (prj) =>
+                (prj?.name ||
+                  prj?.link?.github ||
+                  prj?.link?.liveLink ||
+                  prj?.link?.other ||
+                  prj?.technologies ||
+                  prj?.description) && (
+                  <div key={prj?.id} className="space-y-4">
+                    {/* Project Item */}
+                    <div className="space-y-1">
+                      <div className="flex items-start justify-between gap-4">
+                        <h3 className="font-bold text-slate-900">
+                          {prj?.name}
+                        </h3>
 
-                          <div className="flex gap-2">
-                            {prj?.link?.github && (
-                              <a
-                                href={prj?.link?.github}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm text-slate-500 hover:text-slate-900 underline whitespace-nowrap"
-                              >
-                                GitHub
-                              </a>
-                            )}
-                            {prj?.link?.liveLink && (
-                              <a
-                                href={prj?.link?.liveLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm text-slate-500 hover:text-slate-900 underline whitespace-nowrap"
-                              >
-                                Live
-                              </a>
-                            )}
-                            {prj?.link?.other && (
-                              <a
-                                href={prj?.link?.other}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm text-slate-500 hover:text-slate-900 underline whitespace-nowrap"
-                              >
-                                Other
-                              </a>
-                            )}
-                          </div>
+                        <div className="flex gap-2">
+                          {prj?.link?.github && (
+                            <a
+                              href={prj?.link?.github}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-slate-500 hover:text-slate-900 underline whitespace-nowrap"
+                            >
+                              GitHub
+                            </a>
+                          )}
+                          {prj?.link?.liveLink && (
+                            <a
+                              href={prj?.link?.liveLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-slate-500 hover:text-slate-900 underline whitespace-nowrap"
+                            >
+                              Live
+                            </a>
+                          )}
+                          {prj?.link?.other && (
+                            <a
+                              href={prj?.link?.other}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-slate-500 hover:text-slate-900 underline whitespace-nowrap"
+                            >
+                              Other
+                            </a>
+                          )}
                         </div>
-
-                        <p className="text-xs text-slate-600">
-                          {prj?.technologies}
-                        </p>
-
-                        <p className="text-sm text-slate-700 leading-relaxed">
-                          {prj?.description}
-                        </p>
                       </div>
+
+                      <p className="text-xs text-slate-600">
+                        {prj?.technologies}
+                      </p>
+
+                      <p className="text-sm text-slate-700 leading-relaxed">
+                        {prj?.description}
+                      </p>
                     </div>
-                  ),
-              )}
-            </Section>
-          )}
+                  </div>
+                ),
+            )}
+          </Section>
+        )}
 
         {certifications?.some(
           (cert) => cert.name || cert.issuer || cert.date || cert.link,
         ) && (
-            <Section title="Certifications">
-              <section className="space-y-4">
-                {certifications.map((cert) => (
-                  <div
-                    key={cert.id}
-                    className="flex items-start justify-between gap-4"
-                  >
-                    <div>
-                      <h3 className="text-sm font-medium text-slate-900">
-                        {cert.name}
-                      </h3>
+          <Section title="Certifications">
+            <section className="space-y-4">
+              {certifications.map((cert) => (
+                <div
+                  key={cert.id}
+                  className="flex items-start justify-between gap-4"
+                >
+                  <div>
+                    <h3 className="text-sm font-medium text-slate-900">
+                      {cert.name}
+                    </h3>
 
-                      <p className="text-sm text-slate-600">{cert.issuer}</p>
+                    <p className="text-sm text-slate-600">{cert.issuer}</p>
 
-                      <p className="text-sm text-slate-500">{cert.date}</p>
-                    </div>
-
-                    {cert.link && (
-                      <a
-                        href={cert.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-slate-500 hover:text-slate-900 underline whitespace-nowrap"
-                      >
-                        Credential
-                      </a>
-                    )}
+                    <p className="text-sm text-slate-500">{cert.date}</p>
                   </div>
-                ))}
-              </section>
-            </Section>
-          )}
+
+                  {cert.link && (
+                    <a
+                      href={cert.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-slate-500 hover:text-slate-900 underline whitespace-nowrap"
+                    >
+                      Credential
+                    </a>
+                  )}
+                </div>
+              ))}
+            </section>
+          </Section>
+        )}
 
         {(skills?.technical?.length !== 0 || skills?.soft?.length !== 0) && (
           <Section title="Skills">
@@ -1025,7 +1047,7 @@ const LivePreview = forwardRef((props, ref) => {
       >
         {inner}
       </div>,
-      document.body
+      document.body,
     );
   }
 

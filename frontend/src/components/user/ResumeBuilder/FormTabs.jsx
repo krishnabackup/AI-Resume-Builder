@@ -6,6 +6,7 @@ import {
   FolderKanban,
   Award,
   Eye,
+  EyeOff,
 } from "lucide-react";
 import { useRef } from "react";
 
@@ -19,7 +20,12 @@ const tabs = [
   { id: "skills", label: "Skills", icon: Zap },
 ];
 
-export default function FormTabs({ activeSection, setActiveSection, onTogglePreview }) {
+export default function FormTabs({
+  activeSection,
+  setActiveSection,
+  showPreview = false,
+  onTogglePreview,
+}) {
   const tabsRef = useRef(null);
   const currentIdx = tabs.findIndex((tab) => tab.id === activeSection);
   return (
@@ -37,7 +43,7 @@ export default function FormTabs({ activeSection, setActiveSection, onTogglePrev
                 <div
                   key={id}
                   onClick={() => setActiveSection(id)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all text-black select-none"
+                  className="flex items-center gap-2 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all text-black select-none md:px-4 px-2"
                 >
                   <Icon size={16} />
                   {label}
@@ -46,11 +52,13 @@ export default function FormTabs({ activeSection, setActiveSection, onTogglePrev
             );
           })}
           {/* step progress */}
-          <div className="flex flex-col gap-1 items-center justify-center text-xs flex-shrink-0">
+          <div className="flex flex-col items-center text-xs flex-wrap md:gap-2 gap-1 md:ml-4 ml-2 md:mr-0 mr-2 w-24">
             {/* Steps */}
-            <div className="text-slate-500 text-xs">step {currentIdx + 1} of 6</div>
+            <div className="text-[0.67rem] md:text-xs">
+              step {currentIdx + 1} of 6
+            </div>
             {/* Progress Bar */}
-            <div className="w-24 h-2 bg-slate-200 rounded-lg">
+            <div className="w-full h-2 bg-slate-200 rounded-lg">
               <div
                 className="h-full bg-blue-400 rounded-lg transition-all duration-200"
                 style={{ width: `${((currentIdx + 1) / 6) * 100}%` }}
@@ -60,11 +68,12 @@ export default function FormTabs({ activeSection, setActiveSection, onTogglePrev
         </div>
       </div>
 
+      {/* Mobile preview toggle (matches CV & Cover Letter) */}
       <button
         onClick={onTogglePreview}
-        aria-label="Preview Resume"
-        title="Preview Resume"
-        className="
+        aria-label={showPreview ? "Hide resume preview" : "Show resume preview"}
+        title={showPreview ? "Hide preview" : "Preview Resume"}
+        className={`
           lg:hidden
           flex-shrink-0
           flex items-center gap-1.5
@@ -72,12 +81,16 @@ export default function FormTabs({ activeSection, setActiveSection, onTogglePrev
           rounded-lg
           text-xs font-semibold
           border transition-all duration-200
-          bg-white text-slate-600 border-slate-200 hover:border-slate-400 hover:text-slate-900
-        "
+          ${
+            showPreview
+              ? "bg-slate-900 text-white border-slate-900 shadow-sm"
+              : "bg-white text-slate-600 border-slate-200 hover:border-slate-400 hover:text-slate-900"
+          }
+        `}
       >
-        <Eye size={14} />
+        {showPreview ? <EyeOff size={14} /> : <Eye size={14} />}
         <span className="hidden sm:inline">
-          Preview
+          {showPreview ? "Hide" : "Preview"}
         </span>
       </button>
     </div>

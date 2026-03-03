@@ -10,7 +10,6 @@ import { UserNotificationProvider } from "../context/UserNotificationContext";
 // Pages
 import Dashboard from "../components/user/Dashboard/Dashboard";
 import ATSChecker from "../components/user/ATSChecker/ATSChecker";
-import MyResumes from "../components/user/MyResumes/MyResumes";
 import Profile from "../components/user/Profile/EditProfile";
 import Security from "../components/user/Profile/Security";
 import ResumeBuilder from "../components/user/ResumeBuilder/ResumeBuilder";
@@ -48,7 +47,6 @@ const UserRoutes = () => {
           <Route path="cover-letter" element={<CoverLetterBuilder />} />
 
           <Route path="ats-checker" element={<ATSChecker />} />
-          <Route path="my-resumes" element={<MyResumes />} />
           <Route path="downloads" element={<Downloads />} />
           <Route path="edit-profile" element={<Profile />} />
           <Route path="security" element={<Security />} />

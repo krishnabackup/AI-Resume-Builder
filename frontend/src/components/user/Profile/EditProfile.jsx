@@ -11,7 +11,7 @@ import {
   Lock,
 } from "lucide-react";
 import "./EditProfile.css";
-import logo from "../../../assets/UptoSkills.webp";
+import UserNavBar from "../UserNavBar/UserNavBar";
 import axios from "../../../api/axios";
 import toast from "react-hot-toast";
 
@@ -28,6 +28,8 @@ const EditProfile = () => {
     github: "",
     linkedin: "",
   });
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminRequestStatus, setAdminRequestStatus] = useState("none");
   const [loading, setLoading] = useState(false);
   const [fetchingProfile, setFetchingProfile] = useState(true);
 
@@ -46,6 +48,8 @@ const EditProfile = () => {
             github: res.data.user.github || "",
             linkedin: res.data.user.linkedin || "",
           });
+          setIsAdmin(res.data.user.isAdmin || false);
+          setAdminRequestStatus(res.data.user.adminRequestStatus || "none");
         }
       } catch (err) {
         console.error(err);
@@ -77,17 +81,7 @@ const EditProfile = () => {
   return (
     <div className="edit-profile-page">
 
-      {/* 🔷 LOGO BAR */}
-      <div className="profile-logo-bar">
-        <div className="profile-logo-inner">
-          <img
-            src={logo}
-            alt="UpToSkills Logo"
-            className="profile-logo"
-            onClick={() => navigate("/user/dashboard")}
-          />
-        </div>
-      </div>
+      <UserNavBar />
 
       {/* 🔷 PAGE CONTENT */}
       <div className="profile-page-content">
@@ -97,17 +91,25 @@ const EditProfile = () => {
           <div className="profile-sidebar-card">
             <div className="profile-header-section">
               <div className="avatar-frame">
-                {formData.fullName && formData.fullName.trim()
+                {formData.fullName?.trim()
                   ? formData.fullName
-                      .split(" ")
-                      .slice(0, 2)
-                      .map((n) => n[0].toUpperCase())
-                      .join("")
+                    .trim()
+                    .split(" ")
+                    .filter(Boolean)                // remove empty strings
+                    .slice(0, 2)
+                    .map((n) => n.charAt(0).toUpperCase())
+                    .join("")
                   : "?"}
               </div>
             </div>
 
-            <h2 className="profile-name">{formData.fullName || "User"}</h2>
+            <h2 className="profile-name">
+              {formData.username && formData.username.trim()
+                ? formData.username.trim().split(" ")[0]
+                : (formData.fullName && formData.fullName.trim()
+                  ? formData.fullName.trim().split(" ")[0]
+                  : "User")}
+            </h2>
             <p className="profile-bio">{formData.bio || "No bio added"}</p>
 
             <div className="member-info">
@@ -231,15 +233,15 @@ const EditProfile = () => {
                   </div>
 
                   <div className="form-actions">
-                    <button 
+                    <button
                       className="btn-cancel"
                       onClick={() => navigate("/user/dashboard")}
                     >
                       <X size={18} /> Cancel
                     </button>
 
-                    <button 
-                      className="btn-save" 
+                    <button
+                      className="btn-save"
                       onClick={handleSave}
                       disabled={loading || fetchingProfile}
                     >
@@ -253,7 +255,7 @@ const EditProfile = () => {
 
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 

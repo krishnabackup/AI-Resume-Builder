@@ -48,6 +48,10 @@ const AIBuilderFeature = () => {
   const navigate = useNavigate();
   const isLoggedIn = !!localStorage.getItem("token");
 
+  const handleBackHome = () => {
+    navigate("/?scrollTo=features");
+  };
+
   const handleCTA = () => {
     navigate(isLoggedIn ? "/user/resume-builder" : "/login");
   };

@@ -31,7 +31,6 @@ const SidebarTailwind = ({ sidebarCollapsed, setSidebarCollapsed, activePage, se
     { id: 'resume', label: 'AI Resume Builder', icon: FileText },
     { id: 'templates', label: 'Templates', icon: Folder },
     { id: 'ats', label: 'ATS Score Checker', icon: CheckCircle },
-    { id: 'my-resumes', label: 'My Resumes', icon: Copy },
   ]
 
   return (
@@ -62,11 +61,10 @@ const SidebarTailwind = ({ sidebarCollapsed, setSidebarCollapsed, activePage, se
       <div className="mt-auto w-full">
         <button
           onClick={logout}
-          className={`w-full transition-all duration-300 ${
-            isOpen
+          className={`w-full transition-all duration-300 ${isOpen
               ? 'bg-red-50 border border-red-200 text-red-600 py-3 rounded-lg flex items-center justify-center gap-2'
               : 'mx-auto flex flex-col items-center justify-center p-2 rounded-md bg-red-50'
-          }`}
+            }`}
         >
           <LogOut className={`${isOpen ? 'w-5 h-5 text-red-600' : 'w-5 h-5 text-red-600'}`} />
           {isOpen && <span className="text-red-600 font-medium">Logout</span>}

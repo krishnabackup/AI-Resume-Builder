@@ -15,8 +15,8 @@ import NavBar from "../components/NavBar";
 import Footer from "./Footer";
 import growth from "../assets/growth1.png";
 
-const StrategicInsightsPage = () => {
-  const navigate = useNavigate();
+const StrategicInsightsPage = () => {<section className="py-12"></section>
+  const navigate = useNavigate();<div className="mt-1 grid gap-10 lg:grid-cols-3"></div>
   const isLoggedIn =
     typeof window !== "undefined" && !!localStorage.getItem("token");
 

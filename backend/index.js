@@ -7,6 +7,7 @@ import cookieParser from "cookie-parser";
 import path from "path";
 import { fileURLToPath } from "url";
 import notificationRoutes from "./routers/notification.router.js";
+ 
 
 // Routers
 import authRouter from "./routers/auth.router.js";
@@ -15,7 +16,12 @@ import templateRouter from "./routers/template.router.js";
 import resumeRouter from "./routers/resume.router.js";
 import templateVisibilityRouter from "./routers/templateVisibility.router.js";
 import planRouter from "./routers/plan.router.js";
+
+import downloadsRouter from "./routers/downloads.router.js";
+import coverLetterRouter from "./routers/coverletter.js";  // ✅ NEW
+
 import chatbotRouter from "./routers/chatbot.router.js";
+
 
 // Config
 import connectDB from "./config/db.js";
@@ -37,6 +43,10 @@ const __dirname = path.dirname(__filename);
 app.use(express.json());
 app.use(cookieParser());
 
+// ✅ UPDATED: Larger JSON limit for HTML content
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
 // Allow CORS from local dev frontends
 app.use(
   cors({
@@ -56,12 +66,15 @@ app.use("/api/user", userRouter);
 app.use("/api/template", templateRouter);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/resume", resumeRouter);
+app.use("/api/coverletter", coverLetterRouter);  // ✅ NEW
 app.use("/api/template-visibility", templateVisibilityRouter);
 app.use("/api/plans", planRouter);
 app.use("/api/chatbot", chatbotRouter);
 
 // Serve uploads directory (for images/resumes)
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+app.use("/api/downloads", downloadsRouter);
 
 // Error handling middleware (add before listen)
 app.use((err, req, res, next) => {
@@ -92,8 +105,6 @@ const bootstrapAdmin = async () => {
       });
       await newAdmin.save();
       console.log(`✅ Admin user created: ${adminEmail}`);
-    } else {
-      console.log(`ℹ️ Admin user already exists: ${adminEmail} (ID: ${adminExists._id})`);
     }
   } catch (error) {
     console.error("❌ Error bootstrapping admin:", error);

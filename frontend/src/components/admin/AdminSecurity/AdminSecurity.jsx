@@ -33,35 +33,33 @@ export default function AdminSecurity() {
             return;
         }
 
+
         if (form.newPassword !== form.confirmPassword) {
             toast.error("Passwords do not match");
             return;
         }
 
-        const promise = axios.put("/api/user/password", {
-            currentPassword: form.currentPassword,
-            newPassword: form.newPassword,
-        });
-
-        toast.promise(promise, {
-            loading: 'Updating password...',
-            success: (res) => {
-                setForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
-                return res.data?.message || "Password updated successfully";
-            },
-            error: (err) => err?.response?.data?.message || "Failed to update password"
-        });
-
         try {
             setLoading(true);
-            await promise;
+            const res = await axios.put("/api/auth/change-password", {
+                oldPassword: form.currentPassword,
+                newPassword: form.newPassword,
+            });
+            console.log("Password change response:", res.data);
+            toast.success(res.data?.message || "Password updated successfully");
+            setForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+
+            // Redirect to login after successful password change due to cookie clearing
+            setTimeout(() => {
+                navigate("/login");
+            }, 2000);
         } catch (err) {
-            console.error("Password update error:", err);
+            console.error(err);
+            toast.error(err?.response?.data?.message || "Something went wrong. Try again.");
         } finally {
             setLoading(false);
         }
     };
-
 
     return (
         <div className="w-full min-h-[calc(100vh-64px)] bg-slate-50 flex items-center justify-center px-4 py-8">

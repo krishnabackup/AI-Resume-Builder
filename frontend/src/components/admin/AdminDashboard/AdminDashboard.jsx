@@ -30,42 +30,38 @@ export default function AdminDashboard() {
   const [userGrowth, setUserGrowth] = useState([]);
   const [dailyActivity, setDailyActivity] = useState([]);
 
-  /* ------------------ COLORS ------------------ */
+  /* ------------------ DUMMY DATA ------------------ */
   const colors = ["#6366F1", "#22C55E", "#F59E0B", "#EC4899"];
 
   const stats = [
     {
       title: "Total Users",
-      value: totalUser.toLocaleString(),
-      change: totalUserChange,
-      isNegative: totalUserChange < 0,
+      value: totalUser,
+      change: `+${totalUserChange}%`,
       icon: Users,
       color: "text-blue-600",
       bg: "bg-blue-50",
     },
     {
       title: "Resumes Generated",
-      value: totalResumeGen.toLocaleString(),
-      change: totalResumeGenChange,
-      isNegative: totalResumeGenChange < 0,
+      value: totalResumeGen,
+      change: `+${totalResumeGenChange}%`,
       icon: FileText,
       color: "text-indigo-600",
       bg: "bg-indigo-50",
     },
     {
       title: "Active Subscriptions",
-      value: totalActiveSub.toLocaleString(),
-      change: totalActiveSubChange,
-      isNegative: totalActiveSubChange < 0,
+      value: totalActiveSub,
+      change: `+${totalActiveSubChange}%`,
       icon: CreditCard,
       color: "text-purple-600",
       bg: "bg-purple-50",
     },
     {
       title: "Total Revenue",
-      value: `₹${totalRevenue.toLocaleString()}`,
-      change: totalRevenueChange,
-      isNegative: totalRevenueChange < 0,
+      value: `$ ${totalRevenue}`,
+      change: `+${totalRevenueChange}%`,
       icon: DollarSign,
       color: "text-green-600",
       bg: "bg-green-50",
@@ -120,10 +116,7 @@ export default function AdminDashboard() {
                 <div>
                   <p className="text-xs sm:text-sm text-gray-500">{item.title}</p>
                   <p className="text-xl sm:text-2xl font-bold">{item.value}</p>
-                  <p className={`text-xs sm:text-sm font-medium ${item.isNegative ? 'text-red-600' : 'text-green-600'}`}>
-                    {item.change > 0 && "+"}
-                    {item.change}%
-                  </p>
+                  <p className="text-xs sm:text-sm text-green-600">{item.change}</p>
                 </div>
                 <div className={`p-2 sm:p-3 rounded-xl ${item.bg} ${item.color}`}>
                   <Icon size={20} className="sm:w-[22px] sm:h-[22px]" />
@@ -211,25 +204,20 @@ export default function AdminDashboard() {
 
             {/* Custom Legend */}
             <div className="flex flex-wrap justify-center gap-2 sm:gap-6 mt-2 sm:mt-4">
-              {subscriptionSplit.map((item, i) => {
-                const total = subscriptionSplit.reduce((acc, curr) => acc + curr.value, 0);
-                const percentage = total > 0 ? ((item.value / total) * 100).toFixed(1) : 0;
-
-                return (
-                  <div
-                    key={item.name}
-                    className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm"
-                  >
-                    <span
-                      className="w-2 h-2 sm:w-3 sm:h-3 rounded-full"
-                      style={{ backgroundColor: colors[i % colors.length] }}
-                    />
-                    <span className="text-gray-600 whitespace-nowrap">
-                      {item.name}: <span className="font-semibold text-slate-900">{item.value}</span> ({percentage}%)
-                    </span>
-                  </div>
-                );
-              })}
+              {subscriptionSplit.map((item, i) => (
+                <div
+                  key={item.name}
+                  className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm"
+                >
+                  <span
+                    className="w-2 h-2 sm:w-3 sm:h-3 rounded-full"
+                    style={{ backgroundColor: colors[i] }}
+                  />
+                  <span className="text-gray-600 whitespace-nowrap">
+                    {item.name} ({item.value}%)
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
 

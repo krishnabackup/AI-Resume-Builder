@@ -19,8 +19,7 @@ export const templates = [
   { id: "elite", name: "Elite ", category: "Creative" },
   { id: "eclipse", name: "Eclipse", category: "Contemporary" },
   { id: "eclipse1", name: "Eclipse", category: "Traditional" },
-  { id: "harbor", name: "Harbor", category: "Creative",
-  },
+  { id: "harbor", name: "Harbor", category: "Creative" },
 ];
 
 /* ----------------------------- Card ----------------------------- */

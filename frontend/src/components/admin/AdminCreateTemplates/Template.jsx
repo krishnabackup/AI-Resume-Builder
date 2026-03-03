@@ -144,21 +144,21 @@ export default function AdminTemplates() {
             <h2 className="text-lg font-semibold text-orange-600">
               Pending Reviews ({pendingTemplates.length})
             </h2>
-               <div className="flex gap-4 overflow-x-auto pb-3 snap-x snap-mandatory 
-                sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4
-                scrollbar-hide">        
-                {pendingTemplates.map((tpl) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {pendingTemplates.map((tpl) => (
                 <div
-                 key={tpl._id}
-                 className="bg-orange-50 border border-orange-200 rounded-xl p-3 
-                 min-w-[220px] sm:min-w-0 snap-start"
-                 >
-                  <div className="relative w-full aspect-[3/4] sm:aspect-[210/297]bg-white rounded-lg overflow-hidden mb-3">
-                    <img
-                      src={tpl.imageUrl}
-                      alt={tpl.name}
-                      className="w-full h-full object-cover"
-                    />
+                  key={tpl._id}
+                  className="bg-orange-50 border border-orange-200 rounded-xl p-3"
+                >
+                  <div className="relative w-full aspect-[210/297] bg-white rounded-lg overflow-hidden mb-3">
+                   <img
+  src={tpl.image}
+  alt={tpl.name}
+  className="w-full h-full object-cover"
+  onError={(e) => {
+    e.target.src = CV_PLACEHOLDER;
+  }}
+/>
                   </div>
                   <h3 className="text-sm font-semibold text-slate-800">
                     {tpl.name}
@@ -192,19 +192,18 @@ export default function AdminTemplates() {
                     View All ({templates.length})
                   </button>
                 </div>
-                <div className="flex gap-4 overflow-x-auto pb-3 snap-x snap-mandatory 
-                sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4
-                scrollbar-hide">                     {templates.map((tpl, index) => {
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {templates.map((tpl, index) => {
                     const active = isTemplateActive(tpl._id);
                     return (
                       <div
-                     key={index}
-                 className={`bg-white border rounded-xl p-3 transition relative 
-                   min-w-[160px] sm:min-w-0 snap-start ${active
-                   ? "border-slate-200 hover:shadow-lg"
-                   : "border-slate-100 opacity-75 grayscale-[0.5]"
-                     }`}
-                     >
+                        key={index}
+                        className={`bg-white border rounded-xl p-3 transition relative ${active
+                          ? "border-slate-200 hover:shadow-lg"
+                          : "border-slate-100 opacity-75 grayscale-[0.5]"
+                          }`}
+                      >
                         {/* Status Badge */}
                         <div
                           className={`absolute top-5 right-5 z-10 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border shadow-sm ${active
@@ -220,11 +219,15 @@ export default function AdminTemplates() {
                           className="relative w-full aspect-[210/297] bg-slate-100 rounded-lg overflow-hidden cursor-pointer"
                           onClick={() => handlePreview(tpl.image)}
                         >
-                          <img
-                            src={tpl.image}
-                            alt={tpl.name}
-                            className="w-full h-full object-cover"
-                          />
+                         <img
+  src={tpl.image}
+  alt={tpl.name}
+  className="w-full h-full object-cover"
+  onError={(e) => {
+    e.target.onerror = null; // prevent infinite loop
+    e.target.src = CV_PLACEHOLDER;
+  }}
+/>
                           <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
                             <Eye
                               className="text-white drop-shadow-md"

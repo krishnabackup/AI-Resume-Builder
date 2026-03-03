@@ -33,32 +33,6 @@
 /* Each stat card */
 .dashboard-stats>div {
   flex: 1;
-  background: #fff;
-  padding: 18px 24px;
-  border-radius: 14px;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  font-weight: 600;
-  font-size: 1.1rem;
-  color: #1a1a2e;
-}
-
-/* Stat icon */
-.dashboard-stats>div img {
-  width: 28px;
-  height: 28px;
-  object-fit: contain;
-  filter: grayscale(50%) contrast(120%);
-}
-
-/* Stat number bigger and right aligned */
-.stat-value {
-  font-size: 1.7rem;
-  font-weight: 700;
-  margin-left: auto;
-  color: #111827;
 }
 
 /* Main content grid */
@@ -188,10 +162,7 @@
 }
 
 
-.dashboard-stats>div {
-  font-size: 1rem;
-  padding: 14px 18px;
-}
+
 
 
 /* ===============================

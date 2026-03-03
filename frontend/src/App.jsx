@@ -26,12 +26,12 @@ import CoverLetterExamples from "./pages/CoverLetterExamples";
 import CVFormattingPage from "./pages/CV";
 import WritingCoverLetter from "./pages/WritingCoverLetter"
 
-import { Toaster } from "react-hot-toast";
 import ScrollToTop from "./components/ScrollToTop";
 import RequireAuth from "./components/RequireAuth";
 import PrivacyPolicy from "./pages/Privacypolicy";
 import ResumeChecker from "./pages/ResumeChecker";
 import Terms from "./pages/Terms";
+import LandingPageLayouts from "./pages/LandingPageLayouts";
 import NotFound from "./pages/NotFound";
 
 // ================= ADMIN =================
@@ -57,24 +57,10 @@ import ResumeGuide from "./pages/ResumeGuide";
 import ResumeExamplesPage from "./pages/ResumeExample";
 import CoverLetterTemplates from "./pages/CoverLetterTemplates";
 import Faq from "./pages/Faq";
-import LandingPageLayout from "./pages/LandingPageLayouts";
 
 function App() {
   return (
     <BrowserRouter>
-      <Toaster
-        position="top-right"
-        reverseOrder={false}
-        containerStyle={{
-          zIndex: 99999,
-        }}
-        toastOptions={{
-          duration: 4000,
-          style: {
-            zIndex: 99999,
-          },
-        }}
-      />
       <ScrollToTop />
       <div className="flex flex-col min-h-screen">
         <Routes>
@@ -86,7 +72,8 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route element={<LandingPageLayout />}>
+
+          <Route element={<LandingPageLayouts />}>
             <Route path="/" element={<Home />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/HelpCenter" element={<HelpCenter />} />
@@ -120,9 +107,8 @@ function App() {
             <Route path="/cv" element={<CVFormattingPage />} />
             <Route path="/WritingCoverLetter" element={<WritingCoverLetter />} />
           </Route>
-
           {/* ================= USER DASHBOARD ROUTES ================= */}
-          <Route path="/user/*" element={<RequireAuth allowedRoles={['user', 'admin']}><UserRoutes /></RequireAuth>} />
+          <Route path="/user/*" element={<RequireAuth allowedRoles={['user']}><UserRoutes /></RequireAuth>} />
 
           {/* ================= ADMIN ROUTES ================= */}
           <Route path="/admin" element={<RequireAuth allowedRoles={['admin']}><AdminLayout /></RequireAuth>}>

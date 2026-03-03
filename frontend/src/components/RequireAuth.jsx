@@ -25,7 +25,8 @@ export default function RequireAuth({ children, allowedRoles }) {
       if (allowedRoles && allowedRoles.length > 0) {
         if (allowedRoles.includes('admin') && isAdmin) {
           setIsAuthorized(true)
-        } else if (allowedRoles.includes('user') && !isAdmin) {
+        } else if (allowedRoles.includes('user')) {
+          // Both users and admins can access user pages
           setIsAuthorized(true)
         } else {
           setIsAuthorized(false)

@@ -1,22 +1,19 @@
-import {
-  User,
-  Briefcase,
-  FileText,
-  Send,
-  Building2,
-  Eye,
-} from 'lucide-react';
-import { useRef } from 'react';
+import { User, Briefcase, FileText, Send, Building2, Eye } from "lucide-react";
+import { useRef } from "react";
 
 const tabs = [
-  { id: 'sender', label: 'Personal', icon: User },
-  { id: 'recipient', label: 'Recipient', icon: Building2 },
-  { id: 'job', label: 'Job Details', icon: Briefcase },
-  { id: 'body', label: 'Content', icon: FileText },
-  { id: 'closing', label: 'Closing', icon: Send }
+  { id: "sender", label: "Personal", icon: User },
+  { id: "recipient", label: "Recipient", icon: Building2 },
+  { id: "job", label: "Job Details", icon: Briefcase },
+  { id: "body", label: "Content", icon: FileText },
+  { id: "closing", label: "Closing", icon: Send },
 ];
 
-const CoverLetterFormTabs = ({ activeSection, setActiveSection, onTogglePreview }) => {
+const CoverLetterFormTabs = ({
+  activeSection,
+  setActiveSection,
+  onTogglePreview,
+}) => {
   const tabsRef = useRef(null);
   const currentIdx = tabs.findIndex((tab) => tab.id === activeSection);
 
@@ -46,7 +43,9 @@ const CoverLetterFormTabs = ({ activeSection, setActiveSection, onTogglePreview 
           {/* step progress */}
           <div className="flex flex-col gap-1 items-center justify-center text-xs flex-shrink-0">
             {/* Steps */}
-            <div className="text-slate-500 text-xs">step {currentIdx + 1} of 5</div>
+            <div className="text-slate-500 text-xs">
+              step {currentIdx + 1} of 5
+            </div>
             {/* Progress Bar */}
             <div className="w-24 h-2 bg-slate-200 rounded-lg">
               <div
@@ -74,9 +73,7 @@ const CoverLetterFormTabs = ({ activeSection, setActiveSection, onTogglePreview 
         "
       >
         <Eye size={14} />
-        <span className="hidden sm:inline">
-          Preview
-        </span>
+        <span className="hidden sm:inline">Preview</span>
       </button>
     </div>
   );

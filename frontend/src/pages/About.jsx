@@ -364,7 +364,7 @@ const AboutUs = () => {
   {/* Image */}
 <img
   src={Success}
-  alt="Student Success"
+  alt="Studet Success"
   className="relative w-full max-w-none lg:w-[110%] xl:w-[120%] h-auto object-contain drop-shadow-2xl rounded-2xl backdrop-blur-sm"
 />
 

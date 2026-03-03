@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Check, X, Eye, Download } from "lucide-react";
-import axios from "../../../api/axios";
-import { toast } from "react-hot-toast";
+import axios from "axios";
 
 export default function AdminAcceptUser() {
   const [requests, setRequests] = useState([]);
@@ -11,7 +10,9 @@ export default function AdminAcceptUser() {
 
   const fetchPendingTemplates = async () => {
     try {
-      const response = await axios.get("/api/template?status=pending");
+      const response = await axios.get("http://localhost:5000/api/template?status=pending");
+      // Transform API data to match UI expectations if needed, or just use as is
+      // The controller returns fields: _id, name, category, fileUrl, imageUrl, description, etc.
       setRequests(response.data);
       setLoading(false);
     } catch (err) {
@@ -26,35 +27,26 @@ export default function AdminAcceptUser() {
   }, []);
 
   const handleAction = async (id, action) => {
-    const isReject = action === "rejected";
-
-    if (isReject && !window.confirm("Are you sure you want to reject and delete this template?")) {
-      return;
-    }
-
-    const url = isReject
-      ? `/api/template/${id}`
-      : `/api/template/approve/${id}`;
-
-    const method = isReject ? 'delete' : 'put';
-    const promise = axios[method](url);
-
-    toast.promise(promise, {
-      loading: isReject ? 'Rejecting template...' : 'Approving template...',
-      success: () => {
-        setRequests((prev) => prev.filter((t) => t._id !== id));
-        return isReject ? "Template rejected" : "Template approved";
-      },
-      error: (err) => err?.response?.data?.message || `Failed to ${action} template`
-    });
-
     try {
-      await promise;
+      if (action === "approved") {
+        await axios.put(`http://localhost:5000/api/template/approve/${id}`);
+        alert("Template approved successfully!");
+      } else if (action === "rejected") {
+        if (window.confirm("Are you sure you want to reject and delete this template?")) {
+          await axios.delete(`http://localhost:5000/api/template/${id}`);
+          alert("Template rejected and deleted.");
+        } else {
+          return; // Cancel action
+        }
+      }
+
+      // Remove from local list
+      setRequests((prev) => prev.filter((t) => t._id !== id));
     } catch (err) {
-      console.error(`Error during ${action}:`, err);
+      console.error(`Error ${action} template:`, err);
+      alert(`Failed to ${action} template.`);
     }
   };
-
 
   if (loading) return <div className="p-6">Loading pending requests...</div>;
   if (error) return <div className="p-6 text-red-500">{error}</div>;

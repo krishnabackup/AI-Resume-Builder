@@ -14,8 +14,9 @@ import {
   RefreshCw,
   CheckCircle,
   MousePointer2,
-} from "lucide-react";
-import Footer from "./Footer";
+  ArrowLeft
+} from 'lucide-react';
+import Footer from "./Footer"
 import { useNavigate } from "react-router-dom";
 import CV from "../assets/CV1.png";
 import NavBar from "../components/NavBar";

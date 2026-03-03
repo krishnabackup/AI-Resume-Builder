@@ -306,7 +306,7 @@ const ResumeGuide = () => {
       </section>
 
       {/* --- CONTENT TRANSFORMATION (BEFORE & AFTER) --- */}
-      <section className="px-8 py-19 bg-gray-50/50">
+      <section className="px-8 py-24 bg-gray-50/50">
         <div className="max-w-5xl mx-auto text-center">
           <h2 className="text-4xl font-black text-[#1a2e52] mb-4">
             From Tasks to Achievements
@@ -350,16 +350,61 @@ const ResumeGuide = () => {
       </section>
 
       {/* --- RESUME FORMATS: THE BLUEPRINT SELECTION --- */}
-      <section className="px-8 py-20 bg-slate-50/50">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-16 text-center">
-            <h2 className="text-4xl font-black text-[#1a2e52] tracking-tighter">
-              Choose Your Architecture.
-            </h2>
-            <p className="mt-4 font-medium text-gray-500">
-              Select the structural layout that best represents your career
-              journey.
-            </p>
+<section className="px-8 py-24 bg-slate-50/50">
+  <div className="mx-auto max-w-7xl">
+    <div className="mb-16 text-center">
+      <h2 className="text-4xl font-black text-[#1a2e52] tracking-tighter">Choose Your Architecture.</h2>
+      <p className="mt-4 font-medium text-gray-500">Select the structural layout that best represents your career journey.</p>
+    </div>
+
+    <div className="grid gap-6 md:grid-cols-3">
+      {[
+        { 
+          title: "Reverse-Chronological", 
+          use: "Best for: Continuous growth", 
+          desc: "The gold standard. Lists experience from most recent to oldest. Highly preferred by 99% of recruiters.",
+          tag: "Most Popular"
+        },
+        { 
+          title: "Functional / Skills-Based", 
+          use: "Best for: Career changers", 
+          desc: "Focuses on professional strengths and competencies rather than a timeline of job titles.",
+          tag: "Specialized"
+        },
+        { 
+          title: "Combination (Hybrid)", 
+          use: "Best for: Senior professionals", 
+          desc: "Balances a strong skills summary with a detailed chronological history of achievements.",
+          tag: "Expert Level"
+        }
+      ].map((format, i) => (
+        <div key={i} className="p-8 bg-white border border-gray-100 rounded-[2.5rem] hover:shadow-xl transition-all group">
+          <span className="text-[10px] font-black uppercase tracking-widest text-[#0077cc] bg-blue-50 px-3 py-1 rounded-full">{format.tag}</span>
+          <h4 className="mt-6 mb-2 text-xl font-bold text-[#1a2e52]">{format.title}</h4>
+          <p className="text-sm font-bold text-[#0077cc] mb-4">{format.use}</p>
+          <p className="text-sm leading-relaxed text-gray-500">{format.desc}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+       {/* --- HEADER COMPLIANCE: THE MODERN STANDARD --- */}
+<section className="px-8 py-24 bg-white">
+  <div className="mx-auto max-w-5xl bg-[#1a2e52] rounded-[4rem] overflow-hidden relative">
+    <div className="absolute top-0 right-0 w-64 h-64 -mt-32 -mr-32 rounded-full bg-blue-500/10 blur-3xl" />
+    
+    <div className="relative z-10 flex flex-col items-center gap-12 p-12 md:p-16 lg:flex-row">
+      <div className="flex-1 text-center lg:text-left">
+        <h2 className="mb-6 text-3xl font-black text-white md:text-4xl">The "Clean Header" Protocol</h2>
+        <p className="mb-8 leading-relaxed text-blue-100/70">
+          Modern recruiting focuses on merit. Including unnecessary personal data can trigger unconscious bias or ATS errors.
+        </p>
+        
+        <div className="flex flex-wrap justify-center gap-4 lg:justify-start">
+          <div className="px-6 py-4 border bg-white/5 border-white/10 rounded-2xl">
+            <span className="block mb-1 text-xs font-black tracking-widest text-red-400 uppercase">Remove These:</span>
+            <p className="text-sm font-medium text-white/80">DOB, Photos, Marital Status</p>
           </div>
 
           <div className="grid gap-6 md:grid-cols-3">
@@ -403,7 +448,30 @@ const ResumeGuide = () => {
             ))}
           </div>
         </div>
-      </section>
+      </div>
+      
+      <div className="w-full lg:w-1/3 p-8 bg-white/10 rounded-[2.5rem] border border-white/10 backdrop-blur-md">
+        <ShieldAlert className="mb-4 text-orange-400" size={32} />
+        <p className="text-sm italic font-medium leading-relaxed text-blue-50">
+          "In many regions, including a photo is grounds for immediate resume deletion to comply with anti-discrimination laws."
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+   
+       {/* --- SKILL ZONING: BENTO GRID --- */}
+<section className="px-8 py-24 bg-white">
+  <div className="mx-auto max-w-7xl">
+    <div className="flex flex-col items-end justify-between gap-6 mb-16 lg:flex-row">
+      <div className="max-w-xl">
+        <h2 className="text-4xl font-black text-[#1a2e52] tracking-tighter">Strategic Skill Zoning.</h2>
+        <p className="mt-4 font-medium text-gray-500">Don't just list skills; categorize them to show your full professional spectrum.</p>
+      </div>
+      <button className="flex items-center gap-2 px-6 py-3 text-sm font-bold transition-all border border-gray-200 rounded-xl hover:bg-gray-50">
+        See Full Skill List <ArrowRight size={16} />
+      </button>
+    </div>
 
       {/* --- HEADER COMPLIANCE: THE MODERN STANDARD --- */}
       <section className="px-8 py-19 bg-white">

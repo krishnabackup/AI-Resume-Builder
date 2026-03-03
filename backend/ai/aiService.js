@@ -16,11 +16,19 @@ function getGroqClient() {
   return groq;
 }
 
+async function getAIResponse(prompt, temperature) {
+  let groq = getGroqClient();
+  if (!groq) return "AI Service Unavailable";
+  const response = await groq.chat.completions.create({
+    model: "llama-3.1-8b-instant",   // WORKING MODEL
+    messages: [{ role: "user", content: prompt }],
+    temperature: temperature ?? 0.6
+  });
+  return response.choices[0].message.content?.trim() || "No Response from AI";
+}
+
 export async function generateResumeAI(data) {
   try {
-    let groq = getGroqClient();
-    if (!groq) return "AI Service Unavailable";
-
     console.log("AI FUNCTION CALLED");
     console.log("INPUT DATA:", data);
     const formatEducation = (education = []) =>
@@ -93,15 +101,8 @@ export async function generateResumeAI(data) {
 
       Example format: "I am a skilled software developer with expertise in..."
     `;
-
-    const response = await groq.chat.completions.create({
-      model: "llama-3.1-8b-instant",   // WORKING MODEL
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.6
-    });
-
-    return response.choices[0].message.content;
-
+    const response = await getAIResponse(prompt);
+    return response;
   } catch (error) {
     console.error("AI SERVICE ERROR:", error);
     throw error;
@@ -110,9 +111,6 @@ export async function generateResumeAI(data) {
 
 export async function refineExperienceDescription(data) {
   try {
-    let groq = getGroqClient();
-    if (!groq) throw new Error("AI Service Unavailable");
-
     console.log("AI FUNCTION CALLED");
     console.log("INPUT DATA:", data);
     const prompt = `
@@ -158,15 +156,8 @@ export async function refineExperienceDescription(data) {
       EXPERIENCE DESCRIPTION (rewrite ONLY this text):
       <<<${data.description}>>>
     `;
-
-    const response = await groq.chat.completions.create({
-      model: "llama-3.1-8b-instant",   // WORKING MODEL
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.6
-    });
-
-    return response.choices[0].message.content;
-
+    const response = await getAIResponse(prompt);
+    return response;
   } catch (error) {
     console.error("AI SERVICE ERROR:", error);
     throw error;
@@ -175,9 +166,6 @@ export async function refineExperienceDescription(data) {
 
 export async function refineProjectDescription(data) {
   try {
-    let groq = getGroqClient();
-    if (!groq) throw new Error("AI Service Unavailable");
-
     console.log("AI FUNCTION CALLED");
     console.log("INPUT DATA:", data);
     const prompt = `
@@ -223,15 +211,8 @@ export async function refineProjectDescription(data) {
       EXPERIENCE DESCRIPTION (rewrite ONLY this text):
       <<<${data.description}>>>
     `;
-
-    const response = await groq.chat.completions.create({
-      model: "llama-3.1-8b-instant",   // WORKING MODEL
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.6
-    });
-
-    return response.choices[0].message.content;
-
+    const response = await getAIResponse(prompt);
+    return response;
   } catch (error) {
     console.error("AI SERVICE ERROR:", error);
     throw error;
@@ -327,16 +308,8 @@ export const generateCoverLetterAI = async (jobDetails, sectionType) => {
       default:
         throw new Error("Invalid section type");
     }
-
-    const response = await client.chat.completions.create({
-      model: "llama-3.1-8b-instant",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.7,
-      max_tokens: 250,
-    });
-
-    return response.choices[0].message.content.trim();
-
+    const response = await getAIResponse(prompt, 0.7);
+    return response;
   } catch (error) {
     console.error("❌ AI COVER LETTER ERROR:", error);
     throw error;
@@ -347,7 +320,6 @@ export const generateCoverLetterAI = async (jobDetails, sectionType) => {
 // ✅ 4. Extract Data from Resume Text (FIX #1)
 export async function extractResumeData(resumeText) {
   try {
-    const groq = getGroqClient();
     console.log("Extracting resume data from text...");
 
     const prompt = `
@@ -362,14 +334,8 @@ export async function extractResumeData(resumeText) {
       }
       Resume: ${resumeText.substring(0, 4000)}
     `;
-
-    const response = await groq.chat.completions.create({
-      model: "llama-3.1-8b-instant",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.1
-    });
-
-    return JSON.parse(response.choices[0].message.content);
+    const response = await getAIResponse(prompt, 0.1);
+    return JSON.parse(response);
   } catch (error) {
     console.error("Resume extraction failed:", error);
     return {
@@ -408,12 +374,6 @@ export async function parseResume(resumeFilePath) {
 
 export async function chatBotAPIResponse(userQuestion, history, isLoggedin) {
   try {
-    const groq = getGroqClient();
-    if (!groq) {
-      console.warn("⚠️ AI Service unavailable (Missing API Key)");
-      throw new Error("AI Service unavailable (Missing API Key)");
-    }
-
     function formatChatHistory(history) {
       return history
         .map(msg => {
@@ -622,14 +582,8 @@ export async function chatBotAPIResponse(userQuestion, history, isLoggedin) {
 
       Respond strictly following all rules above.
     `;
-
-    const response = await groq.chat.completions.create({
-      model: "llama-3.1-8b-instant",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.6
-    });
-
-    return response.choices[0].message.content;
+    const response = await getAIResponse(prompt);
+    return response;
   } catch (error) {
     console.error("AI SERVICE ERROR:", error);
     throw error;

@@ -6,9 +6,10 @@ import {
   History,
   ArrowRight,
   CheckCircle2,
-  UploadCloud,
-  Link2,
-  FileDown,
+  MousePointerClick,
+  UploadCloud, 
+  Link2, 
+  FileDown, 
   MousePointer2,
   ArrowLeft,
 } from "lucide-react";
@@ -134,11 +135,10 @@ const SimpleCoverLetterPage = () => {
 
           <div className="mb-12 space-y-6 text-lg text-gray-600">
             <p>
-              A cover letter is a professional document that accompanies your
-              resume to provide a detailed introduction of your skills,
-              experiences, and interests in a specific job role. It acts as a
-              bridge between your technical qualifications and the unique value
-              you bring to a potential employer.
+              A cover letter is a professional document that accompanies your resume to provide a
+              detailed introduction of your skills, experiences, and interest in a specific job role.
+              It acts as a bridge between your technical qualifications and the unique value you bring
+              to a potential employer.
             </p>
             <p>
               Our AI Cover Letter builder analyzes the job description and your
@@ -207,19 +207,17 @@ const SimpleCoverLetterPage = () => {
               </span>
               <h3 className="mb-6 text-2xl font-bold">Manual Writing</h3>
               <ul className="space-y-4">
-                {[
-                  "Generic Greetings",
-                  "Hours of Editing",
-                  "Zero Keyword Optimization",
-                ].map((text, i) => (
-                  <li
-                    key={i}
-                    className="flex items-center gap-3 text-sm font-medium text-gray-500"
-                  >
-                    <span className="w-2 h-2 transition-colors bg-gray-300 rounded-full group-hover/old:bg-red-400" />{" "}
-                    {text}
-                  </li>
-                ))}
+                {["Generic Greetings", "Hours of editing", "Zero Keyword Optimization"].map(
+                  (text, i) => (
+                    <li
+                      key={i}
+                      className="flex items-center gap-3 text-sm font-medium text-gray-500"
+                    >
+                      <span className="w-2 h-2 transition-colors bg-gray-300 rounded-full group-hover/old:bg-red-400" />{" "}
+                      {text}
+                    </li>
+                  )
+                )}
               </ul>
             </div>
 
@@ -233,7 +231,7 @@ const SimpleCoverLetterPage = () => {
               <h3 className="mb-6 text-2xl font-bold">AI Builder</h3>
               <ul className="space-y-4">
                 {[
-                  "Tailored to specific job role",
+                  "Tailored to specific Job Role",
                   "Finished in under 10 seconds",
                   "Guaranteed ATS compatibility",
                 ].map((text, i) => (

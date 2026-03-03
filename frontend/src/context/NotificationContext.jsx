@@ -23,9 +23,9 @@ export const NotificationProvider = ({ children }) => {
         try {
             console.log('Fetching notifications from /api/notifications/admin');
             const response = await axiosInstance.get('/api/notifications/admin');
-
+            
             console.log('Notification response:', response.data);
-
+            
             if (response.data.success && response.data.data) {
                 // Transform backend data to UI format
                 const transformedNotifications = response.data.data.map((notif) => {
@@ -60,13 +60,11 @@ export const NotificationProvider = ({ children }) => {
                         'PREMIUM_ACTIVATED': 'premium_activated',
                         'PAYMENT_RECEIVED': 'payment_received',
                         'NEW_USER': 'new_user',
-                        'ROLE_CHANGED': 'security_alert',
-                        'USER_ROLE_UPDATED': 'system_alert',
                     };
 
                     // Get username from userId object
-                    const username = typeof notif.userId === 'object'
-                        ? notif.userId?.username
+                    const username = typeof notif.userId === 'object' 
+                        ? notif.userId?.username 
                         : notif.userId;
 
                     return {

@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import React from "react";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import featureImage1 from "../assets/rejection.png";
 import featureImage2 from "../assets/advice2.png";
 import featureImage3 from "../assets/solve.png";
@@ -428,13 +429,12 @@ function LandingPage() {
                 <img
                   src={step.image}
                   alt={step.heading}
-                  // className="w-1/2 h-full object-contain rounded-3xl transition-transform duration-500"
-                  className="w-full md:w-1/2 h-auto object-contain rounded-3xl transition-transform duration-500"
+                  className="w-1/2 h-full object-contain rounded-3xl transition-transform duration-500"
                 />
 
                 {/* TEXT CONTENT */}
                 <div className="w-full space-y-3 md:space-y-6 md:w-1/2">
-                  <span className="text-[#0077cc] font-black text-4xl md:text-6xl opacity-50">
+                  <span className="text-[#0077cc] font-black text-4xl md:text-6xl opacity-10">
                     0{index + 1}
                   </span>
                   <h3 className="text-2xl md:text-3xl font-bold text-[#1a2e52] leading-tight">

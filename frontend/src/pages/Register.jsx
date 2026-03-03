@@ -198,10 +198,11 @@ export default function Register() {
               <button
                 onClick={handleRegister}
                 disabled={loading}
-                className={`w-full py-3 rounded-lg text-white font-semibold transition transform ${loading
-                  ? "bg-blue-400 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700 hover:shadow-lg hover:scale-105"
-                  }`}
+                className={`w-full py-3 rounded-lg text-white font-semibold transition transform ${
+                  loading
+                    ? "bg-blue-400 cursor-not-allowed"
+                    : "bg-blue-600 hover:bg-blue-700 hover:shadow-lg hover:scale-105"
+                }`}
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">

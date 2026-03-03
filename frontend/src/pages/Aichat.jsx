@@ -1,4 +1,3 @@
-// Aichat.jsx
 import { useEffect, useRef, useState } from "react";
 import { Bot, SendHorizontal, X } from "lucide-react";
 import { Link } from "react-router-dom";

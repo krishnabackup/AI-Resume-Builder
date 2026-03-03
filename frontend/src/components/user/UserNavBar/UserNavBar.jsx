@@ -4,6 +4,7 @@ import {
   UserCog,
   Shield,
   LogOut,
+  Repeat,
   HelpCircle,
   CreditCard,
   Info,
@@ -18,6 +19,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import UptoSkillsLogo from "../../../assets/UptoSkills.webp";
 import { useUserNotifications } from "../../../context/UserNotificationContext";
+import axiosInstance from "../../../api/axios";
 
 const API = "/api";
 
@@ -38,24 +40,26 @@ export default function UserNavbar() {
   const [user, setUser] = useState({
     name: "User",
     email: "",
+    isAdmin: false,
   });
 
   // =================== FETCH LOGGED-IN USER ===================
   useEffect(() => {
-    fetch(`${API}/user/me`, { credentials: "include" })
-      .then((res) => {
-        if (!res.ok) throw new Error("Unauthorized");
-        return res.json();
-      })
-      .then((data) => {
-        setUser({
-          name: data.username || "User",
-          email: data.email || "",
-        });
-      })
-      .catch(() => {
-        console.log("User not logged in");
-      });
+    const fetchProfile = async () => {
+      try {
+        const res = await axiosInstance.get("/api/user/profile");
+        if (res.data?.user) {
+          setUser({
+            name: res.data.user.username || "User",
+            email: res.data.user.email || "",
+            isAdmin: res.data.user.isAdmin || false,
+          });
+        }
+      } catch (err) {
+        console.error("User not logged in or error:", err);
+      }
+    };
+    fetchProfile();
   }, []);
 
   // =================== ICON HELPERS ===================
@@ -135,10 +139,7 @@ export default function UserNavbar() {
   // =================== LOGOUT ===================
   const logout = async () => {
     try {
-      await fetch(`${API}/auth/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
+      await axiosInstance.post("/api/auth/logout");
     } finally {
       navigate("/login");
     }
@@ -158,7 +159,7 @@ export default function UserNavbar() {
             <img
               src={UptoSkillsLogo}
               alt="UptoSkills"
-              className="w-44 h-11 object-contain transition-all duration-300 pl-8"
+              className="w-44 h-11 object-contain transition-all duration-300 pl-6"
             />
           </motion.div>
         </div>
@@ -259,6 +260,16 @@ export default function UserNavbar() {
                       navigate("/help-center");
                     }}
                   />
+                  {user.isAdmin && (
+                    <DropdownItem
+                      icon={<Repeat size={16} />}
+                      label="Switch to Admin Dashboard"
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        navigate("/admin");
+                      }}
+                    />
+                  )}
                   <div className="border-t my-1" />
                   <DropdownItem
                     icon={<LogOut size={16} />}
