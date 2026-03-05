@@ -92,32 +92,32 @@ const CareersPage = () => {
     : jobs.filter(job => job.department === activeFilter);
 
   return (
-    <div className="min-h-screen bg-white font-['Outfit'] text-[#1a2e52] overflow-x-hidden select-none">
+    <div className="page-enter min-h-screen bg-white font-['Outfit'] text-[#1a2e52] overflow-x-hidden select-none">
       <NavBar />
 
       {/* --- HERO SECTION --- */}
-      <section className="relative px-8 pt-6 pb-24 overflow-hidden bg-white">
+      <section className="relative px-8 pt-24 pb-14 overflow-hidden bg-white md:pt-10">
         {/* Soft Background Decorative Blurs */}
         <div className="absolute top-0 right-0 w-1/3 h-1/2 bg-orange-50 rounded-full blur-[120px] -z-10 opacity-50" />
         <div className="absolute bottom-0 left-0 w-1/3 h-1/2 bg-blue-50 rounded-full blur-[120px] -z-10 opacity-50" />
 
         <div className="relative z-10 mx-auto max-w-7xl">
-          <div className="flex flex-col items-center gap-12 lg:flex-row lg:text-left">
+          <div className="flex flex-col items-center gap-8 lg:flex-row lg:text-left">
             {/* LEFT CONTENT: Text & CTA */}
             <div className="flex-1 text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-4 py-2 mb-8 rounded-full bg-blue-50">
+              <div className="inline-flex items-center gap-2 px-4 py-2 mb-6 rounded-full bg-blue-50">
                 <Sparkles size={16} className="text-[#0077cc]" />
                 <span className="text-xs font-black tracking-widest text-[#0077cc] uppercase">
                   Building the Future of Hiring
                 </span>
               </div>
 
-              <h1 className="mb-6 text-5xl font-[1000] tracking-tighter leading-[1.1] md:text-7xl font-jakarta text-[#1a2e52]">
+              <h1 className="mb-4 text-5xl font-[1000] tracking-tighter leading-[1.1] md:text-7xl font-jakarta text-[#1a2e52]">
                 Join the <span className="text-[#0077cc]">AI Career</span>{" "}
                 Revolution.
               </h1>
 
-              <p className="max-w-xl mx-auto mb-10 text-xl font-medium leading-relaxed text-gray-500 lg:mx-0">
+              <p className="max-w-xl mx-auto mb-7 text-xl font-medium leading-relaxed text-gray-500 lg:mx-0">
                 At UptoSkills, we're building the most advanced AI resume engine
                 on the planet. Help us bridge the gap between talent and
                 opportunity.
@@ -140,7 +140,7 @@ const CareersPage = () => {
             </div>
 
             {/* RIGHT CONTENT: Career Image */}
-            <div className="relative flex-1 w-full max-w-[600px] group">
+            <div className="relative hidden flex-1 w-full max-w-[600px] group lg:block">
               {/* Decorative element behind image */}
               <img
                 src={career}
@@ -168,12 +168,12 @@ const CareersPage = () => {
       </section>
 
       {/* --- VALUES SECTION --- */}
-      <section className="px-6 py-12 mx-auto max-w-7xl">
+      <section className="px-6 py-10 mx-auto max-w-7xl">
         <div className="grid gap-8 md:grid-cols-3">
           {values.map((value, index) => (
             <div
               key={index}
-              className="p-10 transition-all duration-300 bg-white border border-gray-100 rounded-[2.5rem] hover:shadow-xl group"
+                className="p-7 transition-all duration-300 bg-white border border-gray-100 rounded-[2.5rem] hover:shadow-xl group"
             >
               <div
                 className={`inline-block p-5 ${value.color} rounded-2xl mb-6 group-hover:scale-110 transition-transform`}
@@ -192,9 +192,9 @@ const CareersPage = () => {
       </section>
 
       {/* --- UPDATED PERKS SECTION: White BG + Blue Text/Icon Hover --- */}
-      <section className="relative px-6 py-24 overflow-hidden bg-white">
+      <section className="relative px-6 py-14 overflow-hidden bg-white">
         <div className="relative z-10 mx-auto max-w-7xl">
-          <div className="mb-16 text-center">
+          <div className="mb-10 text-center">
             <h2 className="mb-4 text-4xl font-[1000] tracking-tighter text-[#1a2e52] font-jakarta md:text-5xl">
               Perks of Being an <span className="text-[#0077cc]">Explorer</span>
             </h2>
@@ -208,7 +208,7 @@ const CareersPage = () => {
             {perks.map((perk, index) => (
               <div
                 key={index}
-                className="group p-10 bg-white rounded-[2.5rem] border border-gray-100 transition-all duration-300 hover:border-[#0077cc]/30 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-2"
+                className="group p-7 bg-white rounded-[2.5rem] border border-gray-100 transition-all duration-300 hover:border-[#0077cc]/30 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-2"
               >
                 <div className="inline-block mb-6 transition-transform duration-300 group-hover:scale-110">
                   <perk.icon
@@ -232,8 +232,8 @@ const CareersPage = () => {
       </section>
 
       {/* --- OPEN POSITIONS --- */}
-      <section id="openings" className="max-w-6xl px-6 py-24 mx-auto">
-        <div className="mb-12 text-center">
+      <section id="openings" className="max-w-6xl px-6 py-14 mx-auto">
+        <div className="mb-9 text-center">
           <h2 className="mb-4 text-4xl font-black text-[#1a2e52] font-jakarta tracking-tight">
             Join the Team
           </h2>
@@ -254,18 +254,18 @@ const CareersPage = () => {
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {filteredJobs.map((job) => (
             <div
               key={job.id}
-              className="p-10 bg-white border border-gray-100 shadow-sm rounded-[2.5rem] hover:shadow-2xl hover:translate-x-2 transition-all group"
+              className="p-7 bg-white border border-gray-100 shadow-sm rounded-[2.5rem] hover:shadow-2xl hover:translate-x-2 transition-all group"
             >
-              <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <h3 className="mb-4 text-2xl font-black text-[#1a2e52] group-hover:text-[#0077cc] transition-colors font-jakarta tracking-tight">
+                  <h3 className="mb-3 text-2xl font-black text-[#1a2e52] group-hover:text-[#0077cc] transition-colors font-jakarta tracking-tight">
                     {job.title}
                   </h3>
-                  <div className="flex flex-wrap gap-6 mb-6 text-xs font-bold tracking-widest text-gray-400 uppercase">
+                  <div className="flex flex-wrap gap-4 mb-4 text-xs font-bold tracking-widest text-gray-400 uppercase">
                     <span className="flex items-center gap-2">
                       <MapPin size={14} className="text-[#0077cc]" />{" "}
                       {job.location}
@@ -309,14 +309,14 @@ const CareersPage = () => {
       </section>
 
       {/* --- FINAL CTA --- */}
-      <section className="max-w-5xl px-6 py-24 mx-auto">
-        <div className="relative p-12 overflow-hidden text-center bg-[#1a2e52] rounded-[3rem]">
+      <section className="max-w-5xl px-6 py-14 mx-auto">
+        <div className="relative p-9 overflow-hidden text-center bg-[#1a2e52] rounded-[3rem]">
           <div className="absolute top-0 right-0 w-64 h-64 bg-[#0077cc]/20 blur-3xl" />
           <div className="relative z-10">
-            <h2 className="mb-6 text-4xl font-black tracking-tighter text-white font-jakarta md:text-5xl">
+            <h2 className="mb-4 text-4xl font-black tracking-tighter text-white font-jakarta md:text-5xl">
               Want to Build Something Big?
             </h2>
-            <p className="max-w-2xl mx-auto mb-10 text-xl font-medium leading-relaxed text-blue-100/60">
+            <p className="max-w-2xl mx-auto mb-7 text-xl font-medium leading-relaxed text-blue-100/60">
               If you don't see a role that fits but you're a wizard at AI,
               design, or engineering, reach out anyway.
             </p>

@@ -1,6 +1,5 @@
 import StatCard from "./StatCard";
 import RecentResumes from "./RecentResumes";
-import ActionCenter from "./ActionCenter";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import UserNavBar from "../UserNavBar/UserNavBar";
@@ -9,8 +8,6 @@ import {
   FaFileAlt,
   FaShieldAlt,
   FaCheckCircle,
-  FaExclamationTriangle,
-  FaLightbulb,
   FaArrowRight,
   FaHistory,
 } from "react-icons/fa";
@@ -18,13 +15,8 @@ import { HiLightningBolt, HiSparkles, HiClock } from "react-icons/hi";
 import toast from "react-hot-toast";
 
 import {
-  XAxis,
-  YAxis,
-  CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  BarChart,
-  Bar,
   Cell,
   PieChart,
   Pie,
@@ -120,9 +112,10 @@ const Dashboard = ({ setActivePage }) => {
   const user = dashboardData?.user || {};
 
   const avgAtsScore = stats.avgAtsScore || 0;
-  const resumesCreatedCount = stats.resumesCreated || 0;
-  const cvsCreatedCount = stats.cvsCreated || 0;
-  const coverLettersCreatedCount = stats.coverLettersCreated || 0;
+  // Temporary mock data to show in document breakdown chart
+  const resumesCreatedCount = stats.resumesCreated || 12;
+  const cvsCreatedCount = stats.cvsCreated || 5;
+  const coverLettersCreatedCount = stats.coverLettersCreated || 8;
   const totalAssets =
     resumesCreatedCount + cvsCreatedCount + coverLettersCreatedCount;
 
@@ -153,37 +146,6 @@ const Dashboard = ({ setActivePage }) => {
   const isAdmin = user.isAdmin || false;
   const adminRequestStatus = user.adminRequestStatus || "none";
 
-  // Mocked AI Suggestions for the Action Center
-  const aiSuggestions = [
-    {
-      id: 1,
-      title: "Add Quantifiable Metrics",
-      desc: "Your experience section lacks numbers. Add metrics to boost impact.",
-      priority: "High",
-      impact: "+8 Score",
-      color: "bg-red-50 border-red-200 text-red-700",
-      icon: <FaExclamationTriangle className="text-red-500" />,
-    },
-    {
-      id: 2,
-      title: "Optimize Skills Section",
-      desc: "Missing keyword 'React.js' found in your target job descriptions.",
-      priority: "Medium",
-      impact: "+5 Score",
-      color: "bg-amber-50 border-amber-200 text-amber-700",
-      icon: <HiLightningBolt className="text-amber-500" />,
-    },
-    {
-      id: 3,
-      title: "Action Verbs Check",
-      desc: "Replace 'Responsible for' with strong verbs like 'Spearheaded'.",
-      priority: "Low",
-      impact: "+2 Score",
-      color: "bg-blue-50 border-blue-200 text-blue-700",
-      icon: <FaLightbulb className="text-blue-500" />,
-    },
-  ];
-
   // Mock Data Visualizations
   const documentData = [
     { name: "Resumes", value: resumesCreatedCount, color: "#0284c7" },
@@ -193,13 +155,6 @@ const Dashboard = ({ setActivePage }) => {
       value: coverLettersCreatedCount,
       color: "#f97316",
     },
-  ];
-
-  const sectionStrength = [
-    { name: "Summary", value: 85 },
-    { name: "Experience", value: 60 },
-    { name: "Education", value: 95 },
-    { name: "Skills", value: 70 },
   ];
 
   // Calculations for Circular Progress
@@ -359,154 +314,92 @@ const Dashboard = ({ setActivePage }) => {
           </div>
         </div>
 
-        {/* --- SMART KPI CARDS --- */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <StatCard
-            label="Resume Completion"
-            value={`${stats.completionRate || 85}%`}
-            trend="Strong Profile"
-            trendColor="text-emerald-600"
-            icon={<FaFileAlt className="text-indigo-600 text-[18px]" />}
-          />
-          <StatCard
-            label="ATS Readiness"
-            value={`${avgAtsScore}%`}
-            trend={`\u2197 ${stats.atsDelta || 5}% vs last scan`}
-            trendColor="text-blue-600"
-            icon={<FaCheckCircle className="text-blue-500 text-[18px]" />}
-          />
-          <StatCard
-            label="AI Suggestions"
-            value={aiSuggestions.length}
-            trend="Pending Actions"
-            trendColor="text-orange-500"
-            icon={<FaLightbulb className="text-amber-500 text-[18px]" />}
-          />
-          <StatCard
-            label="Interview Readiness"
-            value={`${stats.interviewProbability || Math.min(avgAtsScore + 5, 95)}%`}
-            trend="⚡ Strong Candidate"
-            trendColor="text-emerald-600"
-            isProbability={true}
-            icon={<HiLightningBolt className="text-amber-400 text-[18px]" />}
-          />
-        </div>
-
-        {/* --- MAIN DASHBOARD GRID: Data Vis & Actions --- */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* AI ACTION CENTER */}
-          <div className="lg:col-span-1 flex flex-col h-full">
-            <ActionCenter />
+        {/* --- MAIN DASHBOARD GRID: KPIs & Data Vis --- */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8 items-stretch">
+          {/* LEFT: Vertical KPI Cards */}
+          <div className="lg:col-span-2 flex flex-col gap-4">
+            <div className="flex-1">
+              <StatCard
+                label="Resume Completion"
+                value={`${stats.completionRate || 85}%`}
+                trend="Strong Profile"
+                trendColor="text-emerald-600"
+                icon={<FaFileAlt className="text-indigo-600 text-[18px]" />}
+              />
+            </div>
+            <div className="flex-1">
+              <StatCard
+                label="ATS Readiness"
+                value={`${avgAtsScore}%`}
+                trend={`\u2197 ${stats.atsDelta || 5}% vs last scan`}
+                trendColor="text-blue-600"
+                icon={<FaCheckCircle className="text-blue-500 text-[18px]" />}
+              />
+            </div>
+            <div className="flex-1">
+              <StatCard
+                label="Interview Readiness"
+                value={`${stats.interviewProbability || Math.min(avgAtsScore + 5, 95)}%`}
+                trend="⚡ Strong Candidate"
+                trendColor="text-emerald-600"
+                isProbability={true}
+                icon={<HiLightningBolt className="text-amber-400 text-[18px]" />}
+              />
+            </div>
           </div>
 
-          {/* DATA VISUALIZATION: Progress & Strength Breakdown */}
-          <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Document Breakdown */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col items-center">
-              <h3 className="text-lg font-bold text-slate-800 self-start mb-6">
-                Document Breakdown
-              </h3>
-              <div className="relative flex-1 w-full flex items-center justify-center min-h-[160px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={documentData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={3}
-                      dataKey="value"
-                      stroke="none"
-                      cornerRadius={4}
-                    >
-                      {documentData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<CustomPieTooltip />} />
-                  </PieChart>
-                </ResponsiveContainer>
-                {/* Center Text */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center font-bold pointer-events-none">
-                  <span className="text-3xl text-slate-900">{totalAssets}</span>
-                  <span className="text-[9px] text-slate-400 font-bold tracking-wider">
-                    TOTAL ASSETS
-                  </span>
-                </div>
-              </div>
-              {/* Legend below */}
-              <div className="mt-4 flex flex-wrap justify-between w-full gap-2 px-2">
-                {documentData.map((item, i) => (
-                  <div key={i} className="flex flex-col">
-                    <div className="flex items-center gap-1.5 mb-0.5">
-                      <div
-                        className="w-2.5 h-2.5 rounded-full"
-                        style={{ backgroundColor: item.color }}
-                      ></div>
-                      <span className="text-xs font-semibold text-slate-700">
-                        {item.name}
-                      </span>
-                    </div>
-                    <span className="text-[10px] text-slate-500 pl-4">
-                      {item.value} Units
-                    </span>
-                  </div>
-                ))}
+          {/* RIGHT: Document Breakdown */}
+          <div className="lg:col-span-3 bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col items-center h-full">
+            <h3 className="text-lg font-bold text-slate-800 self-start mb-6">
+              Document Breakdown
+            </h3>
+            <div className="relative flex-1 w-full flex items-center justify-center min-h-[160px]">
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie
+                    data={documentData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={70}
+                    outerRadius={90}
+                    paddingAngle={3}
+                    dataKey="value"
+                    stroke="none"
+                    cornerRadius={4}
+                  >
+                    {documentData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomPieTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+              {/* Center Text */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center font-bold pointer-events-none">
+                <span className="text-4xl text-slate-900">{totalAssets}</span>
+                <span className="text-[10px] text-slate-400 font-bold tracking-wider">
+                  TOTAL ASSETS
+                </span>
               </div>
             </div>
-
-            {/* Section Strength */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col">
-              <h3 className="text-lg font-bold text-slate-800 mb-6">
-                Section Strength Breakdown
-              </h3>
-              <div className="h-48 w-full flex-1">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={sectionStrength}
-                    layout="vertical"
-                    margin={{ top: 0, right: 10, left: 10, bottom: 0 }}
-                  >
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      horizontal={false}
-                      stroke="#e2e8f0"
-                    />
-                    <XAxis type="number" hide />
-                    <YAxis
-                      dataKey="name"
-                      type="category"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fontSize: 12, fill: "#475569", fontWeight: 600 }}
-                      width={80}
-                    />
-                    <Tooltip
-                      cursor={{ fill: "#f1f5f9" }}
-                      contentStyle={{
-                        borderRadius: "8px",
-                        border: "none",
-                        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                      }}
-                    />
-                    <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={20}>
-                      {sectionStrength.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={
-                            entry.value >= 80
-                              ? "#10b981"
-                              : entry.value >= 65
-                                ? "#3b82f6"
-                                : "#f59e0b"
-                          }
-                        />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+            {/* Legend below */}
+            <div className="mt-4 flex flex-wrap justify-center w-full gap-6 px-2">
+              {documentData.map((item, i) => (
+                <div key={i} className="flex flex-col items-center">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: item.color }}
+                    ></div>
+                    <span className="text-sm font-semibold text-slate-700">
+                      {item.name}
+                    </span>
+                  </div>
+                  <span className="text-xs text-slate-500">
+                    {item.value} Units
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -538,13 +431,12 @@ const Dashboard = ({ setActivePage }) => {
               <button
                 onClick={handleRequestAdmin}
                 disabled={adminRequestStatus === "pending" || requestLoading}
-                className={`px-4 py-2 text-sm rounded-lg font-medium transition-all shrink-0 whitespace-nowrap w-full sm:w-auto ${
-                  adminRequestStatus === "pending"
-                    ? "bg-amber-100 text-amber-700 cursor-not-allowed"
-                    : adminRequestStatus === "rejected"
-                      ? "bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
-                      : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-slate-900 shadow-sm"
-                }`}
+                className={`px-4 py-2 text-sm rounded-lg font-medium transition-all shrink-0 whitespace-nowrap w-full sm:w-auto ${adminRequestStatus === "pending"
+                  ? "bg-amber-100 text-amber-700 cursor-not-allowed"
+                  : adminRequestStatus === "rejected"
+                    ? "bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
+                    : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-slate-900 shadow-sm"
+                  }`}
               >
                 {adminRequestStatus === "pending"
                   ? "Request Pending"

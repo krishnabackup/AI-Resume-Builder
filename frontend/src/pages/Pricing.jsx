@@ -4,7 +4,28 @@ import Footer from "./Footer";
 import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import axiosInstance from "../api/axios";
+import { motion } from "framer-motion";
 
+const fadeUp = {
+  hidden: { opacity: 0, y: 50 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.7,
+      ease: "easeOut",
+    },
+  },
+};
+
+const staggerContainer = {
+  hidden: {},
+  show: {
+    transition: {
+      staggerChildren: 0.2,
+    },
+  },
+};
 const Pricing = () => {
   const navigate = useNavigate();
   const isLoggedIn =
@@ -63,7 +84,7 @@ const Pricing = () => {
       period: " / month",
       description: "Best for job seekers",
       buttonText: "Upgrade to Pro",
-      buttonAction: () => { },
+      buttonAction: () => {},
       gradient: true,
       features: getDynamicFeaturesById(2),
     },
@@ -78,7 +99,7 @@ const Pricing = () => {
       period: " / year",
       description: "For career acceleration",
       buttonText: "Unlock Premium",
-      buttonAction: () => { },
+      buttonAction: () => {},
       gradient: false,
       features: getDynamicFeaturesById(3),
     },
@@ -87,10 +108,15 @@ const Pricing = () => {
   return (
     <>
       <NavBar />
-      <section className="bg-white pt-20 px-6 md:px-16 py-12">
+      <section className="page-enter-fade bg-white pt-20 px-6 md:px-16 py-12">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="text-center mb-14 select-none">
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            animate="show"
+            className="text-center mb-14 select-none"
+          >
             <h2 className="text-4xl font-extrabold">
               <span className="text-blue-600">Plans & </span>{" "}
               <span className="text-blue-600">Pricing</span>
@@ -99,10 +125,14 @@ const Pricing = () => {
               Choose a plan that fits your career goals. Upgrade anytime to
               unlock premium resume features.
             </p>
-          </div>
+          </motion.div>
 
           {/* Pricing Cards */}
-          <div
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, amount: 0.2 }}
             className="
               flex overflow-x-auto gap-6 pt-6 pb-6
               md:grid md:grid-cols-3 md:gap-8 md:overflow-visible md:pt-0
@@ -111,12 +141,16 @@ const Pricing = () => {
             "
           >
             {plans.map((plan, index) => (
-              <div
+              <motion.div
                 key={index}
-                className={`snap-center min-w-[85%] md:min-w-0 rounded-2xl shadow-md p-8 relative ${plan.gradient
-                  ? "bg-gradient-to-b from-orange-50 to-white shadow-xl"
-                  : "bg-white"
-                  }`}
+                variants={fadeUp}
+                whileHover={{ y: -8 }}
+                transition={{ type: "spring", stiffness: 200 }}
+                className={`snap-center min-w-[85%] md:min-w-0 rounded-2xl shadow-md p-8 relative ${
+                  plan.gradient
+                    ? "bg-gradient-to-b from-orange-50 to-white shadow-xl"
+                    : "bg-white"
+                }`}
               >
                 {plan.badge && (
                   <span
@@ -147,20 +181,17 @@ const Pricing = () => {
                 <div className="mb-6">
                   {plan.features && plan.features.length > 0 ? (
                     plan.features.map((feature, i) => (
-                      <div
-                        key={i}
-                        className="flex items-center gap-3 mb-4"
-                      >
+                      <div key={i} className="flex items-center gap-3 mb-4">
                         <Check
                           className={`${plan.checkColor} w-5 h-5 flex-shrink-0`}
                         />
-                        <span className="text-sm text-gray-700">
-                          {feature}
-                        </span>
+                        <span className="text-sm text-gray-700">{feature}</span>
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm text-gray-400 text-center">No features listed</p>
+                    <p className="text-sm text-gray-400 text-center">
+                      No features listed
+                    </p>
                   )}
                 </div>
 
@@ -170,9 +201,9 @@ const Pricing = () => {
                 >
                   {plan.buttonText}
                 </button>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
       <Footer />

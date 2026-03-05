@@ -184,6 +184,49 @@ router.delete("/:id", isAuth, async (req, res) => {
 });
 
 /* =====================================================
+   ✅ ADD NEW ROUTE HERE - GET SINGLE DOWNLOAD + HTML PREVIEW
+===================================================== */
+router.get("/:id", isAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid document id" });
+    }
+
+    const download = await Download.findOne({
+      _id: id,
+      user: req.userId
+    });
+
+    if (!download) {
+      return res.status(404).json({ message: "Document not found" });
+    }
+
+    download.views = (download.views || 0) + 1;
+    await download.save();
+
+    res.json({
+      _id: download._id,
+      name: download.name,
+      type: download.type,
+      format: download.format,
+      size: download.size,
+      views: download.views,
+      downloadDate: download.downloadDate,
+      template: download.template,
+      html: download.html  // ✅ Frontend needs this!
+    });
+
+  } catch (err) {
+    console.error("Get download preview error:", err);
+    res.status(500).json({ 
+      message: "Failed to fetch document", 
+      error: err.message 
+    });
+  }
+});
+/* =====================================================
    PDF DOWNLOAD (OWNER)
 ===================================================== */
 router.get("/:id/pdf", isAuth, async (req, res) => {

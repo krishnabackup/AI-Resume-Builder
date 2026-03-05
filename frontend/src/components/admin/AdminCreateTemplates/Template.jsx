@@ -3,6 +3,8 @@ import { Filter, Plus, Eye, X, Power, PowerOff, Search, ChevronDown } from "luci
 import toast, { Toaster } from "react-hot-toast";
 import { TEMPLATES } from "../../user/Templates/TemplateRegistry";
 import { templates as CV_LIST } from "../../user/CV/Templatesgallery";
+import CVTemplates from "../../user/CV/Cvtemplates";
+import mergeWithSampleData from "../../../utils/Datahelpers";
 import axiosInstance from "../../../api/axios";
 import TemplateTypeSwitch from "./TemplateTypeSwitch";
 
@@ -53,12 +55,13 @@ export default function AdminTemplates() {
           previewText: tpl.description || tpl.category,
           image: tpl.thumbnail || CV_PLACEHOLDER,
           isStatic: !!tpl.thumbnail,
+          templateId: tpl.id,
         }));
 
       setApprovedTemplates({
-        "Modern Templates": mapToAdminFormat(modern),
+        "Contemporary Templates": mapToAdminFormat(modern),
         "Creative Templates": mapToAdminFormat(creative),
-        "Professional Templates": mapToAdminFormat(professional),
+        "Traditional Templates": mapToAdminFormat(professional),
       });
 
       setPendingTemplates([]);
@@ -92,8 +95,8 @@ export default function AdminTemplates() {
     }
   };
 
-  const handlePreview = (imageUrl) => {
-    setPreviewImage(imageUrl);
+  const handlePreview = (tpl) => {
+    setPreviewImage(tpl);
     setIsPreviewModalOpen(true);
   };
 
@@ -256,10 +259,21 @@ export default function AdminTemplates() {
                           {active ? "Active" : "Inactive"}
                         </div>
 
-                        {/* Preview */}
+                  {/* Scroll Container */}
+                  <div
+                    ref={scrollRef}
+                    className="flex gap-6 overflow-x-auto pb-6 pt-2 px-2 -mx-2 scroll-smooth scrollbar-hide"
+                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                  >
+                    {templates.map((tpl, index) => {
+                      const active = isTemplateActive(tpl._id);
+                      return (
                         <div
-                          className="relative w-full aspect-[210/297] bg-slate-100 rounded-lg overflow-hidden cursor-pointer"
-                          onClick={() => handlePreview(tpl.image)}
+                          key={index}
+                          className={`min-w-[260px] w-[260px] bg-white border rounded-xl p-3 transition relative flex-shrink-0 ${active
+                            ? "border-slate-200 hover:shadow-lg"
+                            : "border-slate-100 opacity-75 grayscale-[0.5]"
+                            }`}
                         >
                           <img
                             src={tpl.image}
@@ -287,44 +301,102 @@ export default function AdminTemplates() {
                             className="text-xs text-slate-500 truncate"
                             title={tpl.previewText}
                           >
-                            {tpl.previewText}
-                          </p>
-                        </div>
+                            {active ? "Active" : "Inactive"}
+                          </div>
 
-                        {/* Actions */}
-                        <div className="flex gap-2 mt-3 pt-3 border-t border-slate-100">
-                          <button
-                            onClick={() =>
-                              window.open(
-                                type === "resume"
-                                  ? `/admin/resume-editor?id=${tpl._id}`
-                                  : `/admin/cv-editor?id=${tpl._id}`,
-                                "_blank",
-                              )
-                            }
-                            className="flex-1 py-1.5 flex items-center justify-center gap-1 bg-slate-50 text-slate-600 rounded text-xs hover:bg-slate-100 font-medium transition"
+                          {/* Preview Container */}
+                          <div
+                            className="relative w-full aspect-[210/297] bg-slate-100 rounded-lg overflow-hidden cursor-pointer"
+                            onClick={() => handlePreview(tpl)}
                           >
-                            <Eye size={14} />
-                            View
-                          </button>
-                          <button
-                            onClick={() => handleToggleStatus(tpl._id)}
-                            className={`flex-1 py-1.5 flex items-center justify-center gap-1 rounded text-xs font-medium transition ${active
-                              ? "bg-red-50 text-red-600 hover:bg-red-100"
-                              : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
-                              }`}
-                          >
-                            {active ? (
-                              <PowerOff size={14} />
+                            {type === "resume" || tpl.isStatic ? (
+                              <img
+                                src={tpl.image}
+                                alt={tpl.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = CV_PLACEHOLDER;
+                                }}
+                              />
                             ) : (
-                              <Power size={14} />
+                              <div
+                                className="absolute inset-0 pointer-events-none bg-white"
+                                style={{
+                                  transform: "scale(0.32)", // Adjusted for 260px width
+                                  transformOrigin: "top left",
+                                  width: 794,
+                                }}
+                              >
+                                {CVTemplates[tpl.templateId] &&
+                                  React.createElement(CVTemplates[tpl.templateId], { formData: mergeWithSampleData({}) })
+                                }
+                              </div>
                             )}
-                            {active ? "Disable" : "Enable"}
-                          </button>
+                            <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
+                              <Eye
+                                className="text-white drop-shadow-md"
+                                size={32}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Info */}
+                          <div className="mt-3 space-y-1">
+                            <h3 className="text-sm font-semibold text-slate-800 truncate">
+                              {tpl.name}
+                            </h3>
+                            <p
+                              className="text-xs text-slate-500 truncate"
+                              title={tpl.previewText}
+                            >
+                              {tpl.previewText}
+                            </p>
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex gap-2 mt-3 pt-3 border-t border-slate-100">
+                            <button
+                              onClick={() =>
+                                window.open(
+                                  type === "resume"
+                                    ? `/admin/resume-editor?id=${tpl._id}`
+                                    : `/admin/cv-editor?id=${tpl._id}`,
+                                  "_blank",
+                                )
+                              }
+                              className="flex-1 py-1.5 flex items-center justify-center gap-1 bg-slate-50 text-slate-600 rounded text-xs hover:bg-slate-100 font-medium transition"
+                            >
+                              <Eye size={14} />
+                              View
+                            </button>
+                            <button
+                              onClick={() => handleToggleStatus(tpl._id)}
+                              className={`flex-1 py-1.5 flex items-center justify-center gap-1 rounded text-xs font-medium transition ${active
+                                ? "bg-red-50 text-red-600 hover:bg-red-100"
+                                : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                                }`}
+                            >
+                              {active ? (
+                                <PowerOff size={14} />
+                              ) : (
+                                <Power size={14} />
+                              )}
+                              {active ? "Disable" : "Enable"}
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
+
+                  {/* Right Button */}
+                  <button
+                    onClick={() => scroll('right')}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 -mr-4 z-20 w-10 h-10 bg-white border border-slate-200 shadow-lg rounded-full flex items-center justify-center text-slate-700 opacity-0 group-hover/section:opacity-100 transition-all duration-200 hover:bg-slate-50 hover:scale-110"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
                 </div>
               </div>
             );
@@ -338,20 +410,29 @@ export default function AdminTemplates() {
             onClick={() => setIsPreviewModalOpen(false)}
           >
             <div
-              className="relative bg-white rounded-lg shadow-2xl max-w-4xl max-h-[90vh] overflow-auto animate-scaleIn"
+              className={`relative bg-white rounded-lg shadow-2xl max-h-[90vh] overflow-auto animate-scaleIn ${type === "resume" || (previewImage && previewImage.isStatic) ? "max-w-4xl" : "flex justify-center bg-slate-200/60 p-6"}`}
               onClick={(e) => e.stopPropagation()}
             >
               <button
                 onClick={() => setIsPreviewModalOpen(false)}
-                className="absolute top-2 right-2 p-2 bg-black/50 text-white rounded-full hover:bg-black/70 transition"
+                className="absolute top-2 right-2 p-2 bg-black/50 text-white rounded-full hover:bg-black/70 transition z-[60]"
               >
                 <X size={20} />
               </button>
-              <img
-                src={previewImage}
-                alt="Template Preview"
-                className="w-full h-auto block"
-              />
+
+              {type === "resume" || (previewImage && previewImage.isStatic) ? (
+                <img
+                  src={previewImage.image || previewImage}
+                  alt="Template Preview"
+                  className="w-full h-auto block"
+                />
+              ) : (
+                <div className="shadow-xl bg-white rounded-sm overflow-hidden" style={{ width: 794, minHeight: 1123, flexShrink: 0 }}>
+                  {previewImage && CVTemplates[previewImage.templateId] &&
+                    React.createElement(CVTemplates[previewImage.templateId], { formData: mergeWithSampleData({}) })
+                  }
+                </div>
+              )}
             </div>
           </div>
         )}

@@ -116,3 +116,42 @@ button {
 .float-slow {
   animation: floatSlow 6s ease-in-out infinite;
 }
+
+@keyframes pageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-enter {
+  animation: pageFadeIn 700ms ease-out both;
+}
+
+.page-enter-fade {
+  animation: pageFadeOnly 900ms ease-out both;
+  will-change: opacity;
+}
+
+@keyframes pageFadeOnly {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter {
+    animation: none;
+  }
+
+  .page-enter-fade {
+    animation: none;
+  }
+}

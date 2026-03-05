@@ -192,8 +192,11 @@ const CVBuilder = () => {
   ====================================================== */
   const saveDownloadRecord = async (html, format = "PDF") => {
     try {
+      // Use document title first, then merged data for consistent naming
+      const displayData = mergeWithSampleData(formData);
+      const nameToUse = documentTitle || displayData.fullName || "Document";
       await axiosInstance.post("/api/downloads", {
-        name: `CV - ${formData.fullName || "Document"}`,
+        name: `CV - ${nameToUse}`,
         type: "cv",
         format,
         html,

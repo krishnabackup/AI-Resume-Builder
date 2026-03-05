@@ -63,6 +63,14 @@ const CVBuilderTopBar = ({
 
   return (
     <div className="w-full px-3 sm:px-4 py-3 flex flex-col md:flex-row gap-3 justify-between items-start md:items-center">
+      {/* Hidden file input kept globally so both mobile & desktop upload buttons work */}
+      <input
+        ref={uploadInputRef}
+        type="file"
+        accept=".pdf,.doc,.docx"
+        className="hidden"
+        onChange={handleFileChange}
+      />
       {/* ── Left section ── */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-2 md:gap-3 w-full md:w-auto">
         {/* Title Section - Editable */}
@@ -87,7 +95,7 @@ const CVBuilderTopBar = ({
                   className="text-slate-400 group-hover:text-blue-500 transition-colors shrink-0"
                 />
               </div>
-              <span className="absolute top-full left-0 mt-0.5 text-[11px] text-slate-400 select-none whitespace-nowrap sm:pb-20">
+              <span className="mt-1 text-[11px] text-slate-400 select-none sm:pb-20 md:absolute md:top-full md:left-0 md:mt-0.5 md:whitespace-nowrap">
                 Click to rename your document
               </span>
             </>
@@ -127,7 +135,7 @@ const CVBuilderTopBar = ({
 
         {/* AI Mode Toggle */}
         {showAiToggle && activeTab === "builder" && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full md:w-auto">
             <button
               onClick={onToggleAiMode}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all border ${
@@ -153,12 +161,68 @@ const CVBuilderTopBar = ({
                 />
               </div>
             </button>
+
+            {/* Mobile-only actions: place Upload & Download beside AI Mode */}
+            <div className="flex items-center gap-2 ml-auto md:hidden">
+              {showUpload && (
+                <button
+                  onClick={handleUploadClick}
+                  className="flex items-center justify-center text-white bg-black rounded-lg text-sm transition-all duration-200 hover:bg-black/80 py-2 px-3"
+                >
+                  <Upload size={18} />
+                </button>
+              )}
+
+              <div className="relative" ref={downloadDropdownRef}>
+                <button
+                  onClick={() => setShowDownloadMenu((v) => !v)}
+                  disabled={isDownloading || downloadDisabled}
+                  className="flex items-center justify-center text-white bg-indigo-600 rounded-lg text-sm transition-all duration-200 hover:bg-indigo-700 py-2 px-3 disabled:bg-indigo-400 disabled:cursor-not-allowed"
+                >
+                  {isDownloading ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Download size={18} />
+                  )}
+                  <ChevronDown
+                    size={14}
+                    className={`ml-1 transition-transform duration-200 ${showDownloadMenu ? "rotate-180" : ""}`}
+                  />
+                </button>
+
+                {showDownloadMenu && (
+                  <div className="absolute right-0 mt-1 w-44 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden">
+                    <button
+                      onClick={() => {
+                        setShowDownloadMenu(false);
+                        onDownload?.();
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <Download size={15} className="text-red-500" />
+                      Download PDF
+                    </button>
+                    <div className="border-t border-gray-100" />
+                    <button
+                      onClick={() => {
+                        setShowDownloadMenu(false);
+                        onDownloadWord?.();
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <Download size={15} className="text-blue-500" />
+                      Download Word
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>
 
-      {/* ── Right section ── */}
-      <div className="flex flex-wrap justify-center sm:justify-end items-center gap-2 w-full md:w-auto">
+      {/* ── Right section (desktop / tablet) ── */}
+      <div className="hidden md:flex flex-wrap justify-center sm:justify-end items-center gap-2 w-full md:w-auto">
         {/* Extra Buttons */}
         {extraButtons}
 
@@ -180,13 +244,6 @@ const CVBuilderTopBar = ({
             <span className="hidden sm:inline">Upload</span>
           </button>
         )}
-        <input
-          ref={uploadInputRef}
-          type="file"
-          accept=".pdf,.doc,.docx"
-          className="hidden"
-          onChange={handleFileChange}
-        />
 
         {/* Download dropdown */}
         <div className="relative" ref={downloadDropdownRef}>
@@ -236,6 +293,32 @@ const CVBuilderTopBar = ({
           )}
         </div>
       </div>
+
+      {/* Right Side: Actions */}
+      {/* <div className="flex flex-wrap justify-center md:justify-end items-center gap-2 w-full md:w-auto">
+        <button className="items-center gap-2 px-4 py-2 rounded-lg hidden md:flex border border-gray-300 bg-white text-gray-800 font-medium shadow-sm hover:bg-black hover:text-white transition-all duration-200 select-none">
+          <PenTool size={18} />
+          CV Designer
+        </button>
+
+        <button className="flex gap-2 text-white cursor-pointer bg-black border-0 rounded-lg text-sm transition-all duration-200 select-none md:hover:bg-black/70 py-2 px-5 md:py-2.5 md:px-5">
+          <Upload size={18} />
+          <span className="hidden md:inline">Upload</span>
+        </button>
+
+        <button
+          onClick={onSave}
+          disabled={isSaving}
+          className="flex gap-2 text-white cursor-pointer bg-indigo-600 border-0 rounded-lg select-none text-sm transition-all duration-200 hover:bg-indigo-700 py-2 px-5 md:py-2.5 md:px-5 disabled:opacity-70 disabled:cursor-not-allowed"
+        >
+          {isSaving ? (
+            <div className="animate-spin rounded-full w-4 h-4 border-2 border-white border-t-transparent" />
+          ) : (
+            <Download size={18} />
+          )}
+          <span className="hidden md:inline">{isSaving ? "Saving..." : "Download"}</span>
+        </button>
+      </div> */}
     </div>
   );
 };

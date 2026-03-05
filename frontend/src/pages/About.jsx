@@ -37,7 +37,7 @@ const AboutUs = () => {
     <div className="min-h-screen bg-[#fcfcfd] font-['Outfit'] text-[#1a2e52] overflow-x-hidden">
       <NavBar />
 
-      <main className="bg-[#f8fafc] text-slate-800 overflow-x-hidden">
+      <main className="page-enter bg-[#f8fafc] text-slate-800 overflow-x-hidden">
 
         {/* HERO */}
         <section className="relative max-w-6xl mx-auto px-4 sm:px-2 py-12 md:py-12 grid md:grid-cols-2 gap-10 md:gap-12 items-center overflow-hidden">

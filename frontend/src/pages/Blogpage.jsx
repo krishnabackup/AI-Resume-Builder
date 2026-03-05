@@ -112,7 +112,7 @@ const BlogPage = () => {
   });
 
   return (
-    <div className="min-h-screen select-none bg-white font-['Outfit'] text-[#1a2e52] overflow-x-hidden">
+    <div className="page-enter min-h-screen select-none bg-white font-['Outfit'] text-[#1a2e52] overflow-x-hidden">
       <NavBar />
 
       {/* Hero Section */}

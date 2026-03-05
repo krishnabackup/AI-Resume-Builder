@@ -48,6 +48,11 @@ export const updateAllPlans = async (req, res) => {
       }
     }
 
+    // Delete missing plans dynamically
+    const incomingPlanIds = plans.map(p => p.planId);
+    await Plan.deleteMany({ planId: { $nin: incomingPlanIds } });
+
+
     // Update each plan
     const updatePromises = plans.map(async (plan) => {
       return await Plan.findOneAndUpdate(

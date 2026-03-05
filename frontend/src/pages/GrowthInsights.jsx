@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Target,
@@ -15,6 +15,27 @@ import NavBar from "../components/NavBar";
 import Footer from "./Footer";
 import growth from "../assets/growth1.png";
 
+const useInView = (threshold = 0.15) => {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (!ref.current) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) setVisible(true);
+      },
+      { threshold }
+    );
+
+    observer.observe(ref.current);
+
+    return () => observer.disconnect();
+  }, [threshold]);
+
+  return [ref, visible];
+};
 const StrategicInsightsPage = () => {<section className="py-12"></section>
   const navigate = useNavigate();<div className="mt-1 grid gap-10 lg:grid-cols-3"></div>
   const isLoggedIn =
@@ -29,6 +50,12 @@ const StrategicInsightsPage = () => {<section className="py-12"></section>
     }
   };
 
+  const [heroRef, heroVisible] = useInView(0.2);
+const [whatRef, whatVisible] = useInView(0.15);
+const [pillarRef, pillarVisible] = useInView(0.15);
+const [roadmapRef, roadmapVisible] = useInView(0.15);
+const [ctaRef, ctaVisible] = useInView(0.2);
+
   
 
   return (
@@ -36,7 +63,12 @@ const StrategicInsightsPage = () => {<section className="py-12"></section>
       <NavBar />
 
       {/* --- HERO SECTION --- */}
-      <section className="relative px-8 pt-12 pb-12 overflow-hidden bg-white">
+      <section
+  ref={heroRef}
+  className={`relative px-8 pt-12 pb-12 overflow-hidden bg-white transition-all duration-700 ${
+    heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+  }`}
+>
         {/* Brand Decorative Blurs */}
         <div className="absolute top-0 right-0 w-1/3 h-1/2 bg-orange-50 rounded-full blur-[120px] -z-10 opacity-50" />
         <div className="absolute bottom-0 left-0 w-1/3 h-1/2 bg-blue-50 rounded-full blur-[120px] -z-10 opacity-50" />
@@ -110,7 +142,12 @@ const StrategicInsightsPage = () => {<section className="py-12"></section>
       </section>
 
       {/* --- WHAT IS AI RESUME MATCHING (Updated Content) --- */}
-      <section className="px-8 py-20 bg-white font-['Outfit']">
+     <section
+  ref={whatRef}
+  className={`px-8 py-20 bg-white font-['Outfit'] transition-all duration-700 ${
+    whatVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+  }`}
+>
         <div className="max-w-4xl mx-auto">
           <h2 className="text-4xl font-bold text-center text-[#1a2e52] mb-12">How AI Resume Analysis Works</h2>
           
@@ -145,7 +182,12 @@ const StrategicInsightsPage = () => {<section className="py-12"></section>
       </section>
 
       {/* --- THREE PILLARS: THE ANALYTICS FOCUS --- */}
-      <section className="px-8 py-24">
+     <section
+  ref={pillarRef}
+  className={`px-8 py-24 transition-all duration-700 ${
+    pillarVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+  }`}
+>
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-8 md:grid-cols-3">
             {[
@@ -184,7 +226,12 @@ const StrategicInsightsPage = () => {<section className="py-12"></section>
       </section>
 
       {/* --- ROADMAP SECTION --- */}
-      <section className="relative px-6 overflow-hidden bg-white py-14">
+      <section
+  ref={roadmapRef}
+  className={`relative px-6 overflow-hidden bg-white py-14 transition-all duration-700 ${
+    roadmapVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+  }`}
+>
         <div className="mx-auto text-center max-w-7xl">
           <h2 className="text-4xl md:text-5xl font-black text-[#1a2e52] tracking-tight mb-16 font-jakarta">
             Find Your <span className="text-[#0077cc]">Perfect Match.</span>
@@ -230,7 +277,12 @@ const StrategicInsightsPage = () => {<section className="py-12"></section>
       </section>
 
       {/* --- CTA SECTION --- */}
-      <section className="relative px-8 pt-12 pb-24 overflow-hidden bg-white select-none">
+     <section
+  ref={ctaRef}
+  className={`relative px-8 pt-12 pb-24 overflow-hidden bg-white select-none transition-all duration-1000 ${
+    ctaVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"
+  }`}
+>
         <div className="absolute top-0 right-0 w-1/3 h-full bg-orange-50 rounded-full blur-[120px] -z-10 opacity-60" />
         <div className="absolute bottom-0 left-0 w-1/3 h-full bg-blue-50 rounded-full blur-[120px] -z-10 opacity-60" />
         
