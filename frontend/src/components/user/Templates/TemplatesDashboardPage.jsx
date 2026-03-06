@@ -230,9 +230,9 @@ const TemplatesDashboardPage = ({ onSelectTemplate, isEmbedded = false, external
           <div>
             {(modern.length > 0 || creative.length > 0 || professional.length > 0) ? (
               <>
-                <TemplateSection title="Modern Templates" items={modern} onPreview={handlePreview} onUse={handleUseTemplate} />
+                <TemplateSection title="Contemporary Templates" items={modern} onPreview={handlePreview} onUse={handleUseTemplate} />
                 <TemplateSection title="Creative Templates" items={creative} onPreview={handlePreview} onUse={handleUseTemplate} />
-                <TemplateSection title="Professional Templates" items={professional} onPreview={handlePreview} onUse={handleUseTemplate} />
+                <TemplateSection title="Traditional Templates" items={professional} onPreview={handlePreview} onUse={handleUseTemplate} />
               </>
             ) : (
               <TemplateSection title="All Templates" items={filteredTemplates} onPreview={handlePreview} onUse={handleUseTemplate} />

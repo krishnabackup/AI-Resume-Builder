@@ -252,17 +252,18 @@ const CVBuilder = () => {
     }
 
     setIsDownloading(true);
-    const container = document.createElement("div");
-    Object.assign(container.style, {
-      position: "fixed",
-      top: "0",
-      left: "-9999px",
-      width: `${PDF_PAGE_WIDTH_PX}px`,
-      background: "#ffffff",
-    });
-    document.body.appendChild(container);
-
+    let container;
     try {
+      container = document.createElement("div");
+      Object.assign(container.style, {
+        position: "fixed",
+        top: "0",
+        left: "-9999px",
+        width: `${PDF_PAGE_WIDTH_PX}px`,
+        background: "#ffffff",
+      });
+      document.body.appendChild(container);
+
       const { createRoot } = await import("react-dom/client");
       const displayData = mergeWithSampleData(formData);
       await new Promise((resolve) => {
@@ -293,7 +294,7 @@ const CVBuilder = () => {
       console.error("Word download error:", err);
       toast.error("Failed to download Word.");
     } finally {
-      document.body.removeChild(container);
+      if (container && container.parentNode) document.body.removeChild(container);
       setIsDownloading(false);
     }
   };
@@ -307,27 +308,27 @@ const CVBuilder = () => {
     }
 
     setIsDownloading(true);
-
-    const container = document.createElement("div");
-    Object.assign(container.style, {
-      position: "fixed",
-      top: "0",
-      left: "-9999px",
-      width: `${PDF_PAGE_WIDTH_PX}px`,
-      background: "#ffffff",
-    });
-    document.body.appendChild(container);
-
-    const { createRoot } = await import("react-dom/client");
-    const displayData = mergeWithSampleData(formData);
-
-    await new Promise((resolve) => {
-      const root = createRoot(container);
-      root.render(<TemplateComponent formData={displayData} />);
-      setTimeout(resolve, 400);
-    });
-
+    let container;
     try {
+      container = document.createElement("div");
+      Object.assign(container.style, {
+        position: "fixed",
+        top: "0",
+        left: "-9999px",
+        width: `${PDF_PAGE_WIDTH_PX}px`,
+        background: "#ffffff",
+      });
+      document.body.appendChild(container);
+
+      const { createRoot } = await import("react-dom/client");
+      const displayData = mergeWithSampleData(formData);
+
+      await new Promise((resolve) => {
+        const root = createRoot(container);
+        root.render(<TemplateComponent formData={displayData} />);
+        setTimeout(resolve, 400);
+      });
+
       const canvas = await html2canvas(container, {
         scale: 3,
         useCORS: true,
@@ -387,7 +388,7 @@ const CVBuilder = () => {
       console.error("PDF download error:", err);
       toast.error("Failed to download PDF.");
     } finally {
-      document.body.removeChild(container);
+      if (container && container.parentNode) document.body.removeChild(container);
       setIsDownloading(false);
     }
   };

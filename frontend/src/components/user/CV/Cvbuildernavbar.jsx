@@ -27,14 +27,18 @@ const CVBuilderTopBar = ({
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [localTitle, setLocalTitle] = useState(title ?? "");
   const uploadInputRef = useRef(null);
-  const downloadDropdownRef = useRef(null);
+  const downloadDropdownMobileRef = useRef(null);
+  const downloadDropdownDesktopRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (
-        downloadDropdownRef.current &&
-        !downloadDropdownRef.current.contains(e.target)
-      ) {
+      const inMobile =
+        downloadDropdownMobileRef.current &&
+        downloadDropdownMobileRef.current.contains(e.target);
+      const inDesktop =
+        downloadDropdownDesktopRef.current &&
+        downloadDropdownDesktopRef.current.contains(e.target);
+      if (!inMobile && !inDesktop) {
         setShowDownloadMenu(false);
       }
     };
@@ -173,7 +177,7 @@ const CVBuilderTopBar = ({
                 </button>
               )}
 
-              <div className="relative" ref={downloadDropdownRef}>
+              <div className="relative" ref={downloadDropdownMobileRef}>
                 <button
                   onClick={() => setShowDownloadMenu((v) => !v)}
                   disabled={isDownloading || downloadDisabled}
@@ -246,7 +250,7 @@ const CVBuilderTopBar = ({
         )}
 
         {/* Download dropdown */}
-        <div className="relative" ref={downloadDropdownRef}>
+        <div className="relative" ref={downloadDropdownDesktopRef}>
           <button
             onClick={() => setShowDownloadMenu((v) => !v)}
             disabled={isDownloading || downloadDisabled}
@@ -295,7 +299,7 @@ const CVBuilderTopBar = ({
       </div>
 
       {/* Right Side: Actions */}
-      <div className="flex flex-wrap justify-center md:justify-end items-center gap-2 w-full md:w-auto">
+      {/* <div className="flex flex-wrap justify-center md:justify-end items-center gap-2 w-full md:w-auto">
         <button className="items-center gap-2 px-4 py-2 rounded-lg hidden md:flex border border-gray-300 bg-white text-gray-800 font-medium shadow-sm hover:bg-black hover:text-white transition-all duration-200 select-none">
           <PenTool size={18} />
           CV Designer
@@ -318,7 +322,7 @@ const CVBuilderTopBar = ({
           )}
           <span className="hidden md:inline">{isSaving ? "Saving..." : "Download"}</span>
         </button>
-      </div>
+      </div> */}
     </div>
   );
 };

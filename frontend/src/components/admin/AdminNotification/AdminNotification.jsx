@@ -34,7 +34,9 @@ const NOTIFICATION_TYPES = {
     new_user: { icon: UserPlus, color: "text-indigo-600", bg: "bg-indigo-50", label: "User" },
     security_alert: { icon: Shield, color: "text-rose-600", bg: "bg-rose-50", label: "Security" },
     system_alert: { icon: AlertTriangle, color: "text-orange-600", bg: "bg-orange-50", label: "System" },
-    resume_downloaded: { icon: Download, color: "text-cyan-600", bg: "bg-cyan-50", label: "Download" }
+    resume_downloaded: { icon: Download, color: "text-cyan-600", bg: "bg-cyan-50", label: "Download" },
+    admin_request: { icon: Shield, color: "text-blue-600", bg: "bg-blue-50", label: "Admin Request" },
+    role_update: { icon: UserPlus, color: "text-indigo-600", bg: "bg-indigo-50", label: "Role Update" }
 };
 
 const AdminNotification = () => {
@@ -112,9 +114,9 @@ const AdminNotification = () => {
         .filter(n => {
             if (!searchQuery) return true;
             const query = searchQuery.toLowerCase();
-            return n.title.toLowerCase().includes(query) || 
-                   n.description.toLowerCase().includes(query) ||
-                   (n.user && n.user.toLowerCase().includes(query));
+            return n.title.toLowerCase().includes(query) ||
+                n.description.toLowerCase().includes(query) ||
+                (n.user && n.user.toLowerCase().includes(query));
         });
 
     const todayNotifications = filteredNotifications.filter(n => n.category === 'today');
@@ -179,7 +181,7 @@ const AdminNotification = () => {
                                 className="w-full pl-11 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 focus:bg-white transition-all placeholder:text-slate-400"
                             />
                         </div>
-                        
+
                         {/* Filter tabs */}
                         <div className="flex gap-1 bg-slate-100 p-1 rounded-xl">
                             {[
@@ -190,11 +192,10 @@ const AdminNotification = () => {
                                 <button
                                     key={tab.key}
                                     onClick={() => setFilter(tab.key)}
-                                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-                                        filter === tab.key
+                                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${filter === tab.key
                                             ? 'bg-white text-slate-800 shadow-sm'
                                             : 'text-slate-500 hover:text-slate-700'
-                                    }`}
+                                        }`}
                                 >
                                     {tab.label}
                                     <span className={`ml-1.5 text-xs ${filter === tab.key ? 'text-slate-500' : 'text-slate-400'}`}>({tab.count})</span>
@@ -294,7 +295,7 @@ const NotificationCard = ({ notification, onMarkRead, onDelete, onClick }) => {
     const Icon = typeConfig.icon;
 
     return (
-        <div 
+        <div
             className={`group px-5 py-4 transition-all hover:bg-slate-50 cursor-pointer ${notification.isUnread ? 'bg-blue-50/30' : ''}`}
             onClick={onClick}
         >
@@ -349,7 +350,7 @@ const NotificationCard = ({ notification, onMarkRead, onDelete, onClick }) => {
                             </button>
                         </div>
                     </div>
-                    
+
                     {/* Bottom row with label, user, and time */}
                     <div className="flex items-end justify-between mt-auto">
                         <div className="flex items-center gap-2 text-xs flex-wrap">
@@ -378,11 +379,11 @@ const NotificationDetailModal = ({ notification, onClose, onDelete }) => {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             {/* Backdrop */}
-            <div 
+            <div
                 className="absolute inset-0 bg-black/30 backdrop-blur-sm"
                 onClick={onClose}
             />
-            
+
             {/* Modal */}
             <div className="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                 {/* Header */}

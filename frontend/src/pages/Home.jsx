@@ -35,12 +35,12 @@ import {
 } from "lucide-react";
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 40 },
+  hidden: { opacity: 0, y: 22 },
   show: {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.7,
+      duration: 0.6,
       ease: "easeOut",
     },
   },
@@ -50,7 +50,7 @@ const staggerContainer = {
   hidden: {},
   show: {
     transition: {
-      staggerChildren: 0.15,
+      staggerChildren: 0.12,
     },
   },
 };
@@ -253,7 +253,7 @@ function LandingPage() {
       icon: <Layout className="text-green-600 size-6" />,
       title: "Categorized Templates",
       description:
-        "Access a curated library of Modern, Creative, and Professional templates tailored for every industry.",
+        "Access a curated library of Contemporary, Creative, and Traditional templates tailored for every industry.",
       path: "/TemplatesFeature",
     },
     {
@@ -297,7 +297,7 @@ function LandingPage() {
     <div className="min-h-screen flex flex-col bg-white text-[#1a2e52] font-['Outfit']">
       <NavBar />
       <div className="h-12" />
-      {/*  OVERLAY */}
+      {/* OVERLAY */}
       <div
         onClick={toggleMobileMenu}
         className={`w-full h-full absolute top-0 left-0 z-30 bg-black/20 ${mobileMenuOpen ? "" : "hidden"
@@ -306,16 +306,17 @@ function LandingPage() {
 
       {/* HERO SECTION - padding added and mobile padding reudced */}
       <motion.section
-        variants={fadeUp}
+        variants={staggerContainer}
         initial="hidden"
-        animate="show"
+        whileInView="show"
+        viewport={{ once: true, amount: 0.25 }}
         className="relative 
   px-4 md:px-8 
   bg-white 
   ml-2 md:ml-5 
   lg:min-h-[calc(100vh-80px)]
   flex items-center lg:items-start
-  pt-[100px] md:pt-[120px] lg:pt-16
+  pt-[100px] md:pt-[120px] lg:pt-6
   -mt-12 lg:mt-0"
       >
         <div className="absolute top-0 right-0 w-1/3 h-1/4 bg-orange-50 rounded-full blur-[120px] -z-10 opacity-50"></div>
@@ -323,7 +324,7 @@ function LandingPage() {
 
         <div className="max-w-[1400px] mx-0 md:mx-auto grid lg:grid-cols-2 gap-8 md:gap-6 items-center">
           <div className="flex flex-col gap-4 md:gap-6 text-center md:text-left items-center md:items-start max-w-md mx-0 md:max-w-none md:mx-0">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight select-none font-jakarta">
+            <motion.h1 variants={fadeUp} className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight select-none font-jakarta">
               <span className="bg-gradient-to-r from-[#e65100] to-[#ff8f00] bg-clip-text text-transparent">
                 UptoSkills AI
               </span>{" "}
@@ -334,17 +335,17 @@ function LandingPage() {
               <span className="text-2xl md:text-4xl text-[#1a2e52] mt-2 md:mt-4 block">
                 Craft Your Perfect Resume in Minutes!
               </span>
-            </h1>
+            </motion.h1>
 
-            <h2 className="text-2xl md:text-3xl font-bold text-[#0077cc]">
+            <motion.h2 variants={fadeUp} className="text-2xl md:text-3xl font-bold text-[#0077cc]">
               AI Resume Builder
-            </h2>
+            </motion.h2>
 
-            <p className="text-lg md:text-xl font-normal leading-relaxed text-gray-600 max-w-sm md:max-w-none mx-auto md:mx-0">
+            <motion.p variants={fadeUp} className="text-lg md:text-xl font-normal leading-relaxed text-gray-600 max-w-sm md:max-w-none mx-auto md:mx-0">
               AI-Powered Content, Professional Templates, ATS-Friendly.
-            </p>
+            </motion.p>
 
-            <div className="flex flex-row md:flex-col gap-3 mt-3 select-none justify-center md:items-start">
+            <motion.div variants={fadeUp} className="flex flex-row md:flex-col gap-3 mt-3 select-none justify-center md:items-start">
               <button
                 onClick={() => navigate("/login")}
                 className="flex items-center justify-center gap-2 md:gap-3 px-4 md:px-10 py-3 md:py-5 text-sm md:text-lg font-bold text-white bg-gradient-to-r from-[#e65100] to-[#f4511e] rounded-xl whitespace-nowrap transition-all duration-300 hover:-translate-y-1 shadow-[0_10px_25px_rgba(230,81,0,0.3)] hover:shadow-[0_15px_35px_rgba(230,81,0,0.45)]"
@@ -363,42 +364,16 @@ function LandingPage() {
                 <Layers size={18} />
                 View Templates
               </button>
-            </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            </motion.div>
           </div>
 
           {/* Image carousel -  size reduced, Hidden on mobile, visible on md and up */}
-          <div className="hidden md:flex items-center justify-center">
+          <motion.div variants={fadeUp} className="hidden md:flex items-center justify-center">
             <div className="w-full max-w-2xl lg:max-w-[90%] relative h-[400px] md:h-[600px] lg:h-[600px]">
               {templates.map((template, idx) => (
                 <div
                   key={idx}
-                  className={`absolute inset-0 transition-all duration-700 ease-out flex items-center justify-center select-none ${idx === currentTemplateIndex
+                  className={`absolute inset-0 transition-all duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] flex items-center justify-center select-none ${idx === currentTemplateIndex
                     ? "opacity-100 scale-100"
                     : "opacity-0 scale-95"
                     }`}
@@ -418,7 +393,7 @@ function LandingPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </motion.div>
         </div>
       </motion.section>
 
@@ -432,12 +407,12 @@ function LandingPage() {
       >
         <div className="max-w-[1200px] mx-auto">
           <div className="mb-10 md:mb-20 text-center">
-            <h2 className="mb-3 md:mb-4 text-3xl md:text-4xl lg:text-5xl font-black">
+            <motion.h2 variants={fadeUp} className="mb-3 md:mb-4 text-3xl md:text-4xl lg:text-5xl font-black">
               How <span className="text-[#e65100]">It Works</span>
-            </h2>
-            <p className="text-base md:text-lg text-gray-500">
+            </motion.h2>
+            <motion.p variants={fadeUp} className="text-base md:text-lg text-gray-500">
               Your path to a professional resume in 5 simple steps.
-            </p>
+            </motion.p>
           </div>
 
           <div className="space-y-6 md:space-y-24">
@@ -445,9 +420,8 @@ function LandingPage() {
               <motion.div
                 key={index}
                 variants={fadeUp}
-                className={`flex flex-col md:flex-row items-center gap-6 md:gap-12 ${
-                  index % 2 !== 0 ? "md:flex-row-reverse" : ""
-                }`}
+                className={`flex flex-col md:flex-row items-center gap-6 md:gap-12 ${index % 2 !== 0 ? "md:flex-row-reverse" : ""
+                  }`}
               >
                 {/* MOBILE BADGE - Hidden on Desktop */}
                 <div className="absolute top-4 left-4 md:hidden bg-[#0077cc] text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
@@ -494,12 +468,12 @@ function LandingPage() {
         <div className="max-w-[1400px] mx-auto">
           {/* Header Section */}
           <div className="flex flex-col items-center mb-8 md:mb-12 text-center">
-            <h2 className="mb-3 md:mb-4 text-2xl md:text-3xl lg:text-4xl font-black leading-tight">
+            <motion.h2 variants={fadeUp} className="mb-3 md:mb-4 text-2xl md:text-3xl lg:text-4xl font-black leading-tight">
               Access Free <span className="text-[#0077cc]">Templates</span>
-            </h2>
-            <p className="max-w-2xl px-4 text-sm md:text-base text-gray-500">
+            </motion.h2>
+            <motion.p variants={fadeUp} className="max-w-2xl px-4 text-sm md:text-base text-gray-500">
               All templates are ATS-compliant and fully customizable.
-            </p>
+            </motion.p>
           </div>
 
           <div className="relative group/main">
@@ -577,14 +551,14 @@ function LandingPage() {
         <div className="relative z-10 px-2 md:px-4 mx-auto max-w-7xl">
           {/* Header Section */}
           <div className="flex flex-col items-center mb-10 md:mb-16 text-center">
-            <h2 className="mb-2 md:mb-4 text-3xl md:text-4xl lg:text-5xl font-black text-[#1a2e52] leading-tight">
+            <motion.h2 variants={fadeUp} className="mb-2 md:mb-4 text-3xl md:text-4xl lg:text-5xl font-black text-[#1a2e52] leading-tight">
               AI-Powered <span className="text-[#0077cc]">Innovation</span>
-            </h2>
-            <div className="h-1 w-16 md:h-1.5 md:w-20 bg-[#e65100] rounded-full mb-4 md:mb-6"></div>
-            <p className="max-w-2xl px-2 text-sm md:text-lg text-gray-500 leading-relaxed">
+            </motion.h2>
+            <motion.div variants={fadeUp} className="h-1 w-16 md:h-1.5 md:w-20 bg-[#e65100] rounded-full mb-4 md:mb-6"></motion.div>
+            <motion.p variants={fadeUp} className="max-w-2xl px-2 text-sm md:text-lg text-gray-500 leading-relaxed">
               Advanced tools designed to bypass ATS filters and catch recruiter
               attention instantly.
-            </p>
+            </motion.p>
           </div>
 
           {/* Responsive Grid: 2 columns on mobile, 4 on desktop */}
@@ -639,7 +613,7 @@ function LandingPage() {
           </div>
         </div>
       </motion.section>
-   
+
       <Footer />
     </div>
   );
