@@ -65,7 +65,7 @@ const [ctaRef, ctaVisible] = useInView(0.2);
       {/* --- HERO SECTION --- */}
       <section
   ref={heroRef}
-  className={`relative px-8 pt-12 pb-12 overflow-hidden bg-white transition-all duration-700 ${
+  className={`relative px-8 pt-24 pb-12 overflow-hidden bg-white transition-all duration-700 ${
     heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
   }`}
 >

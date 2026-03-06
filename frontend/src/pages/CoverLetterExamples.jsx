@@ -153,7 +153,7 @@ const CoverLetterExamples = () => {
             <NavBar />
 
             {/* ✅ HERO SECTION (Updated to match screenshot) */}
-            <section className="relative pt-16 pb-20 px-12 pr-16 overflow-hidden bg-white mt-12">
+            <section className="relative pt-20 pb-20 px-12 pr-16 overflow-hidden bg-white mt-12">
                 {/* subtle background */}
                 <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-blue-50/50 to-transparent rounded-bl-[100px] pointer-events-none" />
                 <div className="absolute bottom-0 left-0 w-1/3 h-1/2 bg-gradient-to-t from-orange-50/50 to-transparent rounded-tr-[100px] pointer-events-none" />

@@ -54,7 +54,7 @@ function Contact() {
       <NavBar />
       <div className="h-12" />
       {/* HERO SECTION - MATCHING REFERENCE IMAGE */}
-      <section className="relative px-6 pt-20 md:pt-32 lg:pt-40 pb-14 overflow-hidden bg-white isolate">
+      <section className="relative px-6 pt-24 md:pt-32 lg:pt-14 pb-14 overflow-hidden bg-white isolate">
         {/* BLUR CIRCLES - Using more saturated colors for visibility */}
         <BlurCircle
           top="23%"
@@ -457,7 +457,7 @@ function Contact() {
       </section>
 
       {/* MODERN CONTACT INFO BAR */}
-      <section className="relative px-6 pb-24 lg:px-8">
+      <section className="relative px-6 pb-12 lg:px-8 pt-12">
         <div className="max-w-[1200px] mx-auto">
           {/* Inner Container with subtle glow and glass effect */}
           <div className="relative overflow-hidden bg-white border border-gray-100 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-2">

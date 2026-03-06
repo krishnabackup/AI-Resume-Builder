@@ -40,7 +40,7 @@ const AboutUs = () => {
       <main className="page-enter bg-[#f8fafc] text-slate-800 overflow-x-hidden">
 
         {/* HERO */}
-        <section className="relative max-w-6xl mx-auto px-4 sm:px-2 py-12 md:py-12 grid md:grid-cols-2 gap-10 md:gap-12 items-center overflow-hidden">
+        <section className="relative max-w-6xl mx-auto px-4 sm:px-2 pt-24 md:pt-24 md:pb-12 grid md:grid-cols-2 gap-10 md:gap-12 items-center overflow-hidden">
   
   <motion.div 
     initial="hidden"

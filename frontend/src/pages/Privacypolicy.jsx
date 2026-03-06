@@ -95,7 +95,7 @@ export default function PrivacyPolicy() {
 
       {/* Section to display privacy policy page title and subtitle */}
 
-      <section className="text-center bg-gradient-to-b from-blue-50 via-white to-white py-16 pb-8 md:py-20 md:pb-10">
+      <section className="text-center bg-gradient-to-b from-blue-50 via-white to-white pt-24 pb-2 md:pt-24">
         <div className="max-w-4xl px-4 mx-auto sm:px-6">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 mb-4 md:mb-6 text-xs md:text-sm text-green-700 bg-green-200 rounded-full">
             <i className="fa-solid fa-shield-halved text-sm md:text-base"></i>

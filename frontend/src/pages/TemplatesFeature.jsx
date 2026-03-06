@@ -49,18 +49,6 @@ const TemplatesFeature = () => {
   ref={heroRef}
   className="relative px-6 overflow-hidden bg-gradient-to-br from-blue-50 via-white to-blue-50"
 >
-  {/* Back To Home Button */}
-  <div className="absolute z-20 pt-4 top-10 left-6">
-    <button
-      onClick={handleBackHome}
-      className="inline-flex items-center gap-3 text-sm font-bold text-blue-500 transition-all group hover:text-blue-800"
-    >
-      <i className="transition-transform fas fa-arrow-left group-hover:-translate-x-1"></i>
-      <span className="relative transition-transform duration-300 group-hover:scale-105">
-        Back to home
-      </span>
-    </button>
-  </div>
 
   {/* Background blobs */}
   <div className="absolute rounded-full -top-24 -left-24 w-72 h-72 bg-blue-200/30 blur-3xl animate-pulse" />
@@ -68,7 +56,7 @@ const TemplatesFeature = () => {
 
   <div className="mx-auto max-w-7xl">
     {/* HERO GRID */}
-    <div className="grid items-center min-h-[85vh] gap-12 pt-20 pb-16 lg:grid-cols-2">
+    <div className="grid items-center min-h-[85vh] gap-12 pt-36 pb-16 lg:grid-cols-2">
 
       {/* LEFT CONTENT */}
       <div
@@ -76,7 +64,7 @@ const TemplatesFeature = () => {
           heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
         }`}
       >
-        <div className="inline-block pt-4 px-5 py-2 mb-5 text-sm font-semibold text-blue-700 bg-blue-100 rounded-full">
+        <div className="inline-block mt-4 px-5 py-2 mb-5 text-sm font-semibold text-blue-700 bg-blue-100 rounded-full">
           Professional Resume Templates
         </div>
 

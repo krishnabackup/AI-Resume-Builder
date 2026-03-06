@@ -72,7 +72,7 @@ const FAQ = () => {
       {/* HERO SECTION */}
       <section
         ref={heroRef}
-        className="relative px-6 pt-16 pb-24 overflow-hidden bg-gradient-to-br from-blue-50 via-white to-blue-50"
+        className="relative px-6 pt-24 pb-8 overflow-hidden bg-gradient-to-br from-blue-50 via-white to-blue-50"
       >
         {/* Glow blobs */}
         <div className="absolute rounded-full -top-24 -left-24 w-72 h-72 bg-blue-200/30 blur-3xl animate-pulse" />
@@ -101,7 +101,7 @@ const FAQ = () => {
       </section>
 
       {/* FAQ SECTION */}
-      <section ref={faqRef} className="px-6 py-24 bg-white">
+      <section ref={faqRef} className="px-6 py-12 bg-white">
         <div
           className={`max-w-4xl mx-auto transition-all duration-700 ${
             faqVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
