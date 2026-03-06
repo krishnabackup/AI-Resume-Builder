@@ -108,8 +108,60 @@ export default function AdminUsers({ head = "Manage Users" }) {
     }
   };
 
-  const handleToggleActive = async (user) => {
+  const handleToggleActive = (user) => {
     const newStatus = !user.isActive;
+
+    toast((t) => (
+      <div className="flex flex-col gap-3 min-w-[280px]">
+        <div className="flex items-start gap-3">
+          <div className={`p-2 rounded-lg ${newStatus ? 'bg-green-100' : 'bg-amber-100'}`}>
+            <AlertCircle className={`w-5 h-5 ${newStatus ? 'text-green-600' : 'text-amber-600'}`} />
+          </div>
+          <div>
+            <p className="font-semibold text-gray-800 text-sm">
+              {newStatus ? 'Activate' : 'Deactivate'} User?
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              Are you sure you want to {newStatus ? 'activate' : 'deactivate'} <span className="font-medium text-gray-700">{user.username || user.email}</span>?
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-2 justify-end mt-1">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={async () => {
+              toast.dismiss(t.id);
+              await executeToggleActive(user, newStatus);
+            }}
+            className={`px-4 py-1.5 text-xs font-bold text-white rounded-lg transition-all shadow-sm ${newStatus
+              ? 'bg-green-600 hover:bg-green-700'
+              : 'bg-amber-600 hover:bg-amber-700'
+              }`}
+          >
+            Confirm
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: 6000,
+      position: 'top-center',
+      style: {
+        background: '#fff',
+        color: '#333',
+        padding: '16px',
+        borderRadius: '16px',
+        border: '1px solid #e2e8f0',
+        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+      },
+    });
+  };
+
+  const executeToggleActive = async (user, newStatus) => {
     try {
       // Optimistic update
       setUsers(prev => prev.map(u => u._id === user._id ? { ...u, isActive: newStatus } : u));
@@ -223,6 +275,7 @@ export default function AdminUsers({ head = "Manage Users" }) {
 
   return (
     <div className="min-h-screen bg-slate-50 p-4 sm:p-6">
+      <Toaster />
       <div className="p-6">
         <h1 className="text-2xl font-bold mb-6 text-gray-800">{head}</h1>
 

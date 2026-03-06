@@ -246,12 +246,18 @@ const ResumeBuilder = ({ setActivePage = () => {} }) => {
   const handleDownload = async (e) => {
     if (exporting) return;
     const html = await previewRef.current?.getResumeHTML();
-    if (!html) return;
+    if (!html) {
+      alert("Preview not ready. Please wait a moment and try again.");
+      return;
+    }
     try {
       setExporting(true);
       await GenerateResumePDF(html);
       // Save to downloads page
       await saveDownloadRecord(html, "PDF");
+    } catch (err) {
+      console.error("PDF download error:", err);
+      alert("Failed to download PDF.");
     } finally {
       setExporting(false);
     }
@@ -259,25 +265,33 @@ const ResumeBuilder = ({ setActivePage = () => {} }) => {
 
   const handleDownloadWord = async () => {
     const html = await previewRef.current?.getResumeHTML();
-    if (!html) return;
-    const wordHtml = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Resume</title></head><body>${html}</body></html>`;
-    const blob = new Blob(["\uFEFF", wordHtml], { type: "application/msword" });
-    const url = URL.createObjectURL(blob);
-    const sanitize = (s) =>
-      (s || "")
-        .replace(/[^a-z0-9_\- ]/gi, "")
-        .trim()
-        .replace(/\s+/g, "_");
-    const fileName =
-      sanitize(documentTitle) || sanitize(formData.fullName) || "Resume";
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${fileName}.doc`;
-    a.click();
-    URL.revokeObjectURL(url);
+    if (!html) {
+      alert("Preview not ready. Please wait a moment and try again.");
+      return;
+    }
+    try {
+      const wordHtml = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Resume</title></head><body>${html}</body></html>`;
+      const blob = new Blob(["\uFEFF", wordHtml], { type: "application/msword" });
+      const url = URL.createObjectURL(blob);
+      const sanitize = (s) =>
+        (s || "")
+          .replace(/[^a-z0-9_\- ]/gi, "")
+          .trim()
+          .replace(/\s+/g, "_");
+      const fileName =
+        sanitize(documentTitle) || sanitize(formData.fullName) || "Resume";
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${fileName}.doc`;
+      a.click();
+      URL.revokeObjectURL(url);
     
-    // Save to downloads page
-    await saveDownloadRecord(html, "DOCX");
+      // Save to downloads page
+      await saveDownloadRecord(html, "DOCX");
+    } catch (err) {
+      console.error("Word download error:", err);
+      alert("Failed to download Word document.");
+    }
   };
 
   /* ======================================================

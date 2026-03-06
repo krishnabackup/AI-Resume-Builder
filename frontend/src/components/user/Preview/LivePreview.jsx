@@ -376,16 +376,16 @@ const LivePreview = forwardRef((props, ref) => {
     return v !== "" && v !== undefined && v !== null;
   });
 
-  const PreviewContent = () => {
-    const templateId = currentTemplate?.id || currentTemplate;
-    const TemplateComponent = templateId
-      ? getTemplateComponent(templateId)
-      : null;
+  const templateId = currentTemplate?.id || currentTemplate;
+  const ResolvedTemplate = templateId
+    ? getTemplateComponent(templateId)
+    : null;
 
-    if (TemplateComponent) {
+  const renderPreviewContent = () => {
+    if (ResolvedTemplate) {
       return (
         <div ref={resume_doc}>
-          <TemplateComponent data={formData} />
+          <ResolvedTemplate data={formData} />
         </div>
       );
     }
@@ -679,7 +679,7 @@ const LivePreview = forwardRef((props, ref) => {
   };
 
   /* ── toolbar ──────────────────────────────────────────────────────────── */
-  const Toolbar = () => (
+  const renderToolbar = () => (
     <div
       style={{
         display: "flex",
@@ -865,7 +865,7 @@ const LivePreview = forwardRef((props, ref) => {
   );
 
   /* ── thumbnail strip ──────────────────────────────────────────────────── */
-  const ThumbnailStrip = () => {
+  const renderThumbnailStrip = () => {
     if (totalPages <= 1 || isNarrow) return null;
     return (
       <div
@@ -923,7 +923,7 @@ const LivePreview = forwardRef((props, ref) => {
     );
   };
 
-  const Canvas = () => (
+  const renderCanvas = () => (
     <div
       ref={containerRef}
       style={{
@@ -946,18 +946,16 @@ const LivePreview = forwardRef((props, ref) => {
           backgroundSize: showGrid ? "20px 20px" : undefined,
         }}
       >
-        <div ref={resume_doc}>
-          <PaginatedPreview
-            zoom={effectiveZoom}
-            currentPage={currentPage}
-            onTotalPagesChange={(n) => {
-              setTotalPages(n);
-              setCurrentPage((p) => clamp(p, 1, n));
-            }}
-          >
-            <PreviewContent />
-          </PaginatedPreview>
-        </div>
+        <PaginatedPreview
+          zoom={effectiveZoom}
+          currentPage={currentPage}
+          onTotalPagesChange={(n) => {
+            setTotalPages(n);
+            setCurrentPage((p) => clamp(p, 1, n));
+          }}
+        >
+          {renderPreviewContent()}
+        </PaginatedPreview>
       </div>
 
       {/* status bar */}
@@ -1014,10 +1012,10 @@ const LivePreview = forwardRef((props, ref) => {
         boxShadow: "inset 0 1px 4px rgba(0,0,0,0.02)",
       }}
     >
-      <Toolbar />
+      {renderToolbar()}
       <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
-        <Canvas />
-        <ThumbnailStrip />
+        {renderCanvas()}
+        {renderThumbnailStrip()}
       </div>
     </div>
   );

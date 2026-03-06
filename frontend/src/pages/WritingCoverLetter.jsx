@@ -214,7 +214,7 @@ Warm regards,
               initial="hidden"
               whileInView="show"
               viewport={{ once: true, amount: 0.25 }}
-              className="relative flex justify-center lg:justify-end hidden sm:flex"
+              className="relative flex justify-center lg:justify-end sm:flex"
             >
               <div className="absolute -inset-6 bg-blue-100/60 blur-3xl rounded-full" />
 

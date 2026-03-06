@@ -1,5 +1,6 @@
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Check, Eye, ChevronLeft, ChevronRight, X } from "lucide-react";
+import axiosInstance from "../../../api/axios";
 import CVTemplates from "./Cvtemplates";
 import mergeWithSampleData, {
   hasAnyUserData,
@@ -170,14 +171,31 @@ const TemplateSection = ({
 
 const TemplatesGallery = ({ selectedTemplate, onSelectTemplate, formData }) => {
   const [previewTemplate, setPreviewTemplate] = useState(null);
+  const [statuses, setStatuses] = useState({});
+
+  useEffect(() => {
+    const fetchStatuses = async () => {
+      try {
+        const statusRes = await axiosInstance.get('/api/template-visibility');
+        setStatuses(statusRes.data || {});
+      } catch (err) {
+        console.error("Error loading template statuses:", err);
+      }
+    };
+    fetchStatuses();
+  }, []);
 
   const displayData = useMemo(() => mergeWithSampleData(formData), [formData]);
   const showingUserData = useMemo(() => hasAnyUserData(formData), [formData]);
 
-  const traditional = templates.filter((t) => t.category === "Traditional");
-  const contemporary = templates.filter((t) => t.category === "Contemporary");
-  const creative = templates.filter((t) => t.category === "Creative");
-  const academic = templates.filter((t) => t.category === "Academic");
+  const activeTemplates = useMemo(() => {
+    return templates.filter((t) => statuses[t.id] !== false);
+  }, [statuses]);
+
+  const traditional = activeTemplates.filter((t) => t.category === "Traditional");
+  const contemporary = activeTemplates.filter((t) => t.category === "Contemporary");
+  const creative = activeTemplates.filter((t) => t.category === "Creative");
+  const academic = activeTemplates.filter((t) => t.category === "Academic");
 
   const PreviewModal = ({ template }) => {
     const TemplateComponent = CVTemplates[template.id];

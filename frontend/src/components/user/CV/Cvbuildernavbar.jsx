@@ -27,14 +27,18 @@ const CVBuilderTopBar = ({
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [localTitle, setLocalTitle] = useState(title ?? "");
   const uploadInputRef = useRef(null);
-  const downloadDropdownRef = useRef(null);
+  const downloadDropdownMobileRef = useRef(null);
+  const downloadDropdownDesktopRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (
-        downloadDropdownRef.current &&
-        !downloadDropdownRef.current.contains(e.target)
-      ) {
+      const inMobile =
+        downloadDropdownMobileRef.current &&
+        downloadDropdownMobileRef.current.contains(e.target);
+      const inDesktop =
+        downloadDropdownDesktopRef.current &&
+        downloadDropdownDesktopRef.current.contains(e.target);
+      if (!inMobile && !inDesktop) {
         setShowDownloadMenu(false);
       }
     };
@@ -173,7 +177,7 @@ const CVBuilderTopBar = ({
                 </button>
               )}
 
-              <div className="relative" ref={downloadDropdownRef}>
+              <div className="relative" ref={downloadDropdownMobileRef}>
                 <button
                   onClick={() => setShowDownloadMenu((v) => !v)}
                   disabled={isDownloading || downloadDisabled}
@@ -246,7 +250,7 @@ const CVBuilderTopBar = ({
         )}
 
         {/* Download dropdown */}
-        <div className="relative" ref={downloadDropdownRef}>
+        <div className="relative" ref={downloadDropdownDesktopRef}>
           <button
             onClick={() => setShowDownloadMenu((v) => !v)}
             disabled={isDownloading || downloadDisabled}
@@ -293,6 +297,32 @@ const CVBuilderTopBar = ({
           )}
         </div>
       </div>
+
+      {/* Right Side: Actions */}
+      {/* <div className="flex flex-wrap justify-center md:justify-end items-center gap-2 w-full md:w-auto">
+        <button className="items-center gap-2 px-4 py-2 rounded-lg hidden md:flex border border-gray-300 bg-white text-gray-800 font-medium shadow-sm hover:bg-black hover:text-white transition-all duration-200 select-none">
+          <PenTool size={18} />
+          CV Designer
+        </button>
+
+        <button className="flex gap-2 text-white cursor-pointer bg-black border-0 rounded-lg text-sm transition-all duration-200 select-none md:hover:bg-black/70 py-2 px-5 md:py-2.5 md:px-5">
+          <Upload size={18} />
+          <span className="hidden md:inline">Upload</span>
+        </button>
+
+        <button
+          onClick={onSave}
+          disabled={isSaving}
+          className="flex gap-2 text-white cursor-pointer bg-indigo-600 border-0 rounded-lg select-none text-sm transition-all duration-200 hover:bg-indigo-700 py-2 px-5 md:py-2.5 md:px-5 disabled:opacity-70 disabled:cursor-not-allowed"
+        >
+          {isSaving ? (
+            <div className="animate-spin rounded-full w-4 h-4 border-2 border-white border-t-transparent" />
+          ) : (
+            <Download size={18} />
+          )}
+          <span className="hidden md:inline">{isSaving ? "Saving..." : "Download"}</span>
+        </button>
+      </div> */}
     </div>
   );
 };

@@ -70,7 +70,7 @@ const AIBuilderFeature = () => {
       {/* HERO */}
       <section
         ref={heroRef}
-         className="relative px-6 pt-24 overflow-hidden bg-white"
+         className="relative px-6 pt-32 pb-12 overflow-hidden bg-white"
 
 
       >

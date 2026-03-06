@@ -1,9 +1,32 @@
-import React from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import UpToSkillsImg from "../assets/UptoSkills.webp";
-import { useEffect, useState } from "react";
+
 import NavBar from "../components/NavBar";
 import Footer from "./Footer";
+
+// Scroll animation hook
+const useInView = (threshold = 0.15) => {
+  const ref = useRef(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    if (!ref.current) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) setIsVisible(true);
+      },
+      { threshold }
+    );
+
+    observer.observe(ref.current);
+
+    return () => observer.disconnect();
+  }, [threshold]);
+
+  return [ref, isVisible];
+};
 
 export default function PrivacyPolicy() {
   const navigate = useNavigate();
@@ -89,13 +112,22 @@ export default function PrivacyPolicy() {
     },
   ];
 
+  const [heroRef, heroVisible] = useInView(0.2);
+const [cardsRef, cardsVisible] = useInView(0.1);
+
   return (
     <div className="min-h-screen text-gray-900 bg-white select-none">
       <NavBar />
 
       {/* Section to display privacy policy page title and subtitle */}
 
-      <section className="text-center bg-gradient-to-b from-blue-50 via-white to-white py-16 pb-8 md:py-20 md:pb-10">
+     <section
+  ref={heroRef}
+  className={`text-center bg-gradient-to-b from-blue-50 via-white to-white pt-24 pb-2 md:pt-24
+  transition-all duration-700
+  ${heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}
+`}
+>
         <div className="max-w-4xl px-4 mx-auto sm:px-6">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 mb-4 md:mb-6 text-xs md:text-sm text-green-700 bg-green-200 rounded-full">
             <i className="fa-solid fa-shield-halved text-sm md:text-base"></i>
@@ -117,7 +149,13 @@ export default function PrivacyPolicy() {
 
       {/* Section to display privacy policy cards, icons, badges, title and content */}
 
-      <section className="max-w-6xl px-4 sm:px-6 pt-6 md:pt-10 pb-4 mx-auto space-y-6 md:space-y-10">
+     <section
+  ref={cardsRef}
+  className={`max-w-6xl px-4 sm:px-6 pt-6 md:pt-10 pb-4 mx-auto space-y-6 md:space-y-10
+  transition-all duration-700
+  ${cardsVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"}
+`}
+>
         {policys.map((policy, index) => (
           <div
             key={index}
