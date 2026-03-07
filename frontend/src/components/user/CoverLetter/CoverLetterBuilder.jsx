@@ -126,10 +126,10 @@ const CoverLetterBuilder = () => {
   const [documentTitle, setDocumentTitle] = useState("");
 
   const date = new Date().toLocaleDateString("en-US", {
-  year: "numeric",
-  month: "long",
-  day: "numeric",
-});
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
 
   useEffect(() => {
@@ -141,45 +141,45 @@ const CoverLetterBuilder = () => {
 
   useEffect(() => {
 
-  const saveEditActivity = async () => {
+    const saveEditActivity = async () => {
 
-    const TemplateComponent = CoverLetterTemplates[selectedTemplate];
-    if (!TemplateComponent) return;
+      const TemplateComponent = CoverLetterTemplates[selectedTemplate];
+      if (!TemplateComponent) return;
 
-    const container = document.createElement("div");
+      const container = document.createElement("div");
 
-    Object.assign(container.style, {
-      position: "fixed",
-      top: "0",
-      left: "-9999px",
-      width: "794px",
-      background: "#ffffff",
-    });
+      Object.assign(container.style, {
+        position: "fixed",
+        top: "0",
+        left: "-9999px",
+        width: "794px",
+        background: "#ffffff",
+      });
 
-    document.body.appendChild(container);
+      document.body.appendChild(container);
 
-    const { createRoot } = await import("react-dom/client");
+      const { createRoot } = await import("react-dom/client");
 
-    await new Promise((resolve) => {
-      const root = createRoot(container);
-      root.render(
-        <TemplateComponent formData={formData} exportDate={date} />
-      );
-      setTimeout(resolve, 300);
-    });
+      await new Promise((resolve) => {
+        const root = createRoot(container);
+        root.render(
+          <TemplateComponent formData={formData} exportDate={date} />
+        );
+        setTimeout(resolve, 300);
+      });
 
-    const html = container.innerHTML;
+      const html = container.innerHTML;
 
-    await saveRecentActivity(html, "visited");
+      await saveRecentActivity(html, "visited");
 
-    document.body.removeChild(container);
-  };
+      document.body.removeChild(container);
+    };
 
-  const timer = setTimeout(saveEditActivity, 5000);
+    const timer = setTimeout(saveEditActivity, 5000);
 
-  return () => clearTimeout(timer);
+    return () => clearTimeout(timer);
 
-}, [formData, selectedTemplate]);
+  }, [formData, selectedTemplate]);
 
   // Measure sticky navbar height for floating offset
   useEffect(() => {
@@ -204,7 +204,7 @@ const CoverLetterBuilder = () => {
   };
 
 
- 
+
 
   /* ======================================================
      SAVE DOWNLOAD RECORD
@@ -228,99 +228,99 @@ const CoverLetterBuilder = () => {
   /* ======================================================
    SAVE RECENT ACTIVITY (visited / preview / download)
 ====================================================== */
-const saveRecentActivity = async (html, action = "visited") => {
-  try {
-    const sanitize = (s) =>
-      (s || "")
-        .replace(/[^a-z0-9_\- ]/gi, "")
-        .trim()
-        .replace(/\s+/g, "_");
+  const saveRecentActivity = async (html, action = "visited") => {
+    try {
+      const sanitize = (s) =>
+        (s || "")
+          .replace(/[^a-z0-9_\- ]/gi, "")
+          .trim()
+          .replace(/\s+/g, "_");
 
 
-    const nameToUse =
-      sanitize(documentTitle) || sanitize(formData.fullName) || "Document";
+      const nameToUse =
+        sanitize(documentTitle) || sanitize(formData.fullName) || "Document";
 
 
-    await axiosInstance.post("/api/downloads", {
-      name: `Cover Letter - ${nameToUse}`,
-      type: "cover-letter",
-      action,
-      format: "PDF",
-      html,
-      template: selectedTemplate,
-      size: "150 KB",
-    });
-  } catch (err) {
-    console.error("Failed to save cover letter activity:", err);
-  }
-};
-
-
-/* ======================================================
-   SAVE ACTIVITY WHEN BUILDER OPENS
-====================================================== */
- useEffect(() => {
-
-
-  // prevent duplicate visit records in same session
-  if (sessionStorage.getItem("coverletter-builder-visited")) return;
-
-
-  const saveVisit = async () => {
-
-
-    const TemplateComponent = CoverLetterTemplates[selectedTemplate];
-    if (!TemplateComponent) return;
-
-
-    const container = document.createElement("div");
-
-
-    Object.assign(container.style, {
-      position: "fixed",
-      top: "0",
-      left: "-9999px",
-      width: "794px",
-      background: "#ffffff",
-    });
-
-
-    document.body.appendChild(container);
-
-
-    const { createRoot } = await import("react-dom/client");
-
-
-    await new Promise((resolve) => {
-      const root = createRoot(container);
-      root.render(
-        <TemplateComponent formData={formData} exportDate={date} />
-      );
-      setTimeout(resolve, 400);
-    });
-
-
-    const html = container.innerHTML;
-
-
-    await saveRecentActivity(html, "visited");
-
-
-    document.body.removeChild(container);
-
-
-    // mark as visited in this session
-    sessionStorage.setItem("coverletter-builder-visited", "true");
+      await axiosInstance.post("/api/downloads", {
+        name: `Cover Letter - ${nameToUse}`,
+        type: "cover-letter",
+        action,
+        format: "PDF",
+        html,
+        template: selectedTemplate,
+        size: "150 KB",
+      });
+    } catch (err) {
+      console.error("Failed to save cover letter activity:", err);
+    }
   };
 
 
-  const timer = setTimeout(saveVisit, 2000);
+  /* ======================================================
+     SAVE ACTIVITY WHEN BUILDER OPENS
+  ====================================================== */
+  useEffect(() => {
 
 
-  return () => clearTimeout(timer);
+    // prevent duplicate visit records in same session
+    if (sessionStorage.getItem("coverletter-builder-visited")) return;
 
 
-}, []);
+    const saveVisit = async () => {
+
+
+      const TemplateComponent = CoverLetterTemplates[selectedTemplate];
+      if (!TemplateComponent) return;
+
+
+      const container = document.createElement("div");
+
+
+      Object.assign(container.style, {
+        position: "fixed",
+        top: "0",
+        left: "-9999px",
+        width: "794px",
+        background: "#ffffff",
+      });
+
+
+      document.body.appendChild(container);
+
+
+      const { createRoot } = await import("react-dom/client");
+
+
+      await new Promise((resolve) => {
+        const root = createRoot(container);
+        root.render(
+          <TemplateComponent formData={formData} exportDate={date} />
+        );
+        setTimeout(resolve, 400);
+      });
+
+
+      const html = container.innerHTML;
+
+
+      await saveRecentActivity(html, "visited");
+
+
+      document.body.removeChild(container);
+
+
+      // mark as visited in this session
+      sessionStorage.setItem("coverletter-builder-visited", "true");
+    };
+
+
+    const timer = setTimeout(saveVisit, 2000);
+
+
+    return () => clearTimeout(timer);
+
+
+  }, []);
 
 
 
@@ -469,24 +469,22 @@ body {
 </div>
 
 
-${
-  formData.jobTitle || formData.jobReference
-    ? `<div class="job-reference">
+${formData.jobTitle || formData.jobReference
+        ? `<div class="job-reference">
   ${formData.jobTitle ? `<div class="job-title">RE: ${formData.jobTitle.toUpperCase()}</div>` : ""}
   ${formData.jobReference ? `<div class="job-ref">Ref: ${formData.jobReference}</div>` : ""}
 </div>`
-    : ""
-}
+        : ""
+      }
 
 
-${
-  formData.jobSummary || formData.jobDescription
-    ? `<div class="job-details-section">
+${formData.jobSummary || formData.jobDescription
+        ? `<div class="job-details-section">
   ${formData.jobSummary ? `<div><strong>Job Summary:</strong> ${formData.jobSummary}</div>` : ""}
   ${formData.jobDescription ? `<div><strong>Key Responsibilities:</strong> ${formData.jobDescription}</div>` : ""}
 </div>`
-    : ""
-}
+        : ""
+      }
 
 
 <div class="recipient-info">
@@ -529,7 +527,7 @@ ${
       link.download = `${fileName}.pdf`;
       link.click();
       window.URL.revokeObjectURL(url);
-      await saveRecentActivity(letterHtml, "download");
+      await saveDownloadRecord(letterHtml, "PDF");
     } catch (err) {
       console.error("Cover letter PDF generation failed:", err);
       alert("Failed to generate PDF. Please try again.");
@@ -628,15 +626,14 @@ p, div, span { font-family: inherit !important; font-size: 11pt !important; line
 <body>
 <div class="contact-info">
   <div class="contact-name">${formData.fullName || "Your Name"}</div>
-  ${
-    formData.address
-      ? formData.address
+  ${formData.address
+        ? formData.address
           .split("\n")
           .filter(Boolean)
           .map((line) => `<div>${line}</div>`)
           .join("")
-      : ""
-  }
+        : ""
+      }
   <div class="contact-details">
     ${formData.email ? `<div>${formData.email}</div>` : ""}
     ${formData.phone ? `<div>${formData.phone}</div>` : ""}
@@ -646,39 +643,36 @@ p, div, span { font-family: inherit !important; font-size: 11pt !important; line
 </div>
 
 
-${
-  formData.jobTitle || formData.jobReference
-    ? `<div class="job-reference">
+${formData.jobTitle || formData.jobReference
+        ? `<div class="job-reference">
   ${formData.jobTitle ? `<div class="job-title">RE: ${formData.jobTitle.toUpperCase()}</div>` : ""}
   ${formData.jobReference ? `<div class="job-ref">Ref: ${formData.jobReference}</div>` : ""}
 </div>`
-    : ""
-}
+        : ""
+      }
 
 
-${
-  formData.jobSummary || formData.jobDescription
-    ? `<div class="job-details-section">
+${formData.jobSummary || formData.jobDescription
+        ? `<div class="job-details-section">
   ${formData.jobSummary ? `<div><strong>Job Summary:</strong> ${formData.jobSummary}</div>` : ""}
   ${formData.jobDescription ? `<div><strong>Key Responsibilities:</strong> ${formData.jobDescription}</div>` : ""}
 </div>`
-    : ""
-}
+        : ""
+      }
 
 
 <div class="recipient-info">
   <div class="recipient-name">${formData.recipientName || "Hiring Manager"}</div>
   ${formData.recipientTitle ? `<div class="recipient-title">${formData.recipientTitle}</div>` : ""}
   ${formData.companyName ? `<div class="company-name">${formData.companyName}</div>` : ""}
-  ${
-    formData.companyAddress
-      ? formData.companyAddress
+  ${formData.companyAddress
+        ? formData.companyAddress
           .split("\n")
           .filter(Boolean)
           .map((line) => `<div>${line}</div>`)
           .join("")
-      : ""
-  }
+        : ""
+      }
 </div>
 
 
@@ -721,7 +715,7 @@ ${
     URL.revokeObjectURL(url);
 
 
-   await saveRecentActivity(html, "download");
+    await saveDownloadRecord(html, "DOCX");
     setTimeout(() => setIsExporting(false), 800);
   };
 
@@ -779,7 +773,7 @@ ${
 
       <CVBuilderTopBar
         activeTab="builder"
-        setActiveTab={() => {}}
+        setActiveTab={() => { }}
         onDownload={exportToPDF}
         onDownloadWord={exportToWord}
         isDownloading={isExporting}
@@ -823,57 +817,57 @@ ${
               containerRef={leftColRef}
             >
               <div className="bg-white rounded-xl h-full overflow-hidden flex flex-col border border-slate-200">
-                             <CoverLetterFormTabs
-  activeSection={activeSection}
-  setActiveSection={setActiveSection}
-  onTogglePreview={async () => {
+                <CoverLetterFormTabs
+                  activeSection={activeSection}
+                  setActiveSection={setActiveSection}
+                  onTogglePreview={async () => {
 
 
-    const TemplateComponent = CoverLetterTemplates[selectedTemplate];
-    if (!TemplateComponent) {
-      setShowMobilePreview((v) => !v);
-      return;
-    }
+                    const TemplateComponent = CoverLetterTemplates[selectedTemplate];
+                    if (!TemplateComponent) {
+                      setShowMobilePreview((v) => !v);
+                      return;
+                    }
 
 
-    const container = document.createElement("div");
+                    const container = document.createElement("div");
 
 
-    Object.assign(container.style, {
-      position: "fixed",
-      top: "0",
-      left: "-9999px",
-      width: "794px",
-    });
+                    Object.assign(container.style, {
+                      position: "fixed",
+                      top: "0",
+                      left: "-9999px",
+                      width: "794px",
+                    });
 
 
-    document.body.appendChild(container);
+                    document.body.appendChild(container);
 
 
-    const { createRoot } = await import("react-dom/client");
+                    const { createRoot } = await import("react-dom/client");
 
 
-    await new Promise((resolve) => {
-      const root = createRoot(container);
-      root.render(
-        <TemplateComponent formData={formData} exportDate={date} />
-      );
-      setTimeout(resolve, 300);
-    });
+                    await new Promise((resolve) => {
+                      const root = createRoot(container);
+                      root.render(
+                        <TemplateComponent formData={formData} exportDate={date} />
+                      );
+                      setTimeout(resolve, 300);
+                    });
 
 
-    const html = container.innerHTML;
+                    const html = container.innerHTML;
 
 
-    await saveRecentActivity(html, "preview");
+                    await saveRecentActivity(html, "preview");
 
 
-    document.body.removeChild(container);
+                    document.body.removeChild(container);
 
 
-    setShowMobilePreview((v) => !v);
-  }}
-/>
+                    setShowMobilePreview((v) => !v);
+                  }}
+                />
                 <div
                   ref={formContainerRef}
                   className="mt-3 flex-1 overflow-y-auto py-2 pr-2"
@@ -910,92 +904,92 @@ ${
 
 
           {/* Mobile form card (full-width, scrollable, with bottom controls) */}
-<div className="w-full lg:hidden bg-white rounded-xl overflow-hidden flex flex-col border border-slate-200">
-  <CoverLetterFormTabs
-    activeSection={activeSection}
-    setActiveSection={setActiveSection}
-    onTogglePreview={async () => {
+          <div className="w-full lg:hidden bg-white rounded-xl overflow-hidden flex flex-col border border-slate-200">
+            <CoverLetterFormTabs
+              activeSection={activeSection}
+              setActiveSection={setActiveSection}
+              onTogglePreview={async () => {
 
 
-      const TemplateComponent = CoverLetterTemplates[selectedTemplate];
+                const TemplateComponent = CoverLetterTemplates[selectedTemplate];
 
 
-      if (!TemplateComponent) {
-        setShowMobilePreview((v) => !v);
-        return;
-      }
+                if (!TemplateComponent) {
+                  setShowMobilePreview((v) => !v);
+                  return;
+                }
 
 
-      const container = document.createElement("div");
+                const container = document.createElement("div");
 
 
-      Object.assign(container.style, {
-        position: "fixed",
-        top: "0",
-        left: "-9999px",
-        width: "794px",
-      });
+                Object.assign(container.style, {
+                  position: "fixed",
+                  top: "0",
+                  left: "-9999px",
+                  width: "794px",
+                });
 
 
-      document.body.appendChild(container);
+                document.body.appendChild(container);
 
 
-      const { createRoot } = await import("react-dom/client");
+                const { createRoot } = await import("react-dom/client");
 
 
-      await new Promise((resolve) => {
-        const root = createRoot(container);
-        root.render(
-          <TemplateComponent formData={formData} exportDate={date} />
-        );
-        setTimeout(resolve, 300);
-      });
+                await new Promise((resolve) => {
+                  const root = createRoot(container);
+                  root.render(
+                    <TemplateComponent formData={formData} exportDate={date} />
+                  );
+                  setTimeout(resolve, 300);
+                });
 
 
-      const html = container.innerHTML;
+                const html = container.innerHTML;
 
 
-      await saveRecentActivity(html, "preview");
+                await saveRecentActivity(html, "preview");
 
 
-      document.body.removeChild(container);
+                document.body.removeChild(container);
 
 
-      setShowMobilePreview((v) => !v);
-    }}
-  />
+                setShowMobilePreview((v) => !v);
+              }}
+            />
 
 
-  <div className="mt-3 flex-1 overflow-y-auto py-2 pr-2">
-    {renderFormContent()}
-  </div>
+            <div className="mt-3 flex-1 overflow-y-auto py-2 pr-2">
+              {renderFormContent()}
+            </div>
 
 
-  <div className="flex justify-between items-center mt-auto p-4 border-t border-slate-100 bg-white">
-    <button
-      onClick={goLeft}
-      disabled={currentIdx === 0}
-      className="flex gap-1 items-center text-sm bg-slate-100 px-4 py-2 rounded-lg select-none disabled:opacity-40 disabled:cursor-not-allowed transition"
-    >
-      <ArrowLeft size={18} /> Previous
-    </button>
+            <div className="flex justify-between items-center mt-auto p-4 border-t border-slate-100 bg-white">
+              <button
+                onClick={goLeft}
+                disabled={currentIdx === 0}
+                className="flex gap-1 items-center text-sm bg-slate-100 px-4 py-2 rounded-lg select-none disabled:opacity-40 disabled:cursor-not-allowed transition"
+              >
+                <ArrowLeft size={18} /> Previous
+              </button>
 
 
-    <div className="flex-1 text-center text-xs text-gray-500 font-medium">
-      Step {currentIdx + 1} of {tabs.length}
-    </div>
+              <div className="flex-1 text-center text-xs text-gray-500 font-medium">
+                Step {currentIdx + 1} of {tabs.length}
+              </div>
 
 
-    <button
-      onClick={goRight}
-      disabled={currentIdx === tabs.length - 1}
-      className="flex gap-1 items-center text-sm bg-black text-white px-4 py-2 rounded-lg select-none disabled:opacity-40 disabled:cursor-not-allowed transition"
-    >
-      {currentIdx === tabs.length - 1 ? "Finish" : "Next"}
-      <ArrowRight size={18} />
-    </button>
-  </div>
-</div>
+              <button
+                onClick={goRight}
+                disabled={currentIdx === tabs.length - 1}
+                className="flex gap-1 items-center text-sm bg-black text-white px-4 py-2 rounded-lg select-none disabled:opacity-40 disabled:cursor-not-allowed transition"
+              >
+                {currentIdx === tabs.length - 1 ? "Finish" : "Next"}
+                <ArrowRight size={18} />
+              </button>
+            </div>
+          </div>
 
 
           {/* PREVIEW PANEL */}

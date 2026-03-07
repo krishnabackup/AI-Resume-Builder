@@ -18,7 +18,7 @@ export const getDashboardSummary = async (req, res) => {
         }
 
         // 2. Calculate Total Downloads
-        const totalDownloads = await Download.countDocuments({ user: userId });
+        const totalDownloads = await Download.countDocuments({ user: userId, action: "download" });
 
         // 3. Find Last Edited Document
         // Assuming Resume is the main document type we track for "edits"
@@ -64,7 +64,7 @@ export const getDashboardSummary = async (req, res) => {
         });
 
         // - Add recent downloads
-        const recentDownloads = await Download.find({ user: userId }).sort({ createdAt: -1 }).limit(10).select("name type createdAt _id");
+        const recentDownloads = await Download.find({ user: userId, action: "download" }).sort({ createdAt: -1 }).limit(10).select("name type format createdAt downloadDate _id");
         recentDownloads.forEach((d) => {
             let docTitle = d.name || "Document";
             if (d.type) {
@@ -73,7 +73,7 @@ export const getDashboardSummary = async (req, res) => {
             activities.push({
                 id: `download-${d._id}`,
                 type: "download",
-                label: "Downloaded PDF",
+                label: `Downloaded ${d.format || "PDF"}`,
                 timestamp: d.createdAt || d.downloadDate,
                 docTitle: docTitle,
                 docId: null,

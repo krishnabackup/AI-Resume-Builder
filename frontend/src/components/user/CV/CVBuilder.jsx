@@ -121,7 +121,7 @@ const FloatingFormPanel = ({ children, topOffset, containerRef }) => {
   }, []);
 
 
- 
+
   /* update target on scroll — anchor to container's top in the DOM */
   useEffect(() => {
     const onScroll = () => {
@@ -175,87 +175,87 @@ const CVBuilder = () => {
 ====================================================== */
 
 
-const saveRecentActivity = async (html, action = "visited") => {
-  try {
+  const saveRecentActivity = async (html, action = "visited") => {
+    try {
 
 
-    const displayData = mergeWithSampleData(formData);
+      const displayData = mergeWithSampleData(formData);
 
 
-    const sanitize = (s) =>
-      (s || "")
-        .replace(/[^a-z0-9_\- ]/gi, "")
-        .trim()
-        .replace(/\s+/g, "_");
+      const sanitize = (s) =>
+        (s || "")
+          .replace(/[^a-z0-9_\- ]/gi, "")
+          .trim()
+          .replace(/\s+/g, "_");
 
 
-    const nameToUse =
-      sanitize(documentTitle) ||
-      sanitize(displayData.fullName) ||
-      "Document";
+      const nameToUse =
+        sanitize(documentTitle) ||
+        sanitize(displayData.fullName) ||
+        "Document";
 
 
-    await axiosInstance.post("/api/downloads", {
-      name: `CV - ${nameToUse}`,
-      type: "cv",
-      action,
-      format: "PDF",
-      html,
-      template: selectedTemplate,
-      size: "250 KB",
-    });
+      await axiosInstance.post("/api/downloads", {
+        name: `CV - ${nameToUse}`,
+        type: "cv",
+        action,
+        format: "PDF",
+        html,
+        template: selectedTemplate,
+        size: "250 KB",
+      });
 
 
-  } catch (err) {
-    console.error("Failed to save CV activity:", err);
-  }
-};
-  
+    } catch (err) {
+      console.error("Failed to save CV activity:", err);
+    }
+  };
+
 
   /* ======================================================
    SAVE ACTIVITY WHEN CV IS EDITED
 ====================================================== */
-useEffect(() => {
+  useEffect(() => {
 
-  const saveEditActivity = async () => {
+    const saveEditActivity = async () => {
 
-    const TemplateComponent = CVTemplates[selectedTemplate];
-    if (!TemplateComponent) return;
+      const TemplateComponent = CVTemplates[selectedTemplate];
+      if (!TemplateComponent) return;
 
-    const container = document.createElement("div");
+      const container = document.createElement("div");
 
-    Object.assign(container.style, {
-      position: "fixed",
-      top: "0",
-      left: "-9999px",
-      width: `${PDF_PAGE_WIDTH_PX}px`,
-      background: "#ffffff",
-    });
+      Object.assign(container.style, {
+        position: "fixed",
+        top: "0",
+        left: "-9999px",
+        width: `${PDF_PAGE_WIDTH_PX}px`,
+        background: "#ffffff",
+      });
 
-    document.body.appendChild(container);
+      document.body.appendChild(container);
 
-    const { createRoot } = await import("react-dom/client");
+      const { createRoot } = await import("react-dom/client");
 
-    const displayData = mergeWithSampleData(formData);
+      const displayData = mergeWithSampleData(formData);
 
-    await new Promise((resolve) => {
-      const root = createRoot(container);
-      root.render(<TemplateComponent formData={displayData} />);
-      setTimeout(resolve, 300);
-    });
+      await new Promise((resolve) => {
+        const root = createRoot(container);
+        root.render(<TemplateComponent formData={displayData} />);
+        setTimeout(resolve, 300);
+      });
 
-    const html = container.innerHTML;
+      const html = container.innerHTML;
 
-    await saveRecentActivity(html, "visited");
+      await saveRecentActivity(html, "visited");
 
-    document.body.removeChild(container);
-  };
+      document.body.removeChild(container);
+    };
 
-  const timer = setTimeout(saveEditActivity, 5000);
+    const timer = setTimeout(saveEditActivity, 5000);
 
-  return () => clearTimeout(timer);
+    return () => clearTimeout(timer);
 
-}, [formData, selectedTemplate]);
+  }, [formData, selectedTemplate]);
 
 
   const [resumeId, setResumeId] = useState(null);
@@ -316,73 +316,73 @@ useEffect(() => {
   };
 
 
-  
 
 
 
-useEffect(() => {
+
+  useEffect(() => {
 
 
-  // check if visit already saved in this session
-  if (sessionStorage.getItem("cv-builder-visited")) return;
+    // check if visit already saved in this session
+    if (sessionStorage.getItem("cv-builder-visited")) return;
 
 
-  const saveVisit = async () => {
+    const saveVisit = async () => {
 
 
-    const TemplateComponent = CVTemplates[selectedTemplate];
-    if (!TemplateComponent) return;
+      const TemplateComponent = CVTemplates[selectedTemplate];
+      if (!TemplateComponent) return;
 
 
-    const container = document.createElement("div");
+      const container = document.createElement("div");
 
 
-    Object.assign(container.style, {
-      position: "fixed",
-      top: "0",
-      left: "-9999px",
-      width: `${PDF_PAGE_WIDTH_PX}px`,
-      background: "#ffffff",
-    });
+      Object.assign(container.style, {
+        position: "fixed",
+        top: "0",
+        left: "-9999px",
+        width: `${PDF_PAGE_WIDTH_PX}px`,
+        background: "#ffffff",
+      });
 
 
-    document.body.appendChild(container);
+      document.body.appendChild(container);
 
 
-    const { createRoot } = await import("react-dom/client");
+      const { createRoot } = await import("react-dom/client");
 
 
-    const displayData = mergeWithSampleData(formData);
+      const displayData = mergeWithSampleData(formData);
 
 
-    await new Promise((resolve) => {
-      const root = createRoot(container);
-      root.render(<TemplateComponent formData={displayData} />);
-      setTimeout(resolve, 400);
-    });
+      await new Promise((resolve) => {
+        const root = createRoot(container);
+        root.render(<TemplateComponent formData={displayData} />);
+        setTimeout(resolve, 400);
+      });
 
 
-    const html = container.innerHTML;
+      const html = container.innerHTML;
 
 
-    await saveRecentActivity(html, "visited");
+      await saveRecentActivity(html, "visited");
 
 
-    document.body.removeChild(container);
+      document.body.removeChild(container);
 
 
-    // mark that visit was saved
-    sessionStorage.setItem("cv-builder-visited", "true");
-  };
+      // mark that visit was saved
+      sessionStorage.setItem("cv-builder-visited", "true");
+    };
 
 
-  const timer = setTimeout(saveVisit, 2000);
+    const timer = setTimeout(saveVisit, 2000);
 
 
-  return () => clearTimeout(timer);
+    return () => clearTimeout(timer);
 
 
-}, []);
+  }, []);
 
 
 
@@ -421,7 +421,7 @@ useEffect(() => {
 
 
       const html = container.innerHTML;
-      await saveRecentActivity(html, "download");
+      await saveRecentActivity(html, "preview");
       document.body.removeChild(container);
     } catch (err) {
       console.error("Failed to save CV to downloads:", err);
@@ -476,7 +476,7 @@ useEffect(() => {
       a.download = `${clean(documentTitle) || clean(formData.fullName) || "CV"}.doc`;
       a.click();
       URL.revokeObjectURL(url);
-      await saveRecentActivity(bodyHtml, "download");
+      await saveDownloadRecord(bodyHtml, "DOCX");
       toast.success("CV downloaded as Word!");
     } catch (err) {
       console.error("Word download error:", err);
@@ -581,7 +581,7 @@ useEffect(() => {
 
 
       const html = container.innerHTML;
-      await saveRecentActivity(html, "download");
+      await saveDownloadRecord(html, "PDF");
       toast.success("CV downloaded!");
     } catch (err) {
       console.error("PDF download error:", err);
@@ -781,53 +781,53 @@ useEffect(() => {
                       onTogglePreview={async () => {
 
 
-  const TemplateComponent = CVTemplates[selectedTemplate];
+                        const TemplateComponent = CVTemplates[selectedTemplate];
 
 
-  if (!TemplateComponent) {
-    setShowMobilePreview((v) => !v);
-    return;
-  }
+                        if (!TemplateComponent) {
+                          setShowMobilePreview((v) => !v);
+                          return;
+                        }
 
 
-  const container = document.createElement("div");
+                        const container = document.createElement("div");
 
 
-  Object.assign(container.style, {
-    position: "fixed",
-    top: "0",
-    left: "-9999px",
-    width: `${PDF_PAGE_WIDTH_PX}px`,
-  });
+                        Object.assign(container.style, {
+                          position: "fixed",
+                          top: "0",
+                          left: "-9999px",
+                          width: `${PDF_PAGE_WIDTH_PX}px`,
+                        });
 
 
-  document.body.appendChild(container);
+                        document.body.appendChild(container);
 
 
-  const { createRoot } = await import("react-dom/client");
+                        const { createRoot } = await import("react-dom/client");
 
 
-  const displayData = mergeWithSampleData(formData);
+                        const displayData = mergeWithSampleData(formData);
 
 
-  await new Promise((resolve) => {
-    const root = createRoot(container);
-    root.render(<TemplateComponent formData={displayData} />);
-    setTimeout(resolve, 300);
-  });
+                        await new Promise((resolve) => {
+                          const root = createRoot(container);
+                          root.render(<TemplateComponent formData={displayData} />);
+                          setTimeout(resolve, 300);
+                        });
 
 
-  const html = container.innerHTML;
+                        const html = container.innerHTML;
 
 
-  await saveRecentActivity(html, "preview");
+                        await saveRecentActivity(html, "preview");
 
 
-  document.body.removeChild(container);
+                        document.body.removeChild(container);
 
 
-  setShowMobilePreview((v) => !v);
-}}
+                        setShowMobilePreview((v) => !v);
+                      }}
                     />
                   </div>
 
@@ -877,56 +877,56 @@ useEffect(() => {
                   activeSection={activeSection}
                   setActiveSection={setActiveSection}
                   showPreview={showMobilePreview}
-                 onTogglePreview={async () => {
+                  onTogglePreview={async () => {
 
 
-  const TemplateComponent = CVTemplates[selectedTemplate];
+                    const TemplateComponent = CVTemplates[selectedTemplate];
 
 
-  if (!TemplateComponent) {
-    setShowMobilePreview((v) => !v);
-    return;
-  }
+                    if (!TemplateComponent) {
+                      setShowMobilePreview((v) => !v);
+                      return;
+                    }
 
 
-  const container = document.createElement("div");
+                    const container = document.createElement("div");
 
 
-  Object.assign(container.style, {
-    position: "fixed",
-    top: "0",
-    left: "-9999px",
-    width: `${PDF_PAGE_WIDTH_PX}px`,
-  });
+                    Object.assign(container.style, {
+                      position: "fixed",
+                      top: "0",
+                      left: "-9999px",
+                      width: `${PDF_PAGE_WIDTH_PX}px`,
+                    });
 
 
-  document.body.appendChild(container);
+                    document.body.appendChild(container);
 
 
-  const { createRoot } = await import("react-dom/client");
+                    const { createRoot } = await import("react-dom/client");
 
 
-  const displayData = mergeWithSampleData(formData);
+                    const displayData = mergeWithSampleData(formData);
 
 
-  await new Promise((resolve) => {
-    const root = createRoot(container);
-    root.render(<TemplateComponent formData={displayData} />);
-    setTimeout(resolve, 300);
-  });
+                    await new Promise((resolve) => {
+                      const root = createRoot(container);
+                      root.render(<TemplateComponent formData={displayData} />);
+                      setTimeout(resolve, 300);
+                    });
 
 
-  const html = container.innerHTML;
+                    const html = container.innerHTML;
 
 
-  await saveRecentActivity(html, "preview");
+                    await saveRecentActivity(html, "preview");
 
 
-  document.body.removeChild(container);
+                    document.body.removeChild(container);
 
 
-  setShowMobilePreview((v) => !v);
-}}
+                    setShowMobilePreview((v) => !v);
+                  }}
                 />
               </div>
               <div className="p-6">
@@ -1017,7 +1017,7 @@ useEffect(() => {
               <CVPreview
                 {...previewProps}
                 isMaximized={false}
-                onToggleMaximize={() => {}}
+                onToggleMaximize={() => { }}
               />
             </div>
           </div>
@@ -1040,4 +1040,3 @@ useEffect(() => {
 export default CVBuilder;
 
 
-        

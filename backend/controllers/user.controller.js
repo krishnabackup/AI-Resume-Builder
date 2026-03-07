@@ -27,9 +27,9 @@ export const getDashboardData = async (req, res) => {
 
     // Document Breakdown counts (per logged-in user)
     const [totalResumes, totalCvs, totalCoverLetters] = await Promise.all([
-      Download.countDocuments({ user: userId, type: "resume" }),
-      Download.countDocuments({ user: userId, type: "cv" }),
-      Download.countDocuments({ user: userId, type: "cover-letter" }),
+      Download.countDocuments({ user: userId, type: "resume", action: "download" }),
+      Download.countDocuments({ user: userId, type: "cv", action: "download" }),
+      Download.countDocuments({ user: userId, type: "cover-letter", action: "download" }),
     ]);
 
     // Total and Weekly Resumes
