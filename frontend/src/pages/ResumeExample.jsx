@@ -178,7 +178,7 @@ const ResumeExamplesPage = () => {
       <NavBar />
 
       {/* --- HERO SECTION --- */}
-      <section className="relative pt-12 pb-16 bg-white border-b lg:pt-16 border-gray-50">
+      <section className="relative pt-24 pb-16 bg-white border-b lg:pt-32 border-gray-50">
         <motion.div
           variants={staggerContainer}
           initial="hidden"

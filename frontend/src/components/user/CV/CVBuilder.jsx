@@ -6,6 +6,7 @@ import axiosInstance from "../../../api/axios";
 import { toast } from "react-hot-toast";
 import { X } from "lucide-react";
 
+
 // Forms
 import PersonalInfoForm from "./forms/PersonalInfoForm";
 import ExperienceForm from "./forms/ExperienceForm";
@@ -14,18 +15,22 @@ import ProjectsForm from "./forms/ProjectsForm";
 import CertificationsForm from "./forms/CertificationsForm";
 import SkillsForm from "./forms/skillsForm";
 
+
 // Preview + Templates
 import CVPreview from "./CVPreview";
 import TemplatesGallery from "./Templatesgallery";
 import CVTemplates from "./Cvtemplates";
 import mergeWithSampleData from "../../../utils/Datahelpers";
 
+
 import CVBuilderTopBar from "./Cvbuildernavbar";
 import ResumeCompletionBanner from "./ResumeCompletionBanner";
 import "./CVBuilder.css";
 
+
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+
 
 /* ================= CONSTANTS ================= */
 const sections = [
@@ -37,10 +42,12 @@ const sections = [
   "certifications",
 ];
 
+
 const generateId = () =>
   typeof crypto !== "undefined" && crypto.randomUUID
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2);
+
 
 /* ================= DEFAULT CV ================= */
 const createEmptyResume = () => ({
@@ -82,7 +89,9 @@ const createEmptyResume = () => ({
   ],
 });
 
+
 const PDF_PAGE_WIDTH_PX = 794;
+
 
 /* ─────────────────────────────────────────────────────────
    FLOATING FORM PANEL
@@ -95,6 +104,7 @@ const FloatingFormPanel = ({ children, topOffset, containerRef }) => {
   const rafRef = useRef(null);
   const currentY = useRef(0);
   const targetY = useRef(0);
+
 
   /* spring animation loop */
   useEffect(() => {
@@ -109,6 +119,8 @@ const FloatingFormPanel = ({ children, topOffset, containerRef }) => {
     rafRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafRef.current);
   }, []);
+
+
 
   /* update target on scroll — anchor to container's top in the DOM */
   useEffect(() => {
@@ -127,6 +139,7 @@ const FloatingFormPanel = ({ children, topOffset, containerRef }) => {
     return () => window.removeEventListener("scroll", onScroll);
   }, [topOffset, containerRef]);
 
+
   return (
     <div
       ref={panelRef}
@@ -141,6 +154,7 @@ const FloatingFormPanel = ({ children, topOffset, containerRef }) => {
   );
 };
 
+
 /* ═══════════════════════════════════════════════════════════
    MAIN COMPONENT
 ═══════════════════════════════════════════════════════════ */
@@ -150,10 +164,99 @@ const CVBuilder = () => {
   const leftColRef = useRef(null);
   const [headerHeight, setHeaderHeight] = useState(64);
 
+
   const [activeTab, setActiveTab] = useState("builder");
   const [activeSection, setActiveSection] = useState("personal");
   const [selectedTemplate, setSelectedTemplate] = useState("professional");
   const [formData, setFormData] = useState(() => createEmptyResume());
+
+  /* ======================================================
+   SAVE RECENT ACTIVITY (visited / preview / download)
+====================================================== */
+
+
+  const saveRecentActivity = async (html, action = "visited") => {
+    try {
+
+
+      const displayData = mergeWithSampleData(formData);
+
+
+      const sanitize = (s) =>
+        (s || "")
+          .replace(/[^a-z0-9_\- ]/gi, "")
+          .trim()
+          .replace(/\s+/g, "_");
+
+
+      const nameToUse =
+        sanitize(documentTitle) ||
+        sanitize(displayData.fullName) ||
+        "Document";
+
+
+      await axiosInstance.post("/api/downloads", {
+        name: `CV - ${nameToUse}`,
+        type: "cv",
+        action,
+        format: "PDF",
+        html,
+        template: selectedTemplate,
+        size: "250 KB",
+      });
+
+
+    } catch (err) {
+      console.error("Failed to save CV activity:", err);
+    }
+  };
+
+
+  /* ======================================================
+   SAVE ACTIVITY WHEN CV IS EDITED
+====================================================== */
+  useEffect(() => {
+
+    const saveEditActivity = async () => {
+
+      const TemplateComponent = CVTemplates[selectedTemplate];
+      if (!TemplateComponent) return;
+
+      const container = document.createElement("div");
+
+      Object.assign(container.style, {
+        position: "fixed",
+        top: "0",
+        left: "-9999px",
+        width: `${PDF_PAGE_WIDTH_PX}px`,
+        background: "#ffffff",
+      });
+
+      document.body.appendChild(container);
+
+      const { createRoot } = await import("react-dom/client");
+
+      const displayData = mergeWithSampleData(formData);
+
+      await new Promise((resolve) => {
+        const root = createRoot(container);
+        root.render(<TemplateComponent formData={displayData} />);
+        setTimeout(resolve, 300);
+      });
+
+      const html = container.innerHTML;
+
+      await saveRecentActivity(html, "visited");
+
+      document.body.removeChild(container);
+    };
+
+    const timer = setTimeout(saveEditActivity, 5000);
+
+    return () => clearTimeout(timer);
+
+  }, [formData, selectedTemplate]);
+
 
   const [resumeId, setResumeId] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -162,6 +265,7 @@ const CVBuilder = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isAiMode, setIsAiMode] = useState(false);
   const [documentTitle, setDocumentTitle] = useState("");
+
 
   /* Measure sticky navbar height for float offset */
   useEffect(() => {
@@ -174,6 +278,7 @@ const CVBuilder = () => {
     return () => ro.disconnect();
   }, [activeTab]);
 
+
   /* Lock body scroll when mobile preview is open */
   useEffect(() => {
     document.body.style.overflow = showMobilePreview ? "hidden" : "";
@@ -182,10 +287,12 @@ const CVBuilder = () => {
     };
   }, [showMobilePreview]);
 
+
   /* Auto-scroll form to top on section change */
   useEffect(() => {
     formContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, [activeSection]);
+
 
   /* ======================================================
      SAVE CV DOWNLOAD RECORD
@@ -208,6 +315,80 @@ const CVBuilder = () => {
     }
   };
 
+
+
+
+
+
+  useEffect(() => {
+
+
+    // check if visit already saved in this session
+    if (sessionStorage.getItem("cv-builder-visited")) return;
+
+
+    const saveVisit = async () => {
+
+
+      const TemplateComponent = CVTemplates[selectedTemplate];
+      if (!TemplateComponent) return;
+
+
+      const container = document.createElement("div");
+
+
+      Object.assign(container.style, {
+        position: "fixed",
+        top: "0",
+        left: "-9999px",
+        width: `${PDF_PAGE_WIDTH_PX}px`,
+        background: "#ffffff",
+      });
+
+
+      document.body.appendChild(container);
+
+
+      const { createRoot } = await import("react-dom/client");
+
+
+      const displayData = mergeWithSampleData(formData);
+
+
+      await new Promise((resolve) => {
+        const root = createRoot(container);
+        root.render(<TemplateComponent formData={displayData} />);
+        setTimeout(resolve, 400);
+      });
+
+
+      const html = container.innerHTML;
+
+
+      await saveRecentActivity(html, "visited");
+
+
+      document.body.removeChild(container);
+
+
+      // mark that visit was saved
+      sessionStorage.setItem("cv-builder-visited", "true");
+    };
+
+
+    const timer = setTimeout(saveVisit, 2000);
+
+
+    return () => clearTimeout(timer);
+
+
+  }, []);
+
+
+
+
+
+
   /* ======================================================
      SAVE CV TO DOWNLOADS COLLECTION (for preview)
   ====================================================== */
@@ -215,6 +396,7 @@ const CVBuilder = () => {
     try {
       const TemplateComponent = CVTemplates[selectedTemplate];
       if (!TemplateComponent) return;
+
 
       const container = document.createElement("div");
       Object.assign(container.style, {
@@ -226,8 +408,10 @@ const CVBuilder = () => {
       });
       document.body.appendChild(container);
 
+
       const { createRoot } = await import("react-dom/client");
       const displayData = mergeWithSampleData(formData);
+
 
       await new Promise((resolve) => {
         const root = createRoot(container);
@@ -235,13 +419,15 @@ const CVBuilder = () => {
         setTimeout(resolve, 400);
       });
 
+
       const html = container.innerHTML;
-      await saveDownloadRecord(html, "PDF");
+      await saveRecentActivity(html, "preview");
       document.body.removeChild(container);
     } catch (err) {
       console.error("Failed to save CV to downloads:", err);
     }
   };
+
 
   /* ================= DOWNLOAD WORD ================= */
   const downloadWord = async () => {
@@ -250,6 +436,7 @@ const CVBuilder = () => {
       toast.error("No template selected");
       return;
     }
+
 
     setIsDownloading(true);
     const container = document.createElement("div");
@@ -262,6 +449,7 @@ const CVBuilder = () => {
     });
     document.body.appendChild(container);
 
+
     try {
       const { createRoot } = await import("react-dom/client");
       const displayData = mergeWithSampleData(formData);
@@ -270,6 +458,7 @@ const CVBuilder = () => {
         root.render(<TemplateComponent formData={displayData} />);
         setTimeout(resolve, 400);
       });
+
 
       const bodyHtml = container.innerHTML;
       const wordHtml = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>CV</title></head><body>${bodyHtml}</body></html>`;
@@ -298,6 +487,7 @@ const CVBuilder = () => {
     }
   };
 
+
   /* ================= DOWNLOAD PDF ================= */
   const downloadPDF = async () => {
     const TemplateComponent = CVTemplates[selectedTemplate];
@@ -306,7 +496,9 @@ const CVBuilder = () => {
       return;
     }
 
+
     setIsDownloading(true);
+
 
     const container = document.createElement("div");
     Object.assign(container.style, {
@@ -318,8 +510,10 @@ const CVBuilder = () => {
     });
     document.body.appendChild(container);
 
+
     const { createRoot } = await import("react-dom/client");
     const displayData = mergeWithSampleData(formData);
+
 
     await new Promise((resolve) => {
       const root = createRoot(container);
@@ -327,12 +521,14 @@ const CVBuilder = () => {
       setTimeout(resolve, 400);
     });
 
+
     try {
       const canvas = await html2canvas(container, {
         scale: 3,
         useCORS: true,
         windowWidth: PDF_PAGE_WIDTH_PX,
       });
+
 
       const pdf = new jsPDF("p", "mm", "a4");
       const mmPageW = 210;
@@ -343,8 +539,10 @@ const CVBuilder = () => {
       const pxPerMm = canvas.width / mmPageW;
       const pxContentH = Math.round(contentH * pxPerMm);
 
+
       let yPx = 0;
       let firstPage = true;
+
 
       while (yPx < canvas.height) {
         const sliceH = Math.min(pxContentH, canvas.height - yPx);
@@ -372,6 +570,7 @@ const CVBuilder = () => {
         firstPage = false;
       }
 
+
       const clean = (str) =>
         str
           ?.replace(/[^a-z0-9_\- ]/gi, "")
@@ -379,6 +578,7 @@ const CVBuilder = () => {
           .replace(/\s+/g, "_");
       const name = clean(documentTitle) || clean(displayData?.fullName) || "CV";
       pdf.save(`${name}.pdf`);
+
 
       const html = container.innerHTML;
       await saveDownloadRecord(html, "PDF");
@@ -391,6 +591,7 @@ const CVBuilder = () => {
       setIsDownloading(false);
     }
   };
+
 
   /* ================= LOAD RESUME ================= */
   useEffect(() => {
@@ -424,6 +625,7 @@ const CVBuilder = () => {
     })();
     return () => controller.abort();
   }, []);
+
 
   /* ================= SAVE ================= */
   const handleSave = async () => {
@@ -461,14 +663,17 @@ const CVBuilder = () => {
     }
   };
 
+
   const handleInputChange = (field, value) =>
     setFormData((prev) => ({ ...prev, [field]: value }));
+
 
   const handleTemplateSelect = (templateId) => {
     setSelectedTemplate(templateId);
     setActiveTab("builder");
     toast.success("Template applied!");
   };
+
 
   /* ================= SECTION NAV ================= */
   const currentIndex = Math.max(0, sections.indexOf(activeSection));
@@ -479,6 +684,7 @@ const CVBuilder = () => {
   const goPrevious = () => {
     if (currentIndex > 0) setActiveSection(sections[currentIndex - 1]);
   };
+
 
   /* ================= FORM RENDER ================= */
   const renderFormContent = () => {
@@ -507,7 +713,9 @@ const CVBuilder = () => {
     }
   };
 
+
   const previewProps = { formData, selectedTemplate };
+
 
   /* ================= RENDER ================= */
   return (
@@ -516,6 +724,7 @@ const CVBuilder = () => {
       <div ref={headerRef} className="sticky top-0 z-30 bg-[#f1f3f6]">
         <UserNavBar />
       </div>
+
 
       {/* ── Scrollable: topbar + banner ── */}
       <div className="bg-[#f1f3f6]">
@@ -539,6 +748,7 @@ const CVBuilder = () => {
           </div>
         )}
       </div>
+
 
       {/* ════ BUILDER TAB ════ */}
       {activeTab === "builder" && (
@@ -568,9 +778,59 @@ const CVBuilder = () => {
                       activeSection={activeSection}
                       setActiveSection={setActiveSection}
                       showPreview={showMobilePreview}
-                      onTogglePreview={() => setShowMobilePreview((v) => !v)}
+                      onTogglePreview={async () => {
+
+
+                        const TemplateComponent = CVTemplates[selectedTemplate];
+
+
+                        if (!TemplateComponent) {
+                          setShowMobilePreview((v) => !v);
+                          return;
+                        }
+
+
+                        const container = document.createElement("div");
+
+
+                        Object.assign(container.style, {
+                          position: "fixed",
+                          top: "0",
+                          left: "-9999px",
+                          width: `${PDF_PAGE_WIDTH_PX}px`,
+                        });
+
+
+                        document.body.appendChild(container);
+
+
+                        const { createRoot } = await import("react-dom/client");
+
+
+                        const displayData = mergeWithSampleData(formData);
+
+
+                        await new Promise((resolve) => {
+                          const root = createRoot(container);
+                          root.render(<TemplateComponent formData={displayData} />);
+                          setTimeout(resolve, 300);
+                        });
+
+
+                        const html = container.innerHTML;
+
+
+                        await saveRecentActivity(html, "preview");
+
+
+                        document.body.removeChild(container);
+
+
+                        setShowMobilePreview((v) => !v);
+                      }}
                     />
                   </div>
+
 
                   {/* Scrollable form content */}
                   <div
@@ -582,6 +842,7 @@ const CVBuilder = () => {
                     }}
                   >
                     {renderFormContent()}
+
 
                     {/* Prev / Next */}
                     <div className="flex justify-between mt-8">
@@ -607,6 +868,7 @@ const CVBuilder = () => {
             </div>
           )}
 
+
           {/* ── LEFT: mobile form ── */}
           <div className="w-full lg:hidden flex flex-col">
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col overflow-hidden mb-4">
@@ -615,7 +877,56 @@ const CVBuilder = () => {
                   activeSection={activeSection}
                   setActiveSection={setActiveSection}
                   showPreview={showMobilePreview}
-                  onTogglePreview={() => setShowMobilePreview((v) => !v)}
+                  onTogglePreview={async () => {
+
+
+                    const TemplateComponent = CVTemplates[selectedTemplate];
+
+
+                    if (!TemplateComponent) {
+                      setShowMobilePreview((v) => !v);
+                      return;
+                    }
+
+
+                    const container = document.createElement("div");
+
+
+                    Object.assign(container.style, {
+                      position: "fixed",
+                      top: "0",
+                      left: "-9999px",
+                      width: `${PDF_PAGE_WIDTH_PX}px`,
+                    });
+
+
+                    document.body.appendChild(container);
+
+
+                    const { createRoot } = await import("react-dom/client");
+
+
+                    const displayData = mergeWithSampleData(formData);
+
+
+                    await new Promise((resolve) => {
+                      const root = createRoot(container);
+                      root.render(<TemplateComponent formData={displayData} />);
+                      setTimeout(resolve, 300);
+                    });
+
+
+                    const html = container.innerHTML;
+
+
+                    await saveRecentActivity(html, "preview");
+
+
+                    document.body.removeChild(container);
+
+
+                    setShowMobilePreview((v) => !v);
+                  }}
                 />
               </div>
               <div className="p-6">
@@ -640,6 +951,7 @@ const CVBuilder = () => {
             </div>
           </div>
 
+
           {/* ── RIGHT: preview ── */}
           <div className="hidden lg:flex flex-1 flex-col min-w-0">
             <div
@@ -660,6 +972,7 @@ const CVBuilder = () => {
         </div>
       )}
 
+
       {/* ════ TEMPLATES TAB ════ */}
       {activeTab === "templates" && (
         <div className="px-4 pb-16 pt-4">
@@ -670,6 +983,7 @@ const CVBuilder = () => {
           />
         </div>
       )}
+
 
       {/* ── Mobile preview overlay ── */}
       {showMobilePreview && (
@@ -703,7 +1017,7 @@ const CVBuilder = () => {
               <CVPreview
                 {...previewProps}
                 isMaximized={false}
-                onToggleMaximize={() => {}}
+                onToggleMaximize={() => { }}
               />
             </div>
           </div>
@@ -722,4 +1036,7 @@ const CVBuilder = () => {
   );
 };
 
+
 export default CVBuilder;
+
+

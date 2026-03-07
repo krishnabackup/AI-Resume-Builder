@@ -6,6 +6,7 @@ import Payment from "../Models/payment.js";
 import Resume from "../Models/resume.js";
 import Subscription from "../Models/subscription.js";
 import ApiMetric from "../Models/ApiMetric.js";
+import Download from "../Models/Download.js";
 
 /* ================== HELPERS ================== */
 const getLastMonthDate = () => {
@@ -24,8 +25,14 @@ export const getDashboardData = async (req, res) => {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
+    // Document Breakdown counts (per logged-in user)
+    const [totalResumes, totalCvs, totalCoverLetters] = await Promise.all([
+      Download.countDocuments({ user: userId, type: "resume", action: "download" }),
+      Download.countDocuments({ user: userId, type: "cv", action: "download" }),
+      Download.countDocuments({ user: userId, type: "cover-letter", action: "download" }),
+    ]);
+
     // Total and Weekly Resumes
-    const totalResumes = await Resume.countDocuments({ user: userId });
     const resumesThisWeek = await Resume.countDocuments({
       user: userId,
       createdAt: { $gte: oneWeekAgo },
@@ -57,6 +64,8 @@ export const getDashboardData = async (req, res) => {
       },
       stats: {
         resumesCreated: totalResumes,
+        cvsCreated: totalCvs,
+        coverLettersCreated: totalCoverLetters,
         resumesThisWeek,
         avgAtsScore: avgAtsScore,
         latestAts: latestAts,
@@ -279,13 +288,20 @@ export const requestAdminAccess = async (req, res) => {
     user.adminRequestStatus = 'pending';
     await user.save();
 
+    // 🔔 USER NOTIFICATION (Self acknowledgement)
+    await Notification.create({
+      type: "ADMIN_REQUEST_USER",
+      message: "Your request for admin access has been submitted",
+      userId: user._id,
+      actor: "system"
+    });
+
     // 🔔 ADMIN NOTIFICATION
-    // Send to a placeholder admin or skip if direct broadcast isn't supported by the schema.
     const adminUser = await User.findOne({ isAdmin: true });
     if (adminUser) {
       await Notification.create({
         type: "ADMIN_REQUEST",
-        message: `${user.username || user.email} requested admin access`,
+        message: `${user.username || user.email} has requested for admin access`,
         userId: adminUser._id,
         actor: "user"
       });
@@ -314,12 +330,24 @@ export const approveAdminRequest = async (req, res) => {
     user.adminRequestStatus = 'approved';
     await user.save();
 
+    const admin = await User.findById(req.userId);
+    const adminName = admin?.username || "Admin";
+
     // 🔔 USER NOTIFICATION
     await Notification.create({
       type: "ROLE_UPDATE",
-      message: `Your request for admin access has been approved`,
+      message: `Your admin access request has been approved by ${adminName}`,
       userId: user._id,
       actor: "system"
+    });
+
+    // 🔔 ADMIN NOTIFICATION (Confirmation)
+    await Notification.create({
+      type: "ROLE_APPROVED_ADMIN",
+      message: `You approved ${user.username || user.email}'s admin access request`,
+      userId: req.userId,
+      actor: "user",
+      fromAdmin: true
     });
 
     res.status(200).json({ message: "Admin request approved", user });
@@ -343,12 +371,24 @@ export const rejectAdminRequest = async (req, res) => {
     user.adminRequestStatus = 'rejected';
     await user.save();
 
+    const admin = await User.findById(req.userId);
+    const adminName = admin?.username || "Admin";
+
     // 🔔 USER NOTIFICATION
     await Notification.create({
       type: "ROLE_UPDATE",
-      message: `Your request for admin access was rejected`,
+      message: `Your admin access request was rejected by ${adminName}`,
       userId: user._id,
       actor: "system"
+    });
+
+    // 🔔 ADMIN NOTIFICATION (Confirmation)
+    await Notification.create({
+      type: "ROLE_REJECTED_ADMIN",
+      message: `You rejected ${user.username || user.email}'s admin access request`,
+      userId: req.userId,
+      actor: "user",
+      fromAdmin: true
     });
 
     res.status(200).json({ message: "Admin request rejected", user });

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { TrendingUp, Users, UserCheck, UserMinus, Star, Activity, Zap, Shield, Crown, Award, Gem } from "lucide-react";
+import { TrendingUp, Users, UserCheck, UserMinus, Activity, Zap, Shield, Crown, Award, Gem, RefreshCw } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import axiosInstance from "../../../api/axios";
 
@@ -140,27 +140,37 @@ export default function AdminAnalytics() {
           </div>
         </div>
 
-        {/* User Satisfaction Rating */}
+        {/* User Retention Rate */}
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">User Satisfaction</h3>
-            <div className="bg-yellow-50 p-2 rounded-full">
-              <Star className="text-yellow-600" size={20} />
+            <h3 className="text-lg font-semibold">User Retention Rate</h3>
+            <div className="bg-indigo-50 p-2 rounded-full">
+              <RefreshCw className="text-indigo-600" size={20} />
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-4xl font-bold text-yellow-600">4.7</span>
-            <div className="flex">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Star
-                  key={star}
-                  size={16}
-                  className={star <= 4 ? "fill-yellow-400 text-yellow-400" : "text-slate-300"}
-                />
-              ))}
-            </div>
-          </div>
-          <p className="text-sm text-slate-500 mt-2">Based on 2,847 reviews</p>
+          {(() => {
+            const total = (activeUsers.count || 0) + (deletedUsers.count || 0);
+            const rate = total > 0 ? Math.round((activeUsers.count / total) * 100) : 0;
+            const color = rate >= 80 ? "text-indigo-600" : rate >= 60 ? "text-amber-500" : "text-red-500";
+            const barColor = rate >= 80 ? "bg-indigo-600" : rate >= 60 ? "bg-amber-500" : "bg-red-500";
+            const label = rate >= 80 ? "Healthy retention" : rate >= 60 ? "Moderate retention" : "Needs attention";
+            return (
+              <>
+                <div className="flex items-baseline gap-2">
+                  <span className={`text-4xl font-bold ${color}`}>
+                    {loading ? "..." : `${rate}%`}
+                  </span>
+                </div>
+                <p className="text-sm text-slate-500 mt-2">{label}</p>
+                <div className="mt-4 bg-slate-100 rounded-full h-2">
+                  <div className={`h-2 rounded-full ${barColor}`} style={{ width: `${rate}%` }}></div>
+                </div>
+                <p className="text-xs text-slate-400 mt-2">
+                  {loading ? "" : `${activeUsers.count} active · ${deletedUsers.count} churned`}
+                </p>
+              </>
+            );
+          })()}
         </div>
 
         {/* Response Time */}
@@ -391,7 +401,7 @@ export default function AdminAnalytics() {
               subscriptionBreakdown.map((item, index) => {
                 const configs = {
                   Free: { icon: <Users size={18} />, color: "bg-slate-500", light: "bg-slate-50", text: "text-slate-600", border: "border-slate-100" },
-                  Pro: { icon: <Star size={18} />, color: "bg-blue-600", light: "bg-blue-50", text: "text-blue-700", border: "border-blue-100" },
+                  Pro: { icon: <TrendingUp size={18} />, color: "bg-blue-600", light: "bg-blue-50", text: "text-blue-700", border: "border-blue-100" },
                   Premium: { icon: <Award size={18} />, color: "bg-purple-600", light: "bg-purple-50", text: "text-purple-700", border: "border-purple-100" },
                   "Ultra pro": { icon: <Crown size={18} />, color: "bg-amber-500", light: "bg-amber-50", text: "text-amber-700", border: "border-amber-100" },
                   "Ultra Pro": { icon: <Crown size={18} />, color: "bg-amber-500", light: "bg-amber-50", text: "text-amber-700", border: "border-amber-100" },

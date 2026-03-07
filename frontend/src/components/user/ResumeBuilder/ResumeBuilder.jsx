@@ -184,6 +184,37 @@ const ResumeBuilder = ({ setActivePage = () => {} }) => {
   const [exporting, setExporting] = useState(false);
   const previewRef = useRef(null);
 
+  /* ======================================================
+   SAVE ACTIVITY WHEN BUILDER OPENS
+====================================================== */
+useEffect(() => {
+  const saveVisit = async () => {
+    const html = await previewRef.current?.getResumeHTML();
+    if (!html) return;
+
+    await saveRecentActivity(html, "visited");
+  };
+
+  const timer = setTimeout(saveVisit, 2000);
+  return () => clearTimeout(timer);
+}, []);
+
+/* ======================================================
+   SAVE ACTIVITY WHEN USER EDITS RESUME
+====================================================== */
+useEffect(() => {
+  const saveEditActivity = async () => {
+    const html = await previewRef.current?.getResumeHTML();
+    if (!html) return;
+
+    await saveRecentActivity(html, "preview");
+  };
+
+  const timer = setTimeout(saveEditActivity, 1500);
+
+  return () => clearTimeout(timer);
+}, [formData]);
+
   /* Measure sticky navbar height for float offset (same as CV) */
   useEffect(() => {
     const measure = () => {
@@ -304,6 +335,35 @@ const ResumeBuilder = ({ setActivePage = () => {} }) => {
       console.error("Failed to save resume download:", err);
     }
   };
+
+  /* ======================================================
+   SAVE RECENT ACTIVITY (VISITED / PREVIEW / DOWNLOAD)
+====================================================== */
+const saveRecentActivity = async (html, action = "visited") => {
+  try {
+    const sanitize = (s) =>
+      (s || "")
+        .replace(/[^a-z0-9_\- ]/gi, "")
+        .trim()
+        .replace(/\s+/g, "_");
+
+    const nameToUse =
+      sanitize(documentTitle) || sanitize(formData.fullName) || "Document";
+
+    await axiosInstance.post("/api/downloads", {
+      name: `Resume - ${nameToUse}`,
+      type: "resume",
+      action, // visited | preview | download
+      format: "PDF",
+      html,
+      template: selectedTemplate,
+      size: "250 KB",
+    });
+  } catch (err) {
+    console.error("Failed to save activity:", err);
+  }
+};
+  
 
   /*------------------- PREVIOUS & NEXT BUTTON ------------*/
   const tabs = [
