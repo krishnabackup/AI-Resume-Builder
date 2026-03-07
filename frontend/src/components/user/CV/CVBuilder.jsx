@@ -719,270 +719,261 @@ const CVBuilder = () => {
 
   /* ================= RENDER ================= */
   return (
-    <div className="min-h-screen bg-[#f1f3f6]">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50 relative z-0">
       {/* ── Sticky: navbar only ── */}
-      <div ref={headerRef} className="sticky top-0 z-30 bg-[#f1f3f6]">
+      <div ref={headerRef} className="sticky top-0 z-30 bg-gradient-to-br from-slate-50 to-gray-50">
         <UserNavBar />
       </div>
 
 
       {/* ── Scrollable: topbar + banner ── */}
-      <div className="bg-[#f1f3f6]">
-        <CVBuilderTopBar
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          onSave={handleSave}
-          onDownload={downloadPDF}
-          onDownloadWord={downloadWord}
-          onUpload={(file) => console.log("CV upload:", file?.name)}
-          isSaving={isSaving}
-          isDownloading={isDownloading}
-          title={documentTitle}
-          onTitleChange={(_, val) => setDocumentTitle(val)}
-          isAiMode={isAiMode}
-          onToggleAiMode={() => setIsAiMode((v) => !v)}
-        />
+      <CVBuilderTopBar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        onSave={handleSave}
+        onDownload={downloadPDF}
+        onDownloadWord={downloadWord}
+        onUpload={(file) => console.log("CV upload:", file?.name)}
+        isSaving={isSaving}
+        isDownloading={isDownloading}
+        title={documentTitle}
+        onTitleChange={(_, val) => setDocumentTitle(val)}
+        isAiMode={isAiMode}
+        onToggleAiMode={() => setIsAiMode((v) => !v)}
+      />
+
+      <div className="px-2 py-4 sm:px-4 lg:px-4 w-screen max-w-full mx-0">
         {activeTab === "builder" && (
-          <div className="px-4">
-            <ResumeCompletionBanner />
+          <ResumeCompletionBanner />
+        )}
+
+        {/* ════ BUILDER TAB ════ */}
+        {activeTab === "builder" && (
+          <div className="flex gap-[10px] w-full mt-2 lg:mt-5 p-0 sm:p-2 lg:flex-row flex-col max-w-[1920px] mx-auto relative z-10">
+            {/* ── LEFT: floating form panel (desktop) ── */}
+            {!isPreviewMaximized && (
+              <div
+                ref={leftColRef}
+                className="flex-shrink-0 hidden lg:block"
+                style={{ width: 520 }}
+              >
+                <FloatingFormPanel
+                  topOffset={headerHeight}
+                  containerRef={leftColRef}
+                >
+                  <div className="bg-white rounded-xl h-full overflow-hidden flex flex-col border border-slate-200">
+                    {/* Tabs */}
+                    <div className="flex-shrink-0 border-b border-slate-100 px-4 py-3 bg-white">
+                      <FormTabs
+                        activeSection={activeSection}
+                        setActiveSection={setActiveSection}
+                        showPreview={showMobilePreview}
+                        onTogglePreview={async () => {
+
+
+                          const TemplateComponent = CVTemplates[selectedTemplate];
+
+
+                          if (!TemplateComponent) {
+                            setShowMobilePreview((v) => !v);
+                            return;
+                          }
+
+
+                          const container = document.createElement("div");
+
+
+                          Object.assign(container.style, {
+                            position: "fixed",
+                            top: "0",
+                            left: "-9999px",
+                            width: `${PDF_PAGE_WIDTH_PX}px`,
+                          });
+
+
+                          document.body.appendChild(container);
+
+
+                          const { createRoot } = await import("react-dom/client");
+
+
+                          const displayData = mergeWithSampleData(formData);
+
+
+                          await new Promise((resolve) => {
+                            const root = createRoot(container);
+                            root.render(<TemplateComponent formData={displayData} />);
+                            setTimeout(resolve, 300);
+                          });
+
+
+                          const html = container.innerHTML;
+
+
+                          await saveRecentActivity(html, "preview");
+
+
+                          document.body.removeChild(container);
+
+
+                          setShowMobilePreview((v) => !v);
+                        }}
+                      />
+                    </div>
+
+
+                    {/* Scrollable form content */}
+                    <div
+                      ref={formContainerRef}
+                      className="flex-1 overflow-y-auto p-6"
+                      style={{
+                        scrollbarWidth: "thin",
+                        scrollbarColor: "#e2e8f0 transparent",
+                      }}
+                    >
+                      {renderFormContent()}
+
+
+                      {/* Prev / Next */}
+                      <div className="flex justify-between mt-8">
+                        <button
+                          onClick={goPrevious}
+                          disabled={currentIndex === 0}
+                          className="px-6 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-medium disabled:opacity-30 hover:bg-slate-200 transition-colors text-sm"
+                        >
+                          ← Previous
+                        </button>
+                        <button
+                          onClick={goNext}
+                          disabled={currentIndex === sections.length - 1}
+                          className="px-6 py-2.5 rounded-xl bg-slate-900 text-white font-medium disabled:opacity-30 hover:bg-slate-700 transition-colors text-sm"
+                        >
+                          Next →
+                        </button>
+                      </div>
+                      <div style={{ height: 48 }} />
+                    </div>
+                  </div>
+                </FloatingFormPanel>
+              </div>
+            )}
+
+
+            {/* ── LEFT: mobile form ── */}
+            <div className="w-full lg:hidden flex flex-col">
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col overflow-hidden mb-4">
+                <div className="flex-shrink-0 border-b border-slate-100 px-4 py-3">
+                  <FormTabs
+                    activeSection={activeSection}
+                    setActiveSection={setActiveSection}
+                    showPreview={showMobilePreview}
+                    onTogglePreview={async () => {
+
+
+                      const TemplateComponent = CVTemplates[selectedTemplate];
+
+
+                      if (!TemplateComponent) {
+                        setShowMobilePreview((v) => !v);
+                        return;
+                      }
+
+
+                      const container = document.createElement("div");
+
+
+                      Object.assign(container.style, {
+                        position: "fixed",
+                        top: "0",
+                        left: "-9999px",
+                        width: `${PDF_PAGE_WIDTH_PX}px`,
+                      });
+
+
+                      document.body.appendChild(container);
+
+
+                      const { createRoot } = await import("react-dom/client");
+
+
+                      const displayData = mergeWithSampleData(formData);
+
+
+                      await new Promise((resolve) => {
+                        const root = createRoot(container);
+                        root.render(<TemplateComponent formData={displayData} />);
+                        setTimeout(resolve, 300);
+                      });
+
+
+                      const html = container.innerHTML;
+
+
+                      await saveRecentActivity(html, "preview");
+
+
+                      document.body.removeChild(container);
+
+
+                      setShowMobilePreview((v) => !v);
+                    }}
+                  />
+                </div>
+                <div className="p-6">
+                  {renderFormContent()}
+                  <div className="flex justify-between mt-8">
+                    <button
+                      onClick={goPrevious}
+                      disabled={currentIndex === 0}
+                      className="px-6 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-medium disabled:opacity-30 hover:bg-slate-200 transition-colors text-sm"
+                    >
+                      ← Previous
+                    </button>
+                    <button
+                      onClick={goNext}
+                      disabled={currentIndex === sections.length - 1}
+                      className="px-6 py-2.5 rounded-xl bg-slate-900 text-white font-medium disabled:opacity-30 hover:bg-slate-700 transition-colors text-sm"
+                    >
+                      Next →
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+
+            {/* ── RIGHT: preview ── */}
+            <div className="hidden lg:flex flex-1 flex-col min-w-0">
+              <div
+                className="rounded-2xl overflow-hidden border border-slate-100"
+                style={{
+                  minHeight: "calc(100vh - 80px)",
+                  boxShadow:
+                    "0 4px 24px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)",
+                }}
+              >
+                <CVPreview
+                  {...previewProps}
+                  isMaximized={isPreviewMaximized}
+                  onToggleMaximize={() => setIsPreviewMaximized((v) => !v)}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+
+        {/* ════ TEMPLATES TAB ════ */}
+        {activeTab === "templates" && (
+          <div className="pb-16 pt-4">
+            <TemplatesGallery
+              selectedTemplate={selectedTemplate}
+              onSelectTemplate={handleTemplateSelect}
+              formData={formData}
+            />
           </div>
         )}
       </div>
-
-
-      {/* ════ BUILDER TAB ════ */}
-      {activeTab === "builder" && (
-        <div className="flex gap-5 px-4 pb-20 pt-4 items-start">
-          {/* ── LEFT: floating form panel (desktop) ── */}
-          {!isPreviewMaximized && (
-            <div
-              ref={leftColRef}
-              className="flex-shrink-0 hidden lg:block"
-              style={{ width: 480 }}
-            >
-              <FloatingFormPanel
-                topOffset={headerHeight}
-                containerRef={leftColRef}
-              >
-                <div
-                  className="bg-white rounded-2xl flex flex-col overflow-hidden"
-                  style={{
-                    height: "100%",
-                    boxShadow:
-                      "0 4px 24px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)",
-                  }}
-                >
-                  {/* Tabs */}
-                  <div className="flex-shrink-0 border-b border-slate-100 px-4 py-3 bg-white rounded-t-2xl">
-                    <FormTabs
-                      activeSection={activeSection}
-                      setActiveSection={setActiveSection}
-                      showPreview={showMobilePreview}
-                      onTogglePreview={async () => {
-
-
-                        const TemplateComponent = CVTemplates[selectedTemplate];
-
-
-                        if (!TemplateComponent) {
-                          setShowMobilePreview((v) => !v);
-                          return;
-                        }
-
-
-                        const container = document.createElement("div");
-
-
-                        Object.assign(container.style, {
-                          position: "fixed",
-                          top: "0",
-                          left: "-9999px",
-                          width: `${PDF_PAGE_WIDTH_PX}px`,
-                        });
-
-
-                        document.body.appendChild(container);
-
-
-                        const { createRoot } = await import("react-dom/client");
-
-
-                        const displayData = mergeWithSampleData(formData);
-
-
-                        await new Promise((resolve) => {
-                          const root = createRoot(container);
-                          root.render(<TemplateComponent formData={displayData} />);
-                          setTimeout(resolve, 300);
-                        });
-
-
-                        const html = container.innerHTML;
-
-
-                        await saveRecentActivity(html, "preview");
-
-
-                        document.body.removeChild(container);
-
-
-                        setShowMobilePreview((v) => !v);
-                      }}
-                    />
-                  </div>
-
-
-                  {/* Scrollable form content */}
-                  <div
-                    ref={formContainerRef}
-                    className="flex-1 overflow-y-auto p-6"
-                    style={{
-                      scrollbarWidth: "thin",
-                      scrollbarColor: "#e2e8f0 transparent",
-                    }}
-                  >
-                    {renderFormContent()}
-
-
-                    {/* Prev / Next */}
-                    <div className="flex justify-between mt-8">
-                      <button
-                        onClick={goPrevious}
-                        disabled={currentIndex === 0}
-                        className="px-6 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-medium disabled:opacity-30 hover:bg-slate-200 transition-colors text-sm"
-                      >
-                        ← Previous
-                      </button>
-                      <button
-                        onClick={goNext}
-                        disabled={currentIndex === sections.length - 1}
-                        className="px-6 py-2.5 rounded-xl bg-slate-900 text-white font-medium disabled:opacity-30 hover:bg-slate-700 transition-colors text-sm"
-                      >
-                        Next →
-                      </button>
-                    </div>
-                    <div style={{ height: 48 }} />
-                  </div>
-                </div>
-              </FloatingFormPanel>
-            </div>
-          )}
-
-
-          {/* ── LEFT: mobile form ── */}
-          <div className="w-full lg:hidden flex flex-col">
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col overflow-hidden mb-4">
-              <div className="flex-shrink-0 border-b border-slate-100 px-4 py-3">
-                <FormTabs
-                  activeSection={activeSection}
-                  setActiveSection={setActiveSection}
-                  showPreview={showMobilePreview}
-                  onTogglePreview={async () => {
-
-
-                    const TemplateComponent = CVTemplates[selectedTemplate];
-
-
-                    if (!TemplateComponent) {
-                      setShowMobilePreview((v) => !v);
-                      return;
-                    }
-
-
-                    const container = document.createElement("div");
-
-
-                    Object.assign(container.style, {
-                      position: "fixed",
-                      top: "0",
-                      left: "-9999px",
-                      width: `${PDF_PAGE_WIDTH_PX}px`,
-                    });
-
-
-                    document.body.appendChild(container);
-
-
-                    const { createRoot } = await import("react-dom/client");
-
-
-                    const displayData = mergeWithSampleData(formData);
-
-
-                    await new Promise((resolve) => {
-                      const root = createRoot(container);
-                      root.render(<TemplateComponent formData={displayData} />);
-                      setTimeout(resolve, 300);
-                    });
-
-
-                    const html = container.innerHTML;
-
-
-                    await saveRecentActivity(html, "preview");
-
-
-                    document.body.removeChild(container);
-
-
-                    setShowMobilePreview((v) => !v);
-                  }}
-                />
-              </div>
-              <div className="p-6">
-                {renderFormContent()}
-                <div className="flex justify-between mt-8">
-                  <button
-                    onClick={goPrevious}
-                    disabled={currentIndex === 0}
-                    className="px-6 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-medium disabled:opacity-30 hover:bg-slate-200 transition-colors text-sm"
-                  >
-                    ← Previous
-                  </button>
-                  <button
-                    onClick={goNext}
-                    disabled={currentIndex === sections.length - 1}
-                    className="px-6 py-2.5 rounded-xl bg-slate-900 text-white font-medium disabled:opacity-30 hover:bg-slate-700 transition-colors text-sm"
-                  >
-                    Next →
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-
-          {/* ── RIGHT: preview ── */}
-          <div className="hidden lg:flex flex-1 flex-col min-w-0">
-            <div
-              className="rounded-2xl overflow-hidden border border-slate-100"
-              style={{
-                minHeight: "calc(100vh - 80px)",
-                boxShadow:
-                  "0 4px 24px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)",
-              }}
-            >
-              <CVPreview
-                {...previewProps}
-                isMaximized={isPreviewMaximized}
-                onToggleMaximize={() => setIsPreviewMaximized((v) => !v)}
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-
-      {/* ════ TEMPLATES TAB ════ */}
-      {activeTab === "templates" && (
-        <div className="px-4 pb-16 pt-4">
-          <TemplatesGallery
-            selectedTemplate={selectedTemplate}
-            onSelectTemplate={handleTemplateSelect}
-            formData={formData}
-          />
-        </div>
-      )}
 
 
       {/* ── Mobile preview overlay ── */}

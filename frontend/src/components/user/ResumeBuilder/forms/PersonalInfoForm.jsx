@@ -78,82 +78,82 @@ const PersonalInfoForm = ({ formData, onInputChange, onUseSummary }) => {
     <div className="p-1">
       <h3 className="mb-3 text-sm font-semibold">Personal Information</h3>
       <div className="pl-0.5">
-        <div className="flex flex-col gap-[6px] mb-[10px]">
-          <label className="block text-[12px] font-medium text-[#374151] mb-1">
+        <div className="flex flex-col gap-1.5 mb-4">
+          <label className="block text-sm font-semibold text-slate-700 mb-1.5">
             Full Name *
           </label>
           <input
             type="text"
-            className="px-2.5 py-2 border text-sm rounded border-1.5 focus:border-[#007bff] focus:outline-none focus:bg-white focus:shadow-[0_2px_8px_rgba(0,123,255,0.07)]"
+            className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
             value={formData?.fullName || ""}
             placeholder="John Doe"
             onChange={(e) => onInputChange("fullName", e.target.value)}
           />
         </div>
-        <div className="flex flex-col gap-[6px] mb-[10px]">
-          <label className="block text-[12px] font-medium text-[#374151] mb-1">
+        <div className="flex flex-col gap-1.5 mb-4">
+          <label className="block text-sm font-semibold text-slate-700 mb-1.5">
             Email *
           </label>
           <input
             type="email"
-            className="px-2.5 py-2 border text-sm rounded border-1.5 focus:border-[#007bff] focus:outline-none focus:bg-white focus:shadow-[0_2px_8px_rgba(0,123,255,0.07)]"
+            className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
             value={formData?.email || ""}
             placeholder="john.doe@example.com"
             onChange={(e) => onInputChange("email", e.target.value)}
           />
         </div>
-        <div className="flex flex-col gap-[6px] mb-[10px]">
-          <label className="block text-[12px] font-medium text-[#374151] mb-1">
+        <div className="flex flex-col gap-1.5 mb-4">
+          <label className="block text-sm font-semibold text-slate-700 mb-1.5">
             Phone *
           </label>
           <input
             type="tel"
-            className="px-2.5 py-2 border text-sm rounded border-1.5 focus:border-[#007bff] focus:outline-none focus:bg-white focus:shadow-[0_2px_8px_rgba(0,123,255,0.07)]"
+            className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
             value={formData?.phone || ""}
             maxLength={10}
             placeholder="1234567890"
             onChange={(e) => onInputChange("phone", e.target.value)}
           />
         </div>
-        <div className="flex flex-col gap-[6px] mb-[10px]">
-          <label className="block text-[12px] font-medium text-[#374151] mb-1">
+        <div className="flex flex-col gap-1.5 mb-4">
+          <label className="block text-sm font-semibold text-slate-700 mb-1.5">
             Location *
           </label>
           <input
             type="text"
-            className="px-2.5 py-2 border text-sm rounded border-1.5 focus:border-[#007bff] focus:outline-none focus:bg-white focus:shadow-[0_2px_8px_rgba(0,123,255,0.07)]"
+            className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
             value={formData?.location || ""}
             placeholder="San Francisco, CA"
             onChange={(e) => onInputChange("location", e.target.value)}
           />
         </div>
-        <div className="flex flex-col gap-[6px] mb-[10px]">
-          <label className="block text-[12px] font-medium text-[#374151] mb-1">
+        <div className="flex flex-col gap-1.5 mb-4">
+          <label className="block text-sm font-semibold text-slate-700 mb-1.5">
             LinkedIn *
           </label>
           <input
             type="text"
-            className="px-2.5 py-2 border text-sm rounded border-1.5 focus:border-[#007bff] focus:outline-none focus:bg-white focus:shadow-[0_2px_8px_rgba(0,123,255,0.07)]"
+            className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
             value={formData?.linkedin || ""}
             placeholder="linkedin.com/in/johndoe"
             onChange={(e) => onInputChange("linkedin", e.target.value)}
           />
         </div>
-        <div className="flex flex-col gap-[6px] mb-[10px]">
-          <label className="block text-[12px] font-medium text-[#374151] mb-1">
+        <div className="flex flex-col gap-1.5 mb-4">
+          <label className="block text-sm font-semibold text-slate-700 mb-1.5">
             Website/Portfolio *
           </label>
           <input
             type="text"
-            className="px-2.5 py-2 border text-sm rounded border-1.5 focus:border-[#007bff] focus:outline-none focus:bg-white focus:shadow-[0_2px_8px_rgba(0,123,255,0.07)]"
+            className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
             value={formData?.website || ""}
             placeholder="johndoe.com"
             onChange={(e) => onInputChange("website", e.target.value)}
           />
         </div>
       </div>
-      <div className="flex flex-col gap-[6px] mb-[10px] full-width">
-        <label className="flex gap-2 text-[12px] font-medium text-[#374151] mb-1">
+      <div className="flex flex-col gap-1.5 mb-4 full-width">
+        <label className="flex gap-2 text-sm font-semibold text-slate-700 mb-1.5">
           Professional Summary (Optional)
           <RefreshCw
             size={15}
@@ -161,7 +161,7 @@ const PersonalInfoForm = ({ formData, onInputChange, onUseSummary }) => {
           />
         </label>
         <textarea
-          className="w-full h-28 px-2.5 py-2 border text-sm rounded resize-none border-1.5 focus:border-[#007bff] focus:outline-none focus:bg-white focus:shadow-[0_2px_8px_rgba(0,123,255,0.07)] scrollbar-hide"
+          className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white resize-y min-h-[120px] scrollbar-hide"
           value={formData?.summary || ""}
           maxLength={500}
           placeholder="Brief professional summary highlighting your key skills and experience..."

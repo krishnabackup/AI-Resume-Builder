@@ -337,46 +337,54 @@ export default function UserNavbar() {
                   <>
                     {notifications.filter((n) => n.category === "today")
                       .length > 0 && (
-                      <div className="mb-4">
-                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
-                          Today
-                        </h3>
-                        <div className="space-y-4">
-                          {notifications
-                            .filter((n) => n.category === "today")
-                            .map((n, i) => (
-                              <NotificationItemDropdown
-                                key={n.id}
-                                notif={n}
-                                index={i}
-                                getTypeIcon={getTypeIcon}
-                                getAvatarColor={getAvatarColor}
-                              />
-                            ))}
+                        <div className="mb-4">
+                          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
+                            Today
+                          </h3>
+                          <div className="space-y-4">
+                            {notifications
+                              .filter((n) => n.category === "today")
+                              .map((n, i) => (
+                                <NotificationItemDropdown
+                                  key={n.id}
+                                  notif={n}
+                                  index={i}
+                                  getTypeIcon={getTypeIcon}
+                                  getAvatarColor={getAvatarColor}
+                                  onClick={() => {
+                                    setShowNotifications(false);
+                                    navigate("/user/notifications");
+                                  }}
+                                />
+                              ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
                     {notifications.filter((n) => n.category === "older")
                       .length > 0 && (
-                      <div className="mt-6">
-                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
-                          Earlier
-                        </h3>
-                        <div className="space-y-4">
-                          {notifications
-                            .filter((n) => n.category === "older")
-                            .map((n, i) => (
-                              <NotificationItemDropdown
-                                key={n.id}
-                                notif={n}
-                                index={i}
-                                getTypeIcon={getTypeIcon}
-                                getAvatarColor={getAvatarColor}
-                              />
-                            ))}
+                        <div className="mt-6">
+                          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
+                            Earlier
+                          </h3>
+                          <div className="space-y-4">
+                            {notifications
+                              .filter((n) => n.category === "older")
+                              .map((n, i) => (
+                                <NotificationItemDropdown
+                                  key={n.id}
+                                  notif={n}
+                                  index={i}
+                                  getTypeIcon={getTypeIcon}
+                                  getAvatarColor={getAvatarColor}
+                                  onClick={() => {
+                                    setShowNotifications(false);
+                                    navigate("/user/notifications");
+                                  }}
+                                />
+                              ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
                   </>
                 )}
               </div>
@@ -413,35 +421,33 @@ const NotificationItemDropdown = ({
   index,
   getTypeIcon,
   getAvatarColor,
+  onClick,
 }) => (
   <motion.div
     initial={{ opacity: 0, x: 25 }}
     animate={{ opacity: 1, x: 0 }}
     transition={{ duration: 0.3, delay: index * 0.05 }}
-    className={`px-6 py-5 hover:bg-gradient-to-r hover:from-yellow-50/70 hover:to-amber-50/40 transition-all duration-300 group cursor-pointer border-b border-transparent hover:border-yellow-200/40 ${
-      notif.isUnread
+    className={`px-6 py-5 hover:bg-gradient-to-r hover:from-yellow-50/70 hover:to-amber-50/40 transition-all duration-300 group cursor-pointer border-b border-transparent hover:border-yellow-200/40 ${notif.isUnread
         ? "bg-gradient-to-r from-yellow-50/40 to-transparent shadow-sm ring-1 ring-yellow-200/30"
         : ""
-    }`}
-    onClick={() => console.log("Notification clicked:", notif.id)}
+      }`}
+    onClick={onClick}
   >
     <div className="flex items-start gap-4">
       <motion.div
-        className={`flex-shrink-0 p-2.5 rounded-xl shadow-md border border-white/50 backdrop-blur-sm transition-all duration-300 hover:scale-110 group-hover:shadow-xl ${
-          notif.isUnread
+        className={`flex-shrink-0 p-2.5 rounded-xl shadow-md border border-white/50 backdrop-blur-sm transition-all duration-300 hover:scale-110 group-hover:shadow-xl ${notif.isUnread
             ? "bg-white shadow-yellow-100/50 ring-2 ring-yellow-200/60"
             : "bg-white/90"
-        }`}
+          }`}
       >
         {getTypeIcon(notif.type)}
       </motion.div>
       <div className="flex-1 min-w-0">
         <p
-          className={`font-bold text-sm leading-relaxed mb-2.5 line-clamp-2 transition-all duration-300 group-hover:line-clamp-none ${
-            notif.isUnread
+          className={`font-bold text-sm leading-relaxed mb-2.5 line-clamp-2 transition-all duration-300 group-hover:line-clamp-none ${notif.isUnread
               ? "bg-gradient-to-r from-gray-900 via-gray-800 to-yellow-900 bg-clip-text text-transparent"
               : "text-gray-700"
-          }`}
+            }`}
         >
           {notif.title}
         </p>
@@ -469,10 +475,9 @@ const DropdownItem = ({ icon, label, onClick, danger }) => (
   <button
     onClick={onClick}
     className={`w-full flex items-center gap-3 px-4 py-2 text-sm text-left transition-all
-      ${
-        danger
-          ? "text-amber-600 hover:bg-amber-50"
-          : "text-gray-700 hover:bg-gray-100"
+      ${danger
+        ? "text-amber-600 hover:bg-amber-50"
+        : "text-gray-700 hover:bg-gray-100"
       }`}
   >
     {icon}
