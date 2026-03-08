@@ -222,7 +222,7 @@ analysis.overallScore += contactScore;
   analysis.sectionScores.push({
     sectionName: "Section Structure",
     score: headingScore,
-    maxScore: 16,
+    maxScore: 20,
     status: headingScore >= 12 ? "ok" : "warn",
     suggestions: headingSuggestions
   });
@@ -251,7 +251,7 @@ analysis.overallScore += contactScore;
   analysis.sectionScores.push({
     sectionName: "Measurable Achievements",
     score: measurableScore,
-    maxScore: 14,
+    maxScore: 20,
     status: measurableScore >= 9 ? "ok" : "warn",
     suggestions: measurableSuggestions
   });
@@ -305,6 +305,7 @@ if (pronounCount > 0) {
 analysis.sectionScores.push({
   sectionName: "Personal Pronoun Usage",
   score: pronounScore,
+  maxScore: 20,
   status: pronounScore === 20 ? "ok" : "warn",
   suggestions: pronounSuggestions,
 });
