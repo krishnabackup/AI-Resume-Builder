@@ -127,7 +127,7 @@ const EducationForm = ({ formData, setFormData }) => {
                   <label>Degree *</label>
                   <input
                     type="text"
-                    className="px-2.5 py-2 border text-sm rounded border-1.5 focus:border-[#007bff] focus:outline-none focus:bg-white focus:shadow-[0_2px_8px_rgba(0,123,255,0.07)]"
+                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
                     value={edu.degree || ""}
                     placeholder="Bachelor of Science in Computer Science"
                     onChange={(e) => {
@@ -139,11 +139,11 @@ const EducationForm = ({ formData, setFormData }) => {
                     }}
                   />
                 </div>
-                <div className="flex flex-col gap-[6px] mb-[10px]">
+                <div className="flex flex-col gap-1.5 mb-4">
                   <label>School *</label>
                   <input
                     type="text"
-                    className="px-2.5 py-2 border text-sm rounded border-1.5 focus:border-[#007bff] focus:outline-none focus:bg-white focus:shadow-[0_2px_8px_rgba(0,123,255,0.07)]"
+                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
                     value={edu.school || ""}
                     placeholder="University Name"
                     onChange={(e) => {
@@ -155,11 +155,11 @@ const EducationForm = ({ formData, setFormData }) => {
                     }}
                   />
                 </div>
-                <div className="flex flex-col gap-[6px] mb-[10px]">
+                <div className="flex flex-col gap-1.5 mb-4">
                   <label>Start Date *</label>
                   <input
                     type="month"
-                    className="px-2.5 py-2 border text-sm rounded border-1.5 focus:border-[#007bff] focus:outline-none focus:bg-white focus:shadow-[0_2px_8px_rgba(0,123,255,0.07)]"
+                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
                     value={edu.startDate || ""}
                     onChange={(e) => {
                       const val = e.target.value;
@@ -170,11 +170,11 @@ const EducationForm = ({ formData, setFormData }) => {
                     }}
                   />
                 </div>
-                <div className="flex flex-col gap-[6px] mb-[10px]">
+                <div className="flex flex-col gap-1.5 mb-4">
                   <label>Graduation Date *</label>
                   <input
                     type="month"
-                    className="px-2.5 py-2 border text-sm rounded border-1.5 focus:border-[#007bff] focus:outline-none focus:bg-white focus:shadow-[0_2px_8px_rgba(0,123,255,0.07)]"
+                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
                     value={edu.graduationDate || ""}
                     onChange={(e) => {
                       const val = e.target.value;
@@ -187,11 +187,11 @@ const EducationForm = ({ formData, setFormData }) => {
                     }}
                   />
                 </div>
-                <div className="flex flex-col gap-[6px] mb-[10px]">
+                <div className="flex flex-col gap-1.5 mb-4">
                   <label>GPA (Optional)</label>
                   <input
                     type="text"
-                    className="px-2.5 py-2 border text-sm rounded border-1.5 focus:border-[#007bff] focus:outline-none focus:bg-white focus:shadow-[0_2px_8px_rgba(0,123,255,0.07)]"
+                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
                     value={edu.gpa || ""}
                     placeholder="7.8/10.0"
                     onChange={(e) => {

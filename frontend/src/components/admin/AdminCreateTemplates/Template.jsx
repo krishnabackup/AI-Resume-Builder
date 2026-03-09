@@ -19,6 +19,17 @@ export default function AdminTemplates() {
   const [isPreviewModalOpen, setIsPreviewModalOpen] = React.useState(false);
   const [previewImage, setPreviewImage] = React.useState("");
 
+  React.useEffect(() => {
+    if (isPreviewModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isPreviewModalOpen]);
+
   const [pendingTemplates, setPendingTemplates] = React.useState([]);
   const [approvedTemplates, setApprovedTemplates] = React.useState({});
   const [statuses, setStatuses] = React.useState({});

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { X, Eye, EyeOff, Loader2 } from "lucide-react";
 import axios from "../../../api/axios";
 import logo from "../../../assets/UptoSkills.webp";
+import UserNavBar from "../UserNavBar/UserNavBar";
 
 export default function Security() {
   const navigate = useNavigate();
@@ -95,16 +96,8 @@ export default function Security() {
 
   return (
     <div className="w-full min-h-screen bg-[#f4f6f8]">
+      <UserNavBar/>
 
-      {/* LOGO BAR */}
-      <div className="h-[56px] sm:h-[64px] bg-white border-b border-gray-200 flex items-center px-4 sm:px-8">
-        <img
-          src={logo}
-          alt="UpToSkills Logo"
-          className="h-7 sm:h-8 w-auto object-contain cursor-pointer"
-          onClick={() => navigate("/user/dashboard")}
-        />
-      </div>
 
       {/* CENTERED CONTENT */}
       <div className="flex items-center justify-center min-h-[calc(100vh-64px)] px-4">

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Activity,
@@ -15,28 +15,50 @@ import {
   ChevronDown,
   Target,
   FileSearch,
-  Eye,
+  Eye
 } from "lucide-react";
 import {
   ResponsiveContainer,
   AreaChart,
   Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
+  Tooltip
 } from "recharts";
 import NavBar from "../components/NavBar";
 import Footer from "./Footer";
 import write from "../assets/Live.png";
 import { motion } from "framer-motion";
 
+const useInView = (threshold = 0.15) => {
+  const ref = useRef(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    if (!ref.current) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) setIsVisible(true);
+      },
+      { threshold }
+    );
+
+    observer.observe(ref.current);
+
+    return () => observer.disconnect();
+  }, [threshold]);
+
+  return [ref, isVisible];
+};
+
 const fadeUp = {
-  hidden: { opacity: 0, y: 40 },
+  hidden: { opacity: 0, y: 28 },
   show: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.6, ease: "easeOut" },
+    transition: {
+      duration: 0.8,
+      ease: [0.22, 1, 0.36, 1],
+    },
   },
 };
 
@@ -62,10 +84,12 @@ const staggerContainer = {
   hidden: {},
   show: {
     transition: {
-      staggerChildren: 0.15,
+      staggerChildren: 0.12,
+      delayChildren: 0.15,
     },
   },
 };
+
 const ScoreChecker = () => {
   const navigate = useNavigate();
   const isLoggedIn =
@@ -79,20 +103,19 @@ const ScoreChecker = () => {
     }
   };
 
-  // ✅ editor mock (for demo feel)
   const [text, setText] = useState(
-    "Senior Software Engineer\n\n- Spearheaded a team of 5 developers to build a scalable React application.\n- Improved page load speed by 40% using code splitting and lazy loading.\n- Integrated RESTful APIs and optimized database queries for better performance.",
+    "Senior Software Engineer\n\n- Spearheaded a team of 5 developers to build a scalable React application.\n- Improved page load speed by 40% using code splitting and lazy loading.\n- Integrated RESTful APIs and optimized database queries for better performance."
   );
 
   const [openFaq, setOpenFaq] = useState(0);
 
   const [heroRef, heroVisible] = useInView(0.2);
-const [demoRef, demoVisible] = useInView(0.15);
-const [breakRef, breakVisible] = useInView(0.15);
-const [calcRef, calcVisible] = useInView(0.15);
-const [whyRef, whyVisible] = useInView(0.15);
-const [faqRef, faqVisible] = useInView(0.15);
-const [ctaRef, ctaVisible] = useInView(0.2);
+  const [demoRef, demoVisible] = useInView(0.15);
+  const [breakRef, breakVisible] = useInView(0.15);
+  const [calcRef, calcVisible] = useInView(0.15);
+  const [whyRef, whyVisible] = useInView(0.15);
+  const [faqRef, faqVisible] = useInView(0.15);
+  const [ctaRef, ctaVisible] = useInView(0.2);
 
   const scoreValue = useMemo(() => {
     const len = text.trim().length;
@@ -136,7 +159,6 @@ const [ctaRef, ctaVisible] = useInView(0.2);
     return items;
   }, [text]);
 
-  // ✅ Fake trend data that reacts to score
   const trendData = useMemo(() => {
     const base = Math.max(50, scoreValue - 20);
     return Array.from({ length: 8 }).map((_, i) => ({
@@ -150,17 +172,13 @@ const [ctaRef, ctaVisible] = useInView(0.2);
       <NavBar />
 
       {/* 1) HERO SECTION (Centered, distinct from ATS) */}
-      <section
-  ref={heroRef}
-  className={`relative px-6 pt-20 pb-16 bg-white overflow-hidden transition-all duration-700 ${
-    heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-  }`}
->
+      <section className="relative px-6 pt-20 pb-16 bg-white">
         <div className="mx-auto max-w-7xl">
           <motion.div
             variants={staggerContainer}
             initial="hidden"
-            animate="show"
+            whileInView="show"
+            viewport={{ once: true, amount: 0.25 }}
             className="grid items-center gap-12 lg:grid-cols-2"
           >
             {/* LEFT: TEXT */}
@@ -192,6 +210,9 @@ const [ctaRef, ctaVisible] = useInView(0.2);
             {/* RIGHT: IMAGE */}
             <motion.div
               variants={fadeUp}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true, amount: 0.25 }}
               className="relative flex justify-center lg:justify-end"
             >
               <img
@@ -457,11 +478,10 @@ const [ctaRef, ctaVisible] = useInView(0.2);
 
       {/* 3) SECTION SCORE TILES */}
       <section
-  ref={breakRef}
-  className={`px-6 py-12 bg-white transition-all duration-700 ${
-    breakVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-  }`}
->
+        ref={breakRef}
+        className={`px-6 py-12 bg-white transition-all duration-700 ${breakVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+          }`}
+      >
         <div className="max-w-7xl mx-auto">
           <h2 className="text-2xl font-black text-[#1a2e52] mb-8 text-center md:text-left">
             Detailed Breakdown
@@ -531,12 +551,11 @@ const [ctaRef, ctaVisible] = useInView(0.2);
       </section>
 
       {/* 4) HOW WE CALCULATE (New Section) */}
-     <section
-  ref={calcRef}
-  className={`px-6 py-20 bg-gray-50/50 transition-all duration-700 ${
-    calcVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-  }`}
->
+      <section
+        ref={calcRef}
+        className={`px-6 py-20 bg-gray-50/50 transition-all duration-700 ${calcVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+          }`}
+      >
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-black text-[#1a2e52]">
@@ -721,11 +740,10 @@ const [ctaRef, ctaVisible] = useInView(0.2);
 
       {/* 6) FAQ (New Section) */}
       <section
-  ref={faqRef}
-  className={`px-6 py-20 bg-[#F8F9FC] transition-all duration-700 ${
-    faqVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-  }`}
->
+        ref={faqRef}
+        className={`px-6 py-20 bg-[#F8F9FC] transition-all duration-700 ${faqVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+          }`}
+      >
         <div className="max-w-3xl mx-auto">
           <h2 className="text-3xl font-black text-center text-[#1a2e52] mb-12">
             Frequently Asked Questions
@@ -780,11 +798,10 @@ const [ctaRef, ctaVisible] = useInView(0.2);
 
       {/* CTA (keeps your style) */}
       <section
-  ref={ctaRef}
-  className={`relative px-8 py-20 overflow-hidden bg-white text-center transition-all duration-700 ${
-    ctaVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-  }`}
->
+        ref={ctaRef}
+        className={`relative px-8 py-20 overflow-hidden bg-white text-center transition-all duration-700 ${ctaVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+          }`}
+      >
         <div className="absolute top-0 right-0 w-1/3 h-full bg-orange-50 rounded-full blur-[120px] -z-10 opacity-60" />
         <div className="absolute bottom-0 left-0 w-1/3 h-full bg-blue-50 rounded-full blur-[120px] -z-10 opacity-60" />
 

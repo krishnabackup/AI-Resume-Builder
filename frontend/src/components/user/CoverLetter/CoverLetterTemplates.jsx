@@ -1,9 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Check, Eye, X } from "lucide-react";
 
 const CoverLetterTemplates = ({ selectedTemplate, onSelectTemplate }) => {
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
+
+  useEffect(() => {
+    if (isPreviewModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isPreviewModalOpen]);
 
   const templates = [
     {
@@ -82,13 +93,12 @@ const CoverLetterTemplates = ({ selectedTemplate, onSelectTemplate }) => {
           {templates.map((tpl) => (
             <div
               key={tpl.id}
-              className={`bg-white border-2 rounded-xl p-3 hover:shadow-lg transition-all duration-200 flex flex-col cursor-pointer ${
-                selectedTemplate === tpl.id
+              className={`bg-white border-2 rounded-xl p-3 hover:shadow-lg transition-all duration-200 flex flex-col cursor-pointer ${selectedTemplate === tpl.id
                   ? "border-blue-600 shadow-md"
                   : "border-slate-200"
-              }`}
+                }`}
               onClick={() =>
-                handleUseTemplate(tpl.id, { stopPropagation: () => {} })
+                handleUseTemplate(tpl.id, { stopPropagation: () => { } })
               }
             >
               {/* Preview Image */}
@@ -147,11 +157,10 @@ const CoverLetterTemplates = ({ selectedTemplate, onSelectTemplate }) => {
                 </button>
                 <button
                   onClick={(e) => handleUseTemplate(tpl.id, e)}
-                  className={`flex-1 py-2 flex items-center justify-center gap-1 rounded-lg text-xs font-medium transition-colors shadow-sm ${
-                    selectedTemplate === tpl.id
+                  className={`flex-1 py-2 flex items-center justify-center gap-1 rounded-lg text-xs font-medium transition-colors shadow-sm ${selectedTemplate === tpl.id
                       ? "bg-blue-600 text-white hover:bg-blue-700"
                       : "bg-blue-600 text-white hover:bg-blue-700"
-                  }`}
+                    }`}
                 >
                   <Check size={14} />
                   {selectedTemplate === tpl.id ? "Selected" : "Use Template"}

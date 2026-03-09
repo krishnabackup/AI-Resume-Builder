@@ -7,7 +7,7 @@ import cookieParser from "cookie-parser";
 import path from "path";
 import { fileURLToPath } from "url";
 import notificationRoutes from "./routers/notification.router.js";
- 
+
 
 // Routers
 import authRouter from "./routers/auth.router.js";
@@ -19,6 +19,7 @@ import planRouter from "./routers/plan.router.js";
 
 import downloadsRouter from "./routers/downloads.router.js";
 import coverLetterRouter from "./routers/coverletter.js";  // ✅ NEW
+import dashboardRouter from "./routers/dashboard.router.js";
 
 import chatbotRouter from "./routers/chatbot.router.js";
 
@@ -70,6 +71,7 @@ app.use("/api/coverletter", coverLetterRouter);  // ✅ NEW
 app.use("/api/template-visibility", templateVisibilityRouter);
 app.use("/api/plans", planRouter);
 app.use("/api/chatbot", chatbotRouter);
+app.use("/api/dashboard", dashboardRouter);
 
 // Serve uploads directory (for images/resumes)
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));

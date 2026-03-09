@@ -192,7 +192,7 @@ const ExperienceForm = ({ formData, setFormData }) => {
                     <label>Job Title *</label>
                     <input
                       type="text"
-                      className="px-2.5 py-2 border text-sm rounded border-1.5 focus:border-[#007bff] focus:outline-none focus:bg-white focus:shadow-[0_2px_8px_rgba(0,123,255,0.07)]"
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
                       value={exp.title || ""}
                       placeholder="Software Engineer"
                       onChange={(e) =>
@@ -204,7 +204,7 @@ const ExperienceForm = ({ formData, setFormData }) => {
                     <label>Company *</label>
                     <input
                       type="text"
-                      className="px-2.5 py-2 border text-sm rounded border-1.5 focus:border-[#007bff] focus:outline-none focus:bg-white focus:shadow-[0_2px_8px_rgba(0,123,255,0.07)]"
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
                       value={exp.company || ""}
                       placeholder="Tech Company Inc."
                       onChange={(e) =>
@@ -216,7 +216,7 @@ const ExperienceForm = ({ formData, setFormData }) => {
                     <label>Start Date *</label>
                     <input
                       type="month"
-                      className="px-2.5 py-2 border text-sm rounded border-1.5 focus:border-[#007bff] focus:outline-none focus:bg-white focus:shadow-[0_2px_8px_rgba(0,123,255,0.07)]"
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
                       value={exp.startDate || ""}
                       onChange={(e) =>
                         updateExperience(exp.id, "startDate", e.target.value)
@@ -227,7 +227,7 @@ const ExperienceForm = ({ formData, setFormData }) => {
                     <label>End Date *</label>
                     <input
                       type="text"
-                      className="px-2.5 py-2 border text-sm rounded border-1.5 focus:border-[#007bff] focus:outline-none focus:bg-white focus:shadow-[0_2px_8px_rgba(0,123,255,0.07)]"
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
                       value={exp.endDate || ""}
                       placeholder="Present or YYYY-MM"
                       onChange={(e) =>

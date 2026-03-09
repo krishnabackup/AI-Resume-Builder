@@ -196,9 +196,10 @@ const CVPreview = ({
     const TemplateComponent = CVTemplates[selectedTemplate];
     if (!TemplateComponent) return;
 
+    let container;
     try {
       // Create hidden container at full A4 width
-      const container = document.createElement("div");
+      container = document.createElement("div");
       Object.assign(container.style, {
         position: "fixed",
         top: "0",
@@ -284,11 +285,10 @@ const CVPreview = ({
       const template = clean(selectedTemplate) || "Template";
 
       pdf.save(`${name}_${template}.pdf`);
-      setIsDownloading(false);
-
-      document.body.removeChild(container);
     } catch (err) {
-      console.error(err);
+      console.error("PDF download error:", err);
+    } finally {
+      if (container && container.parentNode) document.body.removeChild(container);
     }
   };
 

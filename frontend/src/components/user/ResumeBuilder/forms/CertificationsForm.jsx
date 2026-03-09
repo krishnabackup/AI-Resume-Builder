@@ -107,7 +107,7 @@ const CertificationsForm = ({ formData, setFormData }) => {
                   <label>Certification Name *</label>
                   <input
                     type="text"
-                    className="px-2.5 py-2 border text-sm rounded border-1.5 focus:border-[#007bff] focus:outline-none focus:bg-white focus:shadow-[0_2px_8px_rgba(0,123,255,0.07)]"
+                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
                     value={cert.name || ""}
                     placeholder="AWS Solutions Architect"
                     onChange={(e) => {
@@ -125,11 +125,11 @@ const CertificationsForm = ({ formData, setFormData }) => {
                   />
                 </div>
 
-                <div className="flex flex-col gap-[6px] mb-[10px]">
+                <div className="flex flex-col gap-1.5 mb-4">
                   <label>Issuing Organization *</label>
                   <input
                     type="text"
-                    className="px-2.5 py-2 border text-sm rounded border-1.5 focus:border-[#007bff] focus:outline-none focus:bg-white focus:shadow-[0_2px_8px_rgba(0,123,255,0.07)]"
+                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
                     value={cert.issuer || ""}
                     placeholder="Amazon Web Services"
                     onChange={(e) => {
@@ -147,11 +147,11 @@ const CertificationsForm = ({ formData, setFormData }) => {
                   />
                 </div>
 
-                <div className="flex flex-col gap-[6px] mb-[10px]">
+                <div className="flex flex-col gap-1.5 mb-4">
                   <label>Date Obtained *</label>
                   <input
                     type="month"
-                    className="px-2.5 py-2 border text-sm rounded border-1.5 focus:border-[#007bff] focus:outline-none focus:bg-white focus:shadow-[0_2px_8px_rgba(0,123,255,0.07)]"
+                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
                     value={cert.date || ""}
                     onChange={(e) => {
                       const updated = (formData?.certifications ?? []).map(
@@ -168,11 +168,11 @@ const CertificationsForm = ({ formData, setFormData }) => {
                   />
                 </div>
 
-                <div className="flex flex-col gap-[6px] mb-[10px]">
+                <div className="flex flex-col gap-1.5 mb-4">
                   <label>Credential Link (Optional)</label>
                   <input
                     type="text"
-                    className="px-2.5 py-2 border text-sm rounded border-1.5 focus:border-[#007bff] focus:outline-none focus:bg-white focus:shadow-[0_2px_8px_rgba(0,123,255,0.07)]"
+                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
                     value={cert.link || ""}
                     placeholder="https://credential.url"
                     onChange={(e) => {

@@ -17,7 +17,7 @@ import {
 import {
   parseResume,
   extractResumeData,
-} from "../service/ResumeParser.service.js";
+} from "../service/Resumeparser.service.js";
 
 // ATS Analyzer Services
 import {
@@ -343,6 +343,42 @@ export const uploadAndAnalyzeResume = async (req, res) => {
       });
     }
 
+    // ✅ FIX 1: Ensure File Format Compatibility score is correct for valid formats
+    const fileExtension = file.originalname.split('.').pop()?.toLowerCase();
+    const isValidFormat = ['pdf', 'doc', 'docx'].includes(fileExtension) ||
+                         ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'].includes(file.mimetype);
+    
+    if (analysis.sectionScores) {
+      analysis.sectionScores = analysis.sectionScores.map(section => {
+        if (section.sectionName === "File Format Compatibility") {
+          return {
+            ...section,
+            score: isValidFormat ? section.maxScore : 0,
+            status: isValidFormat ? "ok" : "error",
+            suggestions: isValidFormat ? [] : ["Upload resume in PDF or DOC/DOCX format."]
+          };
+        }
+        return section;
+      });
+    }
+
+    // ✅ FIX 2: Recalculate overallScore from sectionScores to ensure consistency
+    if (analysis.sectionScores && Array.isArray(analysis.sectionScores)) {
+      const totalEarned = analysis.sectionScores.reduce(
+        (sum, s) => sum + (typeof s.score === 'number' ? s.score : 0), 
+        0
+      );
+      const totalPossible = analysis.sectionScores.reduce(
+        (sum, s) => sum + (typeof s.maxScore === 'number' ? s.maxScore : 0), 
+        0
+      );
+      
+      // Calculate weighted overall score (0-100 scale)
+      analysis.overallScore = totalPossible > 0 
+        ? Math.round((totalEarned / totalPossible) * 100) 
+        : 0;
+    }
+
     // Save ATS scan
     const atsScan = new AtsScans({
       userId,
@@ -351,7 +387,7 @@ export const uploadAndAnalyzeResume = async (req, res) => {
       filePath: `/uploads/resumes/${file.filename}`,
       fileSize: file.size,
       fileType: file.mimetype,
-      overallScore: analysis.overallScore,
+      overallScore: analysis.overallScore,  // Now consistent with sections
       sectionScores: analysis.sectionScores,
       matchedKeywords: analysis.matchedKeywords,
       missingKeywords: analysis.missingKeywords,
@@ -371,11 +407,10 @@ export const uploadAndAnalyzeResume = async (req, res) => {
       message: "Resume uploaded and analyzed successfully",
       data: {
         scanId: atsScan._id,
-
         filename: file.filename,
         originalName: file.originalname,
         filePath: atsScan.filePath,
-        overallScore: analysis.overallScore,
+        overallScore: analysis.overallScore,  // ✅ Now matches section sum
         sectionScores: analysis.sectionScores,
         matchedKeywords: analysis.matchedKeywords,
         missingKeywords: analysis.missingKeywords,
@@ -386,7 +421,6 @@ export const uploadAndAnalyzeResume = async (req, res) => {
         metrics: analysis.metrics,
         text: resumeText,
         misspelledWords: analysis.misspelledWords,
-
       },
     });
   } catch (error) {
@@ -398,7 +432,6 @@ export const uploadAndAnalyzeResume = async (req, res) => {
     });
   }
 };
-
 /* =====================================================
    GET ALL USER SCANS
    Fetches all ATS scans for a specific user

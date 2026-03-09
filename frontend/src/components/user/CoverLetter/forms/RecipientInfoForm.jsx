@@ -1,4 +1,32 @@
+import { useState } from "react";
+
 const RecipientInfoForm = ({ formData, onInputChange }) => {
+  const [emailError, setEmailError] = useState(false);
+  const [phoneError, setPhoneError] = useState(false);
+
+  const handleEmailChange = (e) => {
+    const val = e.target.value;
+    onInputChange("email", val);
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (val && !emailRegex.test(val)) {
+      setEmailError(true);
+    } else {
+      setEmailError(false);
+    }
+  };
+
+  const handlePhoneChange = (e) => {
+    const val = e.target.value;
+    const cleanVal = val.replace(/[^0-9+]/g, '');
+    onInputChange("phone", cleanVal);
+
+    if (cleanVal && cleanVal.replace(/[^0-9]/g, '').length < 10) {
+      setPhoneError(true);
+    } else {
+      setPhoneError(false);
+    }
+  };
+
   return (
     <div className="form-section px-4">
       <h3 className="form-section-title">Your Information</h3>
@@ -18,8 +46,10 @@ const RecipientInfoForm = ({ formData, onInputChange }) => {
             type="email"
             placeholder="john.doe@example.com"
             value={formData.email}
-            onChange={(e) => onInputChange("email", e.target.value)}
+            onChange={handleEmailChange}
+            style={{ borderColor: emailError ? 'red' : '' }}
           />
+          {emailError && <span style={{ color: 'red', fontSize: '12px' }}>Please enter a valid email</span>}
         </div>
         <div className="form-group">
           <label>Phone</label>
@@ -27,8 +57,11 @@ const RecipientInfoForm = ({ formData, onInputChange }) => {
             type="tel"
             placeholder="+1 (555) 123-4567"
             value={formData.phone}
-            onChange={(e) => onInputChange("phone", e.target.value)}
+            maxLength={15}
+            onChange={handlePhoneChange}
+            style={{ borderColor: phoneError ? 'red' : '' }}
           />
+          {phoneError && <span style={{ color: 'red', fontSize: '12px' }}>Please enter a valid phone number</span>}
         </div>
         <div className="form-group">
           <label>Address</label>

@@ -8,6 +8,17 @@ export default function AdminAcceptUser() {
   const [error, setError] = useState(null);
   const [previewTemplate, setPreviewTemplate] = useState(null);
 
+  useEffect(() => {
+    if (previewTemplate) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [previewTemplate]);
+
   const fetchPendingTemplates = async () => {
     try {
       const response = await axios.get("http://localhost:5000/api/template?status=pending");

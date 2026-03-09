@@ -42,11 +42,16 @@ const staggerContainer = {
 const CVFormattingPage = () => {
   const navigate = useNavigate();
 
+  const processRef = useRef(null);
+  const ctaRef = useRef(null);
+  const [processVisible, setProcessVisible] = useState(true);
+  const [ctaVisible, setCtaVisible] = useState(true);
+
   return (
     <div className="min-h-screen bg-white font-['Outfit'] text-[#1a2e52] selection:bg-blue-100 overflow-x-hidden">
       <NavBar />
       {/* --- 1. HERO SECTION --- */}
-      <section className="relative px-6 pt-16 overflow-hidden bg-white">
+      <section className="relative px-6 pt-20 overflow-hidden bg-white">
         {/* Brand Decorative Blurs */}
         <div className="absolute top-0 right-0 w-1/3 h-1/2 bg-orange-50 rounded-full blur-[120px] -z-10 opacity-50" />
         <div className="absolute bottom-0 left-0 w-1/3 h-1/2 bg-blue-50 rounded-full blur-[120px] -z-10 opacity-50" />
@@ -342,11 +347,11 @@ const CVFormattingPage = () => {
 
       {/* --- 3. CV ARCHITECTURE PROCESS (MATCHING REFERENCE UI) --- */}
       <section
-  ref={processRef}
-  className={`px-8 py-15 bg-white font-['Outfit'] transition-all duration-700 ${
-    processVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-  }`}
->
+        ref={processRef}
+        className={`px-8 py-15 bg-white font-['Outfit'] transition-all duration-700 ${
+          processVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+        }`}
+      >
         <div className="mx-auto max-w-7xl">
           <div className="mb-16 text-center">
             <h2 className="mb-4 text-4xl md:text-5xl font-black text-[#1a2e52]">
@@ -466,12 +471,12 @@ const CVFormattingPage = () => {
       </section>
 
       {/* --- CTA SECTION --- */}
-     <section
-  ref={ctaRef}
-  className={`relative px-8 pt-12 pb-15 overflow-hidden bg-white transition-all duration-1000 ${
-    ctaVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"
-  }`}
->
+      <section
+        ref={ctaRef}
+        className={`relative px-8 pt-12 pb-15 overflow-hidden bg-white transition-all duration-1000 ${
+          ctaVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12"
+        }`}
+      >
         <div className="absolute top-0 right-0 w-1/3 h-full bg-orange-50 rounded-full blur-[120px] -z-10 opacity-60" />
         <div className="absolute bottom-0 left-0 w-1/3 h-full bg-blue-50 rounded-full blur-[120px] -z-10 opacity-60" />
 

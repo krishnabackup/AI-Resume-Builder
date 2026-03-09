@@ -23,6 +23,7 @@ import {
   FiMinimize,
 } from "react-icons/fi";
 
+
 import {
   Eye,
   Maximize2,
@@ -44,10 +45,11 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import UserNavBar from "../UserNavBar/UserNavBar";
 
+
 const Downloads = () => {
   const navigate = useNavigate();
-  const [zoomLevel, setZoomLevel] = useState(100); 
-  const [isFullscreen, setIsFullscreen] = useState(false); 
+  const [zoomLevel, setZoomLevel] = useState(100);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [downloads, setDownloads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -64,23 +66,24 @@ const Downloads = () => {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewContent, setPreviewContent] = useState(null);
 
+
   useEffect(() => {
   const handleKeyDown = (e) => {
     if (!previewDocument) return;
-    
+   
     // Zoom in/out with Ctrl/Cmd + +/-
     if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '-')) {
       e.preventDefault();
       if (e.key === '+') setZoomLevel(Math.min(200, zoomLevel + 10));
       if (e.key === '-') setZoomLevel(Math.max(50, zoomLevel - 10));
     }
-    
+   
     // Reset zoom with Ctrl/Cmd + 0
     if ((e.ctrlKey || e.metaKey) && e.key === '0') {
       e.preventDefault();
       setZoomLevel(100);
     }
-    
+   
     // Page navigation with arrow keys
     if (e.key === 'ArrowLeft' && currentPage > 1) {
       setCurrentPage(currentPage - 1);
@@ -89,10 +92,11 @@ const Downloads = () => {
       setCurrentPage(currentPage + 1);
     }
   };
-  
+ 
   window.addEventListener('keydown', handleKeyDown);
   return () => window.removeEventListener('keydown', handleKeyDown);
 }, [previewDocument, zoomLevel, currentPage, totalPages]);
+
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -108,9 +112,11 @@ const Downloads = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [openMenuId]);
 
+
   useEffect(() => {
     fetchDownloads();
   }, []);
+
 
   const fetchDownloads = async () => {
     try {
@@ -142,6 +148,7 @@ const Downloads = () => {
     }
   };
 
+
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, sortBy, activeFormat, activeType]);
@@ -149,19 +156,20 @@ const Downloads = () => {
     setTotalPages(Math.ceil(getFilteredDownloads().length / itemsPerPage));
   }, [searchTerm, sortBy, downloads, activeFormat, activeType]);
 
+
  const handleView = async (download) => {
   try {
     setPreviewLoading(true);
     setOpenMenuId(null);
-    
+   
     // ✅ Use your EXISTING endpoint that returns HTML
     const response = await axiosInstance.get(`/api/downloads/${download.id}`);
-    
+   
     setPreviewDocument({
       ...download,
       html: response.data.html // ✅ HTML is already in the response!
     });
-    
+   
   } catch (err) {
     console.error('Preview error:', err);
     // Fallback: just show the document metadata
@@ -170,6 +178,8 @@ const Downloads = () => {
     setPreviewLoading(false);
   }
 };
+
+
 
 
   const handleDownload = async (download) => {
@@ -196,6 +206,7 @@ const Downloads = () => {
     }
   };
 
+
   const handleDelete = async (id) => {
     setDeletingId(id);
     try {
@@ -208,6 +219,7 @@ const Downloads = () => {
       setOpenMenuId(null);
     }
   };
+
 
   const formatDate = (ds) => {
     const date = new Date(ds);
@@ -224,6 +236,7 @@ const Downloads = () => {
       year: "numeric",
     });
   };
+
 
   const getFilteredDownloads = () => {
     let f = [...downloads];
@@ -242,6 +255,7 @@ const Downloads = () => {
     return f;
   };
 
+
   const getCurrentPageItems = () => {
     const f = getFilteredDownloads();
     return f.slice(
@@ -250,6 +264,7 @@ const Downloads = () => {
     );
   };
 
+
   const stats = {
     total: downloads.length,
     resumes: downloads.filter((d) => d.type === "resume").length,
@@ -257,8 +272,10 @@ const Downloads = () => {
     cvs: downloads.filter((d) => d.type === "cv").length,
   };
 
+
   const filteredDownloads = getCurrentPageItems();
   const filteredTotal = getFilteredDownloads().length;
+
 
   const TYPE_META = {
     resume: { icon: "#2563eb", bg: "#eff6ff", label: "Resume" },
@@ -269,11 +286,13 @@ const Downloads = () => {
   const getTypeMeta = (type) =>
     TYPE_META[type] || { icon: "#6b7280", bg: "#f9fafb", label: type };
 
+
   const TypeIcon = ({ type, size = 15 }) => {
     const map = { resume: FiFileText, "cover-letter": FiEdit, cv: FiFile };
     const Icon = map[type] || FiFile;
     return <Icon size={size} />;
   };
+
 
   if (loading) {
     return (
@@ -287,6 +306,7 @@ const Downloads = () => {
       </div>
     );
   }
+
 
   /* ─── STAT CARDS ─── */
   const StatCards = () => {
@@ -324,6 +344,7 @@ const Downloads = () => {
         bg: "#fffbeb",
       },
     ];
+
 
     return (
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
@@ -378,17 +399,20 @@ const Downloads = () => {
     );
   };
 
+
   /* ─── DOCUMENT CARD ─── */
   const DocumentCard = ({ download }) => {
     const isDeleting = deletingId === download.id;
     const isMenuOpen = openMenuId === download.id;
     const tc = getTypeMeta(download.type);
 
+
     const templateLabel = download.template
       ? download.template.length > 24
         ? download.template.slice(0, 24) + "…"
         : download.template
       : null;
+
 
     return (
       <motion.div
@@ -419,6 +443,7 @@ const Downloads = () => {
             <TypeIcon type={download.type} size={17} />
           </div>
 
+
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
               <span
@@ -442,6 +467,7 @@ const Downloads = () => {
               {download.name}
             </h3>
           </div>
+
 
           {/* Three-dot menu */}
           <div className="relative flex-shrink-0">
@@ -483,6 +509,7 @@ const Downloads = () => {
           </div>
         </div>
 
+
         {/* Meta strip */}
         <div className="px-4 py-2.5 flex items-center gap-3 border-b border-gray-50 flex-wrap">
           <span className="flex items-center gap-1 text-[11px] text-gray-400">
@@ -501,6 +528,7 @@ const Downloads = () => {
             </>
           )}
         </div>
+
 
         {/* Template label */}
         <div className="px-4 py-3 flex-1">
@@ -521,6 +549,7 @@ const Downloads = () => {
           )}
         </div>
 
+
         {/* Action Row */}
         <div className="px-4 pb-4 flex gap-2">
           {/* Preview — full width */}
@@ -530,6 +559,7 @@ const Downloads = () => {
           >
             <FiEye size={11} /> Preview
           </button>
+
 
           {/* Delete icon only */}
           <button
@@ -545,6 +575,7 @@ const Downloads = () => {
           </button>
         </div>
 
+
         {isDeleting && (
           <div className="absolute inset-0 bg-white/70 backdrop-blur-sm rounded-2xl flex items-center justify-center">
             <div className="flex items-center gap-2 text-xs text-gray-400">
@@ -556,6 +587,7 @@ const Downloads = () => {
       </motion.div>
     );
   };
+
 
   return (
     <>
@@ -584,7 +616,9 @@ const Downloads = () => {
             </button>
           </div>
 
+
           <StatCards />
+
 
           {/* Search + Format + Sort */}
           <div
@@ -637,6 +671,7 @@ const Downloads = () => {
             </select>
           </div>
 
+
           {/* Active filter chips */}
           {(activeType !== "All" || activeFormat !== "All" || searchTerm) && (
             <div className="flex items-center gap-2 mb-4 flex-wrap">
@@ -678,6 +713,7 @@ const Downloads = () => {
             </div>
           )}
 
+
           {/* Results count */}
           {filteredTotal > 0 && (
             <div className="flex items-center justify-between mb-4">
@@ -700,6 +736,7 @@ const Downloads = () => {
               )}
             </div>
           )}
+
 
           {/* Grid */}
           {filteredDownloads.length === 0 ? (
@@ -745,6 +782,7 @@ const Downloads = () => {
             </div>
           )}
 
+
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-1.5 mt-8">
@@ -787,13 +825,15 @@ const Downloads = () => {
             </div>
           )}
 
+
           <footer className="mt-auto text-center py-4 bg-white border-t text-sm text-gray-600">
             © {new Date().getFullYear()} ResumeAI Inc. All rights reserved.
           </footer>
         </div>
       </div>
 
-      
+
+     
 {/* ========== PREVIEW MODAL (EXACT HEADER REPLICA) ========== */}
 <AnimatePresence>
   {previewDocument && (
@@ -817,15 +857,15 @@ const Downloads = () => {
       </svg>
       <span className="text-sm font-semibold text-gray-800">Preview</span>
     </div>
-    
+   
     {/* Template Name */}
     <span className="text-sm text-gray-500">{previewDocument.template || 'professional'}</span>
-    
+   
     {/* Sample Badge */}
     <span className="text-[10px] px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full font-medium border border-blue-200">
       {previewDocument.type === 'cover-letter' ? 'Your data' : 'Sample'}
     </span>
-    
+   
     {/* Pages Count */}
     <div className="flex items-center gap-1 text-gray-400">
       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -836,14 +876,17 @@ const Downloads = () => {
   </div>
 
 
+
+
  
+
 
   {/* RIGHT SECTION - Fullscreen Button (DARK) */}
   <div className="flex items-center gap-2">
    
     {/* Page Navigation */}
     <div className="flex items-center gap-0.5">
-       <button 
+       <button
     onClick={(e) => {
       e.stopPropagation();
       if (currentPage > 1) setCurrentPage(currentPage - 1);
@@ -857,7 +900,7 @@ const Downloads = () => {
         <span className="text-xs text-gray-400">/</span>
         <span className="text-xs font-medium text-gray-700">2</span>
       </div>
-      <button 
+      <button
     onClick={(e) => {
       e.stopPropagation();
       if (currentPage < 2) setCurrentPage(currentPage + 1);
@@ -867,14 +910,14 @@ const Downloads = () => {
     <FiChevronRight size={14} />
   </button>
     </div>
-    
+   
     {/* Divider */}
     <div className="h-4 w-px bg-gray-300" />
-    
+   
     {/* Zoom Controls */}
     <div className="flex items-center gap-2">
       {/* Zoom Out */}
-      <button 
+      <button
     onClick={(e) => {
       e.stopPropagation(); // ✅ Prevent modal close
       setZoomLevel(Math.max(50, zoomLevel - 10)); // ✅ Zoom out
@@ -883,7 +926,7 @@ const Downloads = () => {
   >
     <ZoomOut size={14} />
   </button>
-      
+     
       {/* Zoom Slider - BLUE COLOR */}
        <div className="flex items-center gap-2 px-2">
     <input
@@ -904,9 +947,9 @@ const Downloads = () => {
     />
   </div>
      
-      
+     
       {/* Zoom In */}
-       <button 
+       <button
     onClick={(e) => {
       e.stopPropagation(); // ✅ Prevent modal close
       setZoomLevel(Math.min(200, zoomLevel + 10)); // ✅ Zoom in
@@ -915,12 +958,12 @@ const Downloads = () => {
   >
     <ZoomIn size={14} /> {/* ✅ Use react-icons instead of inline SVG */}
   </button>
-      
+     
       {/* Zoom Percentage */}
       <span className="text-xs text-gray-600 font-medium bg-gray-100 px-2 py-1 rounded">
         {zoomLevel}%
       </span>
-      
+     
       {/* Reset Zoom */}
      <button
     onClick={(e) => {
@@ -931,10 +974,10 @@ const Downloads = () => {
   >
     <FiRotateCcw size={14} />
   </button>
-      
+     
       {/* Divider */}
       <div className="h-4 w-px bg-gray-300" />
-      
+     
       {/* Download Icon */}
      <button
     onClick={(e) => {
@@ -947,7 +990,8 @@ const Downloads = () => {
     <FiDownload size={16} />
   </button>
     </div>
-  
+ 
+
 
     <button
       onClick={() => setIsFullscreen(!isFullscreen)}
@@ -955,11 +999,12 @@ const Downloads = () => {
     >
       {isFullscreen ? <Minimize2 size={14}/>:<Maximize2 size={16}/>}
     </button>
-    
-  
-  
+   
+ 
+ 
   </div>
 </div>
+
 
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden">
@@ -971,9 +1016,9 @@ const Downloads = () => {
             </div>
           ) : previewDocument?.html ? (
             <div className="flex justify-center">
-              <div 
+              <div
                 className="bg-white shadow-lg"
-                style={{ 
+                style={{
                   width: '210mm',
                   minHeight: '297mm',
                   padding: '25mm 20mm',
@@ -999,6 +1044,7 @@ const Downloads = () => {
           )}
         </div>
 
+
         {/* RIGHT SIDEBAR - Page Thumbnails */}
         <div className="w-20 bg-white border-l border-gray-200 p-3 overflow-y-auto">
           <div className="space-y-3">
@@ -1008,7 +1054,7 @@ const Downloads = () => {
                 1
               </div>
             </div>
-            
+           
             {/* Page 2 */}
             <div className="cursor-pointer rounded-lg overflow-hidden border border-gray-200 hover:border-gray-300">
               <div className="bg-white text-gray-400 text-xs font-medium text-center py-8">
@@ -1018,6 +1064,7 @@ const Downloads = () => {
           </div>
         </div>
       </div>
+
 
       {/* BOTTOM STATUS BAR */}
       <div className="px-4 py-1.5 bg-white border-t border-gray-200 flex items-center justify-between text-[10px] text-gray-400">
@@ -1035,6 +1082,7 @@ const Downloads = () => {
         </div>
       </div>
 
+
       {/* Escape Key Handler */}
       <FullScreenEscape onClose={() => setPreviewDocument(null)} />
     </motion.div>
@@ -1042,11 +1090,15 @@ const Downloads = () => {
 </AnimatePresence>
 
 
+
+
     </>
   );
 };
 
+
 export default Downloads;
+
 
 /* ========== HELPER: Escape Key Listener ========== */
 const FullScreenEscape = ({ onClose }) => {
@@ -1059,3 +1111,6 @@ const FullScreenEscape = ({ onClose }) => {
   }, [onClose]);
   return null;
 };
+
+
+

@@ -24,7 +24,7 @@ const TermsAndConditions = () => {
       <NavBar />
 
       {/* Header Section */}
-      <header className="px-8 py-20 bg-white border-b border-gray-200">
+      <header className="px-8 pt-24 pb-12 bg-white border-b border-gray-200">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center justify-center p-4 bg-[#0077cc]/10 rounded-3xl text-[#0077cc] mb-6">
             <Scale size={40} />

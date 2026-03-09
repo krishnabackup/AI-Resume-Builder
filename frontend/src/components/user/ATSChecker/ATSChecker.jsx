@@ -245,7 +245,7 @@ function SectionCard({ section }) {
           className={`ml-auto text-xs font-bold px-2 py-0.5 rounded-full
           ${isOk ? "bg-emerald-100 text-emerald-700" : isWarn ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}`}
         >
-          {section.score}/20
+          {section.score}/{section.maxScore}
         </span>
       </div>
       {section.suggestions?.length > 0 && (
@@ -432,75 +432,99 @@ const ATSChecker = ({ onSidebarToggle }) => {
   }, [activeError]);
 
   /* ── File change ── */
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setUploadedFile(file);
-    setIsAnalyzing(true);
+const handleFileChange = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  const isValidFormat = file.type === "application/pdf" || 
+                        file.type === "application/msword" || 
+                        file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+                        file.name.endsWith('.pdf') || 
+                        file.name.endsWith('.doc') || 
+                        file.name.endsWith('.docx');
+  
+  setUploadedFile(file);
+  setIsAnalyzing(true);
 
-    if (file.type === "application/pdf") {
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-      sessionStorage.setItem(SESSION_KEY, url);
+  if (file.type === "application/pdf" || file.name.endsWith('.pdf')) {
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    sessionStorage.setItem(SESSION_KEY, url);
 
-      const formData = new FormData();
-      formData.append("resume", file);
-      formData.append("jobTitle", "Placeholder title");
-      formData.append("templateId", "63f1c4e2a3b4d5f678901234");
-      formData.append("resumeprofileId", "63f1c4e2a3b4d5f678901235");
+    const formData = new FormData();
+    formData.append("resume", file);
+    formData.append("jobTitle", "Placeholder title");
+    formData.append("templateId", "63f1c4e2a3b4d5f678901234");
+    formData.append("resumeprofileId", "63f1c4e2a3b4d5f678901235");
 
-      try {
-        const token =
-          localStorage.getItem("token") || sessionStorage.getItem("token");
-        const res = await fetch("http://localhost:5000/api/resume/upload", {
-          method: "POST",
-          body: formData,
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
+    try {
+      const token =
+        localStorage.getItem("token") || sessionStorage.getItem("token");
+      const res = await fetch("http://localhost:5000/api/resume/upload", {
+        method: "POST",
+        body: formData,
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
 
-        const rawText = await res.text();
+      const rawText = await res.text();
 
-        if (!res.ok) {
-          console.error(`Server error [${res.status}]:`, rawText.slice(0, 500));
-          return;
-        }
-
-        let data;
-        try {
-          data = JSON.parse(rawText);
-        } catch {
-          console.error("Expected JSON but got:", rawText.slice(0, 300));
-          return;
-        }
-
-        if (data.success) {
-          setAnalysisResult(data.data);
-          if (data.data.pronounAnalysis?.detected)
-            setPronounErrors(data.data.pronounAnalysis.detected);
-          setResumeText(data?.data?.text || "");
-          sessionStorage.setItem(
-            "ats_analysis_result",
-            JSON.stringify(data.data),
-          );
-        } else {
-          console.error("API returned success: false →", data?.message || data);
-        }
-      } catch (err) {
-        console.error(
-          "ATS fetch failed — is the backend running on port 5000?",
-          err,
-        );
-      } finally {
-        setIsAnalyzing(false);
+      if (!res.ok) {
+        console.error(`Server error [${res.status}]:`, rawText.slice(0, 500));
+        return;
       }
-    } else {
-      setPreviewUrl(null);
-      sessionStorage.removeItem(SESSION_KEY);
-      setAnalysisResult(null);
-      sessionStorage.removeItem("ats_analysis_result");
+
+      let data;
+      try {
+        data = JSON.parse(rawText);
+      } catch {
+        console.error("Expected JSON but got:", rawText.slice(0, 300));
+        return;
+      }
+
+      if (data.success) {
+        // Fix: Ensure File Format Compatibility shows full score for valid PDF
+        const updatedData = { ...data.data };
+        if (updatedData.sectionScores) {
+          updatedData.sectionScores = updatedData.sectionScores.map(section => {
+            if (section.sectionName === "File Format Compatibility") {
+              return {
+                ...section,
+                score: isValidFormat ? section.maxScore : 0,
+                status: isValidFormat ? "ok" : "error",
+                suggestions: isValidFormat ? [] : ["Upload resume in PDF or DOC/DOCX format."]
+              };
+            }
+            return section;
+          });
+        }
+        
+        setAnalysisResult(updatedData);
+        if (updatedData.pronounAnalysis?.detected)
+          setPronounErrors(updatedData.pronounAnalysis.detected);
+        setResumeText(updatedData?.text || "");
+        sessionStorage.setItem(
+          "ats_analysis_result",
+          JSON.stringify(updatedData),
+        );
+      } else {
+        console.error("API returned success: false →", data?.message || data);
+      }
+    } catch (err) {
+      console.error(
+        "ATS fetch failed — is the backend running on port 5000?",
+        err,
+      );
+    } finally {
       setIsAnalyzing(false);
     }
-  };
+  } else {
+    setPreviewUrl(null);
+    sessionStorage.removeItem(SESSION_KEY);
+    setAnalysisResult(null);
+    sessionStorage.removeItem("ats_analysis_result");
+    setIsAnalyzing(false);
+  }
+};
 
   const buildErrorLocationsFromPdf = async (pdf, wrongWords) => {
     if (!pdf || !wrongWords?.length) return [];

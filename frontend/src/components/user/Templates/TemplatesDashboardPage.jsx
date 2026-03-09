@@ -121,6 +121,17 @@ const TemplatesDashboardPage = ({ onSelectTemplate, isEmbedded = false, external
   const [previewImage, setPreviewImage] = useState("");
 
   useEffect(() => {
+    if (isPreviewModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isPreviewModalOpen]);
+
+  useEffect(() => {
     fetchTemplates();
   }, []);
 

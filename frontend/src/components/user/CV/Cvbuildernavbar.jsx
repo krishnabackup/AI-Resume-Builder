@@ -27,14 +27,18 @@ const CVBuilderTopBar = ({
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [localTitle, setLocalTitle] = useState(title ?? "");
   const uploadInputRef = useRef(null);
-  const downloadDropdownRef = useRef(null);
+  const downloadDropdownMobileRef = useRef(null);
+  const downloadDropdownDesktopRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (
-        downloadDropdownRef.current &&
-        !downloadDropdownRef.current.contains(e.target)
-      ) {
+      const inMobile =
+        downloadDropdownMobileRef.current &&
+        downloadDropdownMobileRef.current.contains(e.target);
+      const inDesktop =
+        downloadDropdownDesktopRef.current &&
+        downloadDropdownDesktopRef.current.contains(e.target);
+      if (!inMobile && !inDesktop) {
         setShowDownloadMenu(false);
       }
     };
@@ -173,7 +177,7 @@ const CVBuilderTopBar = ({
                 </button>
               )}
 
-              <div className="relative" ref={downloadDropdownRef}>
+              <div className="relative" ref={downloadDropdownMobileRef}>
                 <button
                   onClick={() => setShowDownloadMenu((v) => !v)}
                   disabled={isDownloading || downloadDisabled}
@@ -246,7 +250,7 @@ const CVBuilderTopBar = ({
         )}
 
         {/* Download dropdown */}
-        <div className="relative" ref={downloadDropdownRef}>
+        <div className="relative" ref={downloadDropdownDesktopRef}>
           <button
             onClick={() => setShowDownloadMenu((v) => !v)}
             disabled={isDownloading || downloadDisabled}

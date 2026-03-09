@@ -28,8 +28,7 @@ const EditProfile = () => {
     github: "",
     linkedin: "",
   });
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [adminRequestStatus, setAdminRequestStatus] = useState("none");
+
   const [loading, setLoading] = useState(false);
   const [fetchingProfile, setFetchingProfile] = useState(true);
 
@@ -37,6 +36,7 @@ const EditProfile = () => {
     const fetchProfile = async () => {
       try {
         const res = await axios.get("/api/user/profile");
+
         if (res.data?.user) {
           setFormData({
             fullName: res.data.user.fullName || "",
@@ -48,8 +48,6 @@ const EditProfile = () => {
             github: res.data.user.github || "",
             linkedin: res.data.user.linkedin || "",
           });
-          setIsAdmin(res.data.user.isAdmin || false);
-          setAdminRequestStatus(res.data.user.adminRequestStatus || "none");
         }
       } catch (err) {
         console.error(err);
@@ -58,6 +56,7 @@ const EditProfile = () => {
         setFetchingProfile(false);
       }
     };
+
     fetchProfile();
   }, []);
 
@@ -80,18 +79,20 @@ const EditProfile = () => {
 
   return (
     <div className="edit-profile-page">
-
       <UserNavBar />
 
-      {/* 🔷 PAGE CONTENT */}
       <div className="profile-page-content">
-        <div className="profile-container">
+
+        {/* SINGLE CARD */}
+        <div className="profile-card">
 
           {/* LEFT CARD */}
           <div className="profile-sidebar-card">
             <div className="profile-header-section">
               <div className="avatar-frame">
-                {formData.fullName?.trim()
+              {formData.username?.trim()
+                ? formData.username.trim().charAt(0).toUpperCase()
+                : formData.fullName?.trim()
                   ? formData.fullName
                     .trim()
                     .split(" ")
@@ -100,16 +101,18 @@ const EditProfile = () => {
                     .map((n) => n.charAt(0).toUpperCase())
                     .join("")
                   : "?"}
-              </div>
+            </div>
             </div>
 
+
             <h2 className="profile-name">
-              {formData.username && formData.username.trim()
+              {formData.username?.trim()
                 ? formData.username.trim().split(" ")[0]
-                : (formData.fullName && formData.fullName.trim()
-                  ? formData.fullName.trim().split(" ")[0]
-                  : "User")}
+                : formData.fullName?.trim()
+                ? formData.fullName.trim().split(" ")[0]
+                : "User"}
             </h2>
+
             <p className="profile-bio">{formData.bio || "No bio added"}</p>
 
             <div className="member-info">
@@ -119,19 +122,42 @@ const EditProfile = () => {
 
             <div className="profile-divider" />
 
-            <div className="profile-actions">
-              <button
-                className="action-button"
-                onClick={() => navigate("/user/security")}
-              >
-                <Lock size={18} />
-                Change Password
-              </button>
-            </div>
+            <button
+              className="action-button"
+              onClick={() => navigate("/user/security")}
+            >
+              <Lock size={18} />
+              Change Password
+            </button>
+             <div className="form-section">
+                    <h3>Social Links</h3>
+
+                    <div className="field-row">
+                      <div className="field-group">
+                        <label><LinkIcon size={16}/> GitHub</label>
+                        <input
+                          type="text"
+                          name="github"
+                          value={formData.github}
+                          onChange={handleChange}
+                        />
+                        <label><LinkIcon size={16}/> LinkedIn</label>
+                        <input
+                          type="text"
+                          name="linkedin"
+                          value={formData.linkedin}
+                          onChange={handleChange}
+                        />
+                      </div>
+
+                      
+                    </div>
+                  </div>
           </div>
 
-          {/* RIGHT CARD */}
-          <div className="profile-main-card">
+          {/* EDIT PROFILE FORM */}
+          <div className="profile-form">
+
             <div className="card-header">
               <h2>Edit Profile</h2>
               <p>Update your personal information</p>
@@ -139,9 +165,7 @@ const EditProfile = () => {
 
             <div className="card-content">
               {fetchingProfile ? (
-                <div style={{ textAlign: "center", padding: "2rem" }}>
-                  <p style={{ color: "#6b7280" }}>Loading profile...</p>
-                </div>
+                <p>Loading profile...</p>
               ) : (
                 <>
                   <div className="form-section">
@@ -155,12 +179,11 @@ const EditProfile = () => {
                           name="username"
                           value={formData.username}
                           onChange={handleChange}
-                          placeholder="Your unique username"
                         />
                       </div>
 
                       <div className="field-group">
-                        <label><User size={16} /> Full Name</label>
+                        <label><User size={16}/> Full Name</label>
                         <input
                           type="text"
                           name="fullName"
@@ -172,7 +195,7 @@ const EditProfile = () => {
 
                     <div className="field-row">
                       <div className="field-group">
-                        <label><Mail size={16} /> Email</label>
+                        <label><Mail size={16}/> Email</label>
                         <input
                           type="email"
                           name="email"
@@ -182,7 +205,7 @@ const EditProfile = () => {
                       </div>
 
                       <div className="field-group">
-                        <label><Phone size={16} /> Phone</label>
+                        <label><Phone size={16}/> Phone</label>
                         <input
                           type="tel"
                           name="phone"
@@ -194,7 +217,7 @@ const EditProfile = () => {
 
                     <div className="field-row">
                       <div className="field-group full-width">
-                        <label><MapPin size={16} /> Location</label>
+                        <label><MapPin size={16}/> Location</label>
                         <input
                           type="text"
                           name="location"
@@ -205,57 +228,33 @@ const EditProfile = () => {
                     </div>
                   </div>
 
-                  <div className="form-section">
-                    <h3>Social Links</h3>
-                    <div className="field-row">
-                      <div className="field-group">
-                        <label><LinkIcon size={16} /> GitHub</label>
-                        <input
-                          type="text"
-                          name="github"
-                          value={formData.github}
-                          onChange={handleChange}
-                          placeholder="github.com/username"
-                        />
-                      </div>
-
-                      <div className="field-group">
-                        <label><LinkIcon size={16} /> LinkedIn</label>
-                        <input
-                          type="text"
-                          name="linkedin"
-                          value={formData.linkedin}
-                          onChange={handleChange}
-                          placeholder="linkedin.com/in/username"
-                        />
-                      </div>
-                    </div>
-                  </div>
+                 
 
                   <div className="form-actions">
                     <button
                       className="btn-cancel"
                       onClick={() => navigate("/user/dashboard")}
                     >
-                      <X size={18} /> Cancel
+                      <X size={18}/> Cancel
                     </button>
 
                     <button
                       className="btn-save"
                       onClick={handleSave}
-                      disabled={loading || fetchingProfile}
+                      disabled={loading}
                     >
-                      <Save size={18} /> {loading ? "Saving..." : "Save Changes"}
+                      <Save size={18}/>
+                      {loading ? "Saving..." : "Save Changes"}
                     </button>
                   </div>
                 </>
               )}
             </div>
-          </div>
 
+          </div>
         </div>
       </div>
-    </div >
+    </div>
   );
 };
 

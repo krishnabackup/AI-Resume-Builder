@@ -174,6 +174,17 @@ const TemplatesGallery = ({ selectedTemplate, onSelectTemplate, formData }) => {
   const [statuses, setStatuses] = useState({});
 
   useEffect(() => {
+    if (previewTemplate) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [previewTemplate]);
+
+  useEffect(() => {
     const fetchStatuses = async () => {
       try {
         const statusRes = await axiosInstance.get('/api/template-visibility');

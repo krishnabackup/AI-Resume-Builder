@@ -167,25 +167,25 @@ const ProjectsForm = ({ formData, setFormData }) => {
                   <label>Project Name *</label>
                   <input
                     type="text"
-                    className="px-2.5 py-2 border text-sm rounded border-1.5 focus:border-[#007bff] focus:outline-none focus:bg-white focus:shadow-[0_2px_8px_rgba(0,123,255,0.07)]"
+                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
                     value={project.name || ""}
                     placeholder="E-commerce Platform"
                     onChange={(e) => updateProject(project.id, "name", e.target.value)}
                   />
                 </div>
 
-                <div className="flex flex-col gap-[6px] mb-[10px]">
+                <div className="flex flex-col gap-1.5 mb-4">
                   <label>Technologies Used *</label>
                   <input
                     type="text"
-                    className="px-2.5 py-2 border text-sm rounded border-1.5 focus:border-[#007bff] focus:outline-none focus:bg-white focus:shadow-[0_2px_8px_rgba(0,123,255,0.07)]"
+                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
                     value={project.technologies || ""}
                     placeholder="React, Node.js, MongoDB"
                     onChange={(e) => updateProject(project.id, "technologies", e.target.value)}
                   />
                 </div>
 
-                <div className="flex flex-col gap-[6px] mb-[10px]">
+                <div className="flex flex-col gap-1.5 mb-4">
                   <div className="w-full flex items-center justify-between">
                     <label>Description *</label>
                     <button
@@ -201,7 +201,7 @@ const ProjectsForm = ({ formData, setFormData }) => {
                     </button>
                   </div>
                   <textarea
-                    className="h-28 px-2.5 py-2 border text-sm rounded border-1.5 resize-none focus:border-[#007bff] focus:outline-none focus:bg-white focus:shadow-[0_2px_8px_rgba(0,123,255,0.07)]"
+                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white resize-y min-h-[120px] scrollbar-hide"
                     value={project.description || ""}
                     maxLength={500}
                     onChange={(e) => updateProject(project.id, "description", e.target.value)}
@@ -222,22 +222,22 @@ const ProjectsForm = ({ formData, setFormData }) => {
                   </span>
                 </div>
 
-                <div className="flex flex-col gap-[6px] mb-[10px]">
+                <div className="flex flex-col gap-1.5 mb-4">
                   <label>GitHub Link *</label>
                   <input
                     type="text"
-                    className="px-2.5 py-2 border text-sm rounded border-1.5 focus:border-[#007bff] focus:outline-none focus:bg-white focus:shadow-[0_2px_8px_rgba(0,123,255,0.07)]"
+                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
                     value={project?.link?.github || ""}
                     onChange={(e) => {
                       const updated = formData.projects.map((item) =>
                         item.id === project.id
                           ? {
-                              ...item,
-                              link: {
-                                ...item.link,
-                                github: e.target.value,
-                              },
-                            }
+                            ...item,
+                            link: {
+                              ...item.link,
+                              github: e.target.value,
+                            },
+                          }
                           : item,
                       );
                       setFormData((prev) => ({
