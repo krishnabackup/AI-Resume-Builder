@@ -589,7 +589,6 @@ ${formData.jobSummary || formData.jobDescription
 <![endif]-->
 <style>
 @page { margin: 1.25in 0.85in 0.75in 0.85in !important; size: A4 portrait !important; }
-* { margin: 0 !important; padding: 0 !important; box-sizing: border-box !important; }
 body {
   font-family: 'Times New Roman', 'Times', serif !important;
   font-size: 11pt !important;
