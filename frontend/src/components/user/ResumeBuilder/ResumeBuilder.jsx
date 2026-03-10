@@ -41,48 +41,12 @@ import CVBuilderTopBar from "../CV/Cvbuildernavbar";
    stays pinned beneath the sticky navbar while scrolling.
 ───────────────────────────────────────────────────────── */
 const FloatingFormPanel = ({ children, topOffset, containerRef }) => {
-  const panelRef = useRef(null);
-  const rafRef = useRef(null);
-  const currentY = useRef(0);
-  const targetY = useRef(0);
-
-  // spring animation loop
-  useEffect(() => {
-    const STIFFNESS = 0.12;
-    const tick = () => {
-      currentY.current += (targetY.current - currentY.current) * STIFFNESS;
-      if (panelRef.current) {
-        panelRef.current.style.transform = `translateY(${currentY.current}px)`;
-      }
-      rafRef.current = requestAnimationFrame(tick);
-    };
-    rafRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, []);
-
-  // update target on scroll — anchor to container's top in the DOM
-  useEffect(() => {
-    const onScroll = () => {
-      if (!containerRef?.current) {
-        targetY.current = Math.max(0, window.scrollY - topOffset);
-        return;
-      }
-      const containerTop =
-        containerRef.current.getBoundingClientRect().top + window.scrollY;
-      const desired = window.scrollY + topOffset - containerTop;
-      targetY.current = Math.max(0, desired);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [topOffset, containerRef]);
-
   return (
     <div
-      ref={panelRef}
       style={{
-        willChange: "transform",
-        height: `calc(100vh - ${topOffset}px)`,
+        position: 'sticky',
+        top: `${topOffset}px`,
+        height: `calc(100vh - ${topOffset}px - 80px)`,
       }}
       className="flex flex-col"
     >
@@ -436,7 +400,7 @@ const ResumeBuilder = ({ setActivePage = () => { } }) => {
 
     // BUILDER TAB – mirror CV layout with floating form + desktop preview
     return (
-      <div className="flex flex-col w-full h-full relative z-10 mx-auto max-w-[1920px]">
+      <div className="flex flex-col w-full relative z-10 mx-auto max-w-[1920px]">
 
         {/* Floating Global Banner logic moved from inside the left col */}
         {activeTab !== "templates" && (
@@ -455,7 +419,7 @@ const ResumeBuilder = ({ setActivePage = () => { } }) => {
         )}
 
         {/* 2-Column Flex Layout */}
-        <div className="flex gap-[10px] w-full p-0 sm:p-2 lg:flex-row flex-col items-start relative z-10">
+        <div className="flex gap-[10px] w-full mt-2 lg:mt-5 p-0 sm:p-2 lg:flex-row flex-col max-w-[1920px] mx-auto relative z-10">
           {/* Desktop floating form panel */}
           {!isPreviewExpanded && (
             <div
@@ -589,7 +553,7 @@ const ResumeBuilder = ({ setActivePage = () => { } }) => {
 
           {/* Desktop preview panel */}
           {!isPreviewHidden && !isPreviewExpanded && (
-            <div className="hidden lg:flex flex-col flex-1 min-w-0 bg-[#eef2f7] rounded-xl overflow-hidden border border-slate-200 relative order-1 lg:order-2 z-10">
+            <div className="hidden lg:flex flex-col flex-1 min-w-0 bg-[#eef2f7] rounded-xl overflow-hidden border border-slate-200 relative order-1 lg:order-2 z-10" style={{ minHeight: 'calc(100vh - 80px)' }}>
               <LivePreview
                 ref={previewRef}
                 formData={formData}
@@ -608,7 +572,7 @@ const ResumeBuilder = ({ setActivePage = () => { } }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50 font-sans tracking-[0.01em] relative z-0">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50 font-sans tracking-[0.01em] relative z-0 flex flex-col">
       {/* Sticky navbar like CV */}
       {!isPreviewExpanded && (
         <div ref={headerRef} className="sticky top-0 z-30 bg-gradient-to-br from-slate-50 to-gray-50">
@@ -659,7 +623,7 @@ const ResumeBuilder = ({ setActivePage = () => { } }) => {
         }
       />
 
-      <div className="p-2.5 overflow-hidden">
+      <div className="px-2 py-4 sm:px-4 lg:px-4 w-screen max-w-full mx-0 flex flex-col">
         {activeTab !== "builder" && (
           <div className="relative w-full md:w-80 mb-4 px-3">
             <Search
@@ -722,10 +686,11 @@ const ResumeBuilder = ({ setActivePage = () => { } }) => {
           </div>
         )}
 
-        <footer className="mt-auto text-center py-4 bg-white border-t text-sm text-gray-600">
-          © {new Date().getFullYear()} ResumeAI Inc. All rights reserved.
-        </footer>
       </div>
+
+      <footer className="mt-auto text-center py-4 bg-white border-t text-sm text-gray-600">
+        © {new Date().getFullYear()} ResumeAI Inc. All rights reserved.
+      </footer>
 
       <style>{`
         @keyframes resumePreviewSlideUp {

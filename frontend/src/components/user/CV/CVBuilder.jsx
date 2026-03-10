@@ -100,52 +100,12 @@ const PDF_PAGE_WIDTH_PX = 794;
    of how tall the scrollable topbar/banner are.
 ───────────────────────────────────────────────────────── */
 const FloatingFormPanel = ({ children, topOffset, containerRef }) => {
-  const panelRef = useRef(null);
-  const rafRef = useRef(null);
-  const currentY = useRef(0);
-  const targetY = useRef(0);
-
-
-  /* spring animation loop */
-  useEffect(() => {
-    const STIFFNESS = 0.12;
-    const tick = () => {
-      currentY.current += (targetY.current - currentY.current) * STIFFNESS;
-      if (panelRef.current) {
-        panelRef.current.style.transform = `translateY(${currentY.current}px)`;
-      }
-      rafRef.current = requestAnimationFrame(tick);
-    };
-    rafRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, []);
-
-
-
-  /* update target on scroll — anchor to container's top in the DOM */
-  useEffect(() => {
-    const onScroll = () => {
-      if (!containerRef?.current) {
-        targetY.current = Math.max(0, window.scrollY - topOffset);
-        return;
-      }
-      const containerTop =
-        containerRef.current.getBoundingClientRect().top + window.scrollY;
-      const desired = window.scrollY + topOffset - containerTop;
-      targetY.current = Math.max(0, desired);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [topOffset, containerRef]);
-
-
   return (
     <div
-      ref={panelRef}
       style={{
-        willChange: "transform",
-        height: `calc(100vh - ${topOffset}px)`,
+        position: 'sticky',
+        top: `${topOffset}px`,
+        height: `calc(100vh - ${topOffset}px - 80px)`,
       }}
       className="flex flex-col"
     >
@@ -719,7 +679,7 @@ const CVBuilder = () => {
 
   /* ================= RENDER ================= */
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50 relative z-0">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50 relative z-0 flex flex-col">
       {/* ── Sticky: navbar only ── */}
       <div ref={headerRef} className="sticky top-0 z-30 bg-gradient-to-br from-slate-50 to-gray-50">
         <UserNavBar />
