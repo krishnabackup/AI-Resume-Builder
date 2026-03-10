@@ -1,5 +1,6 @@
 // src/pages/UserRoutes.jsx
-import { Routes, Route, Navigate } from "react-router-dom";
+import { useEffect, useRef } from "react";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 // Layout
 import UserSidebar from "../components/user/Sidebar/UserSidebar";
@@ -18,10 +19,36 @@ import CVBuilder from "../components/user/CV/CVBuilder";
 import CoverLetterBuilder from "../components/user/CoverLetter/CoverLetterBuilder";
 import Downloads from "../components/user/Downloads/Downloads";
 import UserNotifications from "../components/user/UserNotification/Notification";
+import { trackPageView } from "../utils/trackPageView";
 
 
 
 const UserRoutes = () => {
+  const location = useLocation();
+  const lastTrackedPathRef = useRef("");
+
+  useEffect(() => {
+    const pageConfig = {
+      "/user/dashboard": { page: "Dashboard", route: "/dashboard" },
+      "/user/resume-builder": { page: "AI Resume Builder", route: "/resume-builder" },
+      "/user/cv": { page: "CV", route: "/cv" },
+      "/user/cover-letter": { page: "Cover Letter", route: "/cover-letter" },
+      "/user/ats-checker": { page: "ATS Score Checker", route: "/ats-checker" },
+      "/user/downloads": { page: "Downloads", route: "/downloads" },
+      "/user/notifications": { page: "Notifications", route: "/notifications" },
+    };
+
+    const currentPath = location.pathname;
+    const currentPage = pageConfig[currentPath];
+
+    if (!currentPage || lastTrackedPathRef.current === currentPath) {
+      return;
+    }
+
+    lastTrackedPathRef.current = currentPath;
+    trackPageView(currentPage.page, currentPage.route);
+  }, [location.pathname]);
+
   return (
     <UserNotificationProvider>
       <Routes>

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { TrendingUp, Users, UserCheck, UserMinus, Activity, Zap, Shield, Crown, Award, Gem, RefreshCw } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import axiosInstance from "../../../api/axios";
+import AdminTopPagesAnalytics from "../AdminTopPagesAnalytics";
 
 export default function AdminAnalytics() {
   const [userGrowth, setUserGrowth] = useState({ count: 0, note: "" });
@@ -250,10 +251,8 @@ export default function AdminAnalytics() {
         </div>
       </div>
 
-      {/* Middle Section */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Growth & Revenue Chart */}
-        <div className="xl:col-span-2 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+      {/* Growth & Revenue */}
+      <div className="mb-8 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
           <h2 className="text-lg font-semibold mb-1">
             Platform Growth & Revenue
           </h2>
@@ -311,8 +310,10 @@ export default function AdminAnalytics() {
               No trend data available yet
             </div>
           )}
-        </div>
+      </div>
 
+      {/* Templates + Top Pages Row */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Most Used Templates */}
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
           <h2 className="text-lg font-semibold mb-4">Most Used Templates</h2>
@@ -342,6 +343,8 @@ export default function AdminAnalytics() {
             </div>
           )}
         </div>
+
+        <AdminTopPagesAnalytics />
       </div>
 
       {/* Subscription Breakdown Section */}

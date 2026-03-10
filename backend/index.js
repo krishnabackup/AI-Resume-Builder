@@ -21,6 +21,7 @@ import blogRouter from "./routers/blog.router.js";
 import downloadsRouter from "./routers/downloads.router.js";
 import coverLetterRouter from "./routers/coverletter.js";  // ✅ NEW
 import dashboardRouter from "./routers/dashboard.router.js";
+import analyticsRouter from "./routes/analytics.routes.js";
 
 import chatbotRouter from "./routers/chatbot.router.js";
 
@@ -74,6 +75,7 @@ app.use("/api/plans", planRouter);
 app.use("/api/blog", blogRouter);
 app.use("/api/chatbot", chatbotRouter);
 app.use("/api/dashboard", dashboardRouter);
+app.use("/api", analyticsRouter);
 
 // Serve uploads directory (for images/resumes)
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
