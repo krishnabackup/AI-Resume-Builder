@@ -6,6 +6,7 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
+import ReactDOM from "react-dom";
 import {
   Eye,
   Maximize2,
@@ -841,31 +842,25 @@ const CVPreview = ({
     </>
   );
 
-  const getNavbarHeight = () => {
-    const nav = document.getElementById("main-navbar");
-    return nav ? nav.offsetHeight : 0;
-  };
-
   if (isMaximized) {
-    const navHeight = getNavbarHeight();
-
-    return (
+    return ReactDOM.createPortal(
       <div
         ref={rootRef}
         style={{
           position: "fixed",
-          top: navHeight,
+          top: 0,
           left: 0,
           right: 0,
           bottom: 0,
-          zIndex: 999,
+          zIndex: 99999,
           display: "flex",
           flexDirection: "column",
           background: "#eef2f7",
         }}
       >
         {inner}
-      </div>
+      </div>,
+      document.body,
     );
   }
 
