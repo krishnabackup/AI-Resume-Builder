@@ -10,22 +10,23 @@ const ProfessionalTemplate = ({ formData }) => {
     linkedin,
     github,
     summary,
-    experience,
-    education,
-    skills,
-    projects,
-    certifications,
+    experience = [],
+    education = [],
+    skills = {},
+    projects = [],
+    certifications = [],
   } = formData;
 
   return (
-    <div className="w-full text-[11px] leading-relaxed text-gray-900 font-serif">
+    <div className="w-[794px] h-[1123px] mx-auto bg-white p-8 overflow-hidden text-[10px] leading-relaxed text-gray-900 font-serif">
+
       {/* ================= HEADER ================= */}
-      <div className="text-center mb-6">
-        <h1 className="text-[28px] font-bold tracking-wide uppercase">
+      <div className="text-center mb-4">
+        <h1 className="text-[24px] font-bold tracking-wide uppercase break-words">
           {fullName || "Jessica Claire"}
         </h1>
 
-        <p className="mt-2 text-[10px] flex flex-wrap justify-center gap-x-2">
+        <p className="mt-1 text-[9px] flex flex-wrap justify-center gap-x-2 break-words">
           {location && <span>{location}</span>}
           {email && <span>• {email}</span>}
           {phone && <span>• {phone}</span>}
@@ -37,30 +38,31 @@ const ProfessionalTemplate = ({ formData }) => {
 
       {/* ================= SUMMARY ================= */}
       {summary && (
-        <section className="mb-6">
-          <h2 className="border-b border-gray-400 pb-1 mb-2 text-[11px] font-bold tracking-widest uppercase">
+        <section className="mb-4">
+          <h2 className="border-b border-gray-400 pb-1 mb-2 text-[10px] font-bold tracking-widest uppercase">
             Professional Summary
           </h2>
-          <p>{summary}</p>
+
+          <p className="break-words">{summary}</p>
         </section>
       )}
 
       {/* ================= SKILLS ================= */}
       {(skills?.technical?.length > 0 || skills?.soft?.length > 0) && (
-        <section className="mb-6">
-          <h2 className="border-b border-gray-400 pb-1 mb-2 text-[11px] font-bold tracking-widest uppercase">
+        <section className="mb-4">
+          <h2 className="border-b border-gray-400 pb-1 mb-2 text-[10px] font-bold tracking-widest uppercase">
             Technical Skills
           </h2>
 
           {skills.technical?.length > 0 && (
-            <p className="mb-1">
+            <p className="mb-1 break-words">
               <span className="font-semibold">Technical: </span>
               {skills.technical.join(", ")}
             </p>
           )}
 
           {skills.soft?.length > 0 && (
-            <p>
+            <p className="break-words">
               <span className="font-semibold">Soft Skills: </span>
               {skills.soft.join(", ")}
             </p>
@@ -69,26 +71,27 @@ const ProfessionalTemplate = ({ formData }) => {
       )}
 
       {/* ================= EXPERIENCE ================= */}
-      {experience?.length > 0 && (
-        <section className="mb-6">
-          <h2 className="border-b border-gray-400 pb-1 mb-3 text-[11px] font-bold tracking-widest uppercase">
+      {experience.length > 0 && (
+        <section className="mb-4">
+          <h2 className="border-b border-gray-400 pb-1 mb-2 text-[10px] font-bold tracking-widest uppercase">
             Professional Experience
           </h2>
 
           {experience.map((job) => (
-            <div key={job.id} className="mb-4">
-              <div className="flex justify-between">
-                <div>
-                  <p className="font-semibold">
+            <div key={job.id} className="mb-3">
+              <div className="flex justify-between gap-2">
+                <div className="max-w-[70%]">
+                  <p className="font-semibold break-words">
                     {job.title || "Senior Software Engineer"}
                   </p>
-                  <p className="italic">
+
+                  <p className="italic break-words">
                     {job.company || "Tech Innovations Inc."}
                   </p>
                 </div>
 
-                <div className="text-right text-[10px] italic">
-                  <p>{job.location}</p>
+                <div className="text-right text-[9px] italic">
+                  <p className="break-words">{job.location}</p>
                   <p>
                     {job.startDate} – {job.endDate || "Present"}
                   </p>
@@ -96,10 +99,15 @@ const ProfessionalTemplate = ({ formData }) => {
               </div>
 
               {job.description && (
-                <ul className="list-disc ml-5 mt-2 space-y-1">
-                  {job.description.split("\n").map((line, index) => (
-                    <li key={index}>{line}</li>
-                  ))}
+                <ul className="list-disc ml-5 mt-1 space-y-0.5">
+                  {job.description
+                    .split("\n")
+                    .filter((line) => line.trim() !== "")
+                    .map((line, index) => (
+                      <li key={index} className="break-words">
+                        {line}
+                      </li>
+                    ))}
                 </ul>
               )}
             </div>
@@ -108,75 +116,80 @@ const ProfessionalTemplate = ({ formData }) => {
       )}
 
       {/* ================= EDUCATION ================= */}
-      {education?.length > 0 && (
-        <section className="mb-6">
-          <h2 className="border-b border-gray-400 pb-1 mb-3 text-[11px] font-bold tracking-widest uppercase">
+      {education.length > 0 && (
+        <section className="mb-4">
+          <h2 className="border-b border-gray-400 pb-1 mb-2 text-[10px] font-bold tracking-widest uppercase">
             Education
           </h2>
 
           {education.map((edu) => (
-            <div key={edu.id} className="mb-3">
-              <div className="flex justify-between">
-                <div>
-                  <p className="font-semibold">
+            <div key={edu.id} className="mb-2">
+              <div className="flex justify-between gap-2">
+                <div className="max-w-[70%]">
+                  <p className="font-semibold break-words">
                     {edu.school || "University Name"}
                   </p>
-                  <p className="italic">{edu.degree}</p>
+
+                  <p className="italic break-words">{edu.degree}</p>
                 </div>
 
-                <div className="text-right text-[10px] italic">
-                  <p>{edu.location}</p>
+                <div className="text-right text-[9px] italic">
+                  <p className="break-words">{edu.location}</p>
                   <p>{edu.graduationDate}</p>
                 </div>
               </div>
 
-              {edu.gpa && <p>GPA: {edu.gpa}</p>}
+              {edu.gpa && <p className="text-[9px]">GPA: {edu.gpa}</p>}
             </div>
           ))}
         </section>
       )}
 
       {/* ================= PROJECTS ================= */}
-      {projects?.length > 0 && (
-        <section className="mb-6">
-          <h2 className="border-b border-gray-400 pb-1 mb-3 text-[11px] font-bold tracking-widest uppercase">
+      {projects.length > 0 && (
+        <section className="mb-4">
+          <h2 className="border-b border-gray-400 pb-1 mb-2 text-[10px] font-bold tracking-widest uppercase">
             Projects
           </h2>
 
           {projects.map((project) => (
-            <div key={project.id} className="mb-3">
-              <p className="font-semibold">
+            <div key={project.id} className="mb-2">
+              <p className="font-semibold break-words">
                 {project.name}
+
                 {project.link && (
-                  <span className="font-normal text-blue-600 ml-1">
+                  <span className="font-normal text-blue-600 ml-1 break-all">
                     ({project.link})
                   </span>
                 )}
               </p>
 
               {project.technologies && (
-                <p className="italic text-[10px] mb-1">
+                <p className="italic text-[9px] mb-1 break-words">
                   Technologies: {project.technologies}
                 </p>
               )}
 
-              {project.description && <p>{project.description}</p>}
+              {project.description && (
+                <p className="break-words">{project.description}</p>
+              )}
             </div>
           ))}
         </section>
       )}
 
       {/* ================= CERTIFICATIONS ================= */}
-      {certifications?.length > 0 && (
+      {certifications.length > 0 && (
         <section>
-          <h2 className="border-b border-gray-400 pb-1 mb-3 text-[11px] font-bold tracking-widest uppercase">
+          <h2 className="border-b border-gray-400 pb-1 mb-2 text-[10px] font-bold tracking-widest uppercase">
             Certifications
           </h2>
 
           {certifications.map((cert) => (
-            <div key={cert.id} className="mb-2">
-              <p className="font-semibold">{cert.name}</p>
-              <p className="italic text-[10px]">
+            <div key={cert.id} className="mb-1">
+              <p className="font-semibold break-words">{cert.name}</p>
+
+              <p className="italic text-[9px] break-words">
                 {cert.issuer} • {cert.date}
               </p>
             </div>
