@@ -105,7 +105,7 @@ const AdminSubscription = () => {
       const [usersResponse, plansResponse, statsResponse] = await Promise.all([
         axiosInstance.get("/api/user"),
         axiosInstance.get("/api/plans"),
-        axiosInstance.get("/api/user/dashboard-stat"),
+        axiosInstance.get("/api/admin/dashboard-stat"),
       ]);
 
       const allUsers = usersResponse.data;

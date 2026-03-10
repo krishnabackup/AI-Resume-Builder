@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Users, FileText, CreditCard, DollarSign } from "lucide-react";
+import { Users, FileText, CreditCard, IndianRupee } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -60,9 +60,9 @@ export default function AdminDashboard() {
     },
     {
       title: "Total Revenue",
-      value: `$ ${totalRevenue}`,
+      value: `₹ ${totalRevenue}`,
       change: `+${totalRevenueChange}%`,
-      icon: DollarSign,
+      icon: IndianRupee,
       color: "text-green-600",
       bg: "bg-green-50",
     },
