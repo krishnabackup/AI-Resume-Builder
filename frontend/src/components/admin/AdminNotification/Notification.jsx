@@ -112,9 +112,9 @@ const AdminNotification = () => {
         .filter(n => {
             if (!searchQuery) return true;
             const query = searchQuery.toLowerCase();
-            return n.title.toLowerCase().includes(query) || 
-                   n.description.toLowerCase().includes(query) ||
-                   (n.user && n.user.toLowerCase().includes(query));
+            return n.title.toLowerCase().includes(query) ||
+                n.description.toLowerCase().includes(query) ||
+                (n.user && n.user.toLowerCase().includes(query));
         });
 
     const todayNotifications = filteredNotifications.filter(n => n.category === 'today');
@@ -165,12 +165,16 @@ const AdminNotification = () => {
                     </div>
                 </div>
 
-                {/* Search and Filters */}
+                {/* Search and Filters */}                
                 <div className="bg-white rounded-2xl border border-slate-200 p-4 mb-6 shadow-sm">
-                    <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+
                         {/* Search */}
-                        <div className="flex-1 relative">
-                            <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <div className="w-full lg:flex-1 relative">
+                            <Search
+                                size={18}
+                                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                            />
                             <input
                                 type="text"
                                 placeholder="Search by title, description, or user..."
@@ -179,25 +183,43 @@ const AdminNotification = () => {
                                 className="w-full pl-11 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 focus:bg-white transition-all placeholder:text-slate-400"
                             />
                         </div>
-                        
-                        {/* Filter tabs */}
-                        <div className="flex gap-1 bg-slate-100 p-1 rounded-xl">
+
+                        {/* Filter Tabs */}
+                        <div className="w-full lg:w-auto bg-slate-100 p-1 rounded-xl flex flex-wrap sm:flex-nowrap gap-1">
                             {[
                                 { key: 'all', label: 'All', count: notifications.length },
                                 { key: 'unread', label: 'Unread', count: unreadCount },
-                                { key: 'important', label: 'Important', count: notifications.filter(n => n.priority === 'urgent' || n.priority === 'high').length }
+                                {
+                                    key: 'important',
+                                    label: 'Important',
+                                    count: notifications.filter(
+                                        n => n.priority === 'urgent' || n.priority === 'high'
+                                    ).length
+                                }
                             ].map(tab => (
+
                                 <button
                                     key={tab.key}
                                     onClick={() => setFilter(tab.key)}
-                                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-                                        filter === tab.key
+                                    className={`flex-1 sm:flex-none min-w-[90px] flex items-center justify-center gap-1 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200
+
+                    ${filter === tab.key
                                             ? 'bg-white text-slate-800 shadow-sm'
-                                            : 'text-slate-500 hover:text-slate-700'
-                                    }`}
+                                            : 'text-slate-500 hover:bg-white/70 hover:text-slate-700'
+                                        }`}
                                 >
-                                    {tab.label}
-                                    <span className={`ml-1.5 text-xs ${filter === tab.key ? 'text-slate-500' : 'text-slate-400'}`}>({tab.count})</span>
+                                    <span>{tab.label}</span>
+
+                                    <span
+                                        className={`text-xs font-semibold px-1.5 py-0.5 rounded-md
+
+                        ${filter === tab.key
+                                                ? 'bg-slate-100 text-slate-600'
+                                                : 'bg-slate-200 text-slate-500'
+                                            }`}
+                                    >
+                                        {tab.count}
+                                    </span>
                                 </button>
                             ))}
                         </div>
@@ -294,7 +316,7 @@ const NotificationCard = ({ notification, onMarkRead, onDelete, onClick }) => {
     const Icon = typeConfig.icon;
 
     return (
-        <div 
+        <div
             className={`group px-5 py-4 transition-all hover:bg-slate-50 cursor-pointer ${notification.isUnread ? 'bg-blue-50/30' : ''}`}
             onClick={onClick}
         >
@@ -349,7 +371,7 @@ const NotificationCard = ({ notification, onMarkRead, onDelete, onClick }) => {
                             </button>
                         </div>
                     </div>
-                    
+
                     {/* Bottom row with label, user, and time */}
                     <div className="flex items-end justify-between mt-auto">
                         <div className="flex items-center gap-2 text-xs flex-wrap">
@@ -378,11 +400,11 @@ const NotificationDetailModal = ({ notification, onClose, onDelete }) => {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             {/* Backdrop */}
-            <div 
+            <div
                 className="absolute inset-0 bg-black/30 backdrop-blur-sm"
                 onClick={onClose}
             />
-            
+
             {/* Modal */}
             <div className="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                 {/* Header */}
