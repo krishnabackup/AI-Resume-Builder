@@ -22,8 +22,12 @@ import {
   Menu,
   X,
   EyeOff,
+  Download,
+  Printer,
 } from "lucide-react";
 import PaginatedPreview from "../CV/PaginatedPreview";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 /* ─── constants ─────────────────────────────────────────────────────────── */
 const PAGE_WIDTH = 794;
@@ -210,6 +214,103 @@ const CoverLetterPreview = ({
   } = formData;
 
   const isMobile = isNarrow;
+
+  /* ── PDF Download ─────────────────────────────────────────────────────── */
+  const downloadPDF = async () => {
+    let container;
+    try {
+      // Create hidden container at full A4 width
+      container = document.createElement("div");
+      Object.assign(container.style, {
+        position: "fixed",
+        top: "0",
+        left: "-9999px",
+        width: `${PAGE_WIDTH}px`,
+        background: "#ffffff",
+        zIndex: "-1",
+      });
+
+      document.body.appendChild(container);
+
+      const { createRoot } = await import("react-dom/client");
+
+      await new Promise((resolve) => {
+        const root = createRoot(container);
+        root.render(<CoverContent />);
+        setTimeout(resolve, 400);
+      });
+
+      // Capture full canvas
+      const canvas = await html2canvas(container, {
+        scale: 3,
+        useCORS: true,
+        logging: false,
+        windowWidth: PAGE_WIDTH,
+      });
+
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const mmPageW = 210;
+      const mmPageH = 297;
+
+      const pxPerMm = canvas.width / mmPageW;
+      const pxSliceH = Math.round(mmPageH * pxPerMm);
+
+      let yPx = 0;
+      let first = true;
+
+      while (yPx < canvas.height) {
+        const sliceH = Math.min(pxSliceH, canvas.height - yPx);
+
+        const pageCanvas = document.createElement("canvas");
+        pageCanvas.width = canvas.width;
+        pageCanvas.height = pxSliceH;
+
+        const ctx = pageCanvas.getContext("2d");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+
+        ctx.drawImage(
+          canvas,
+          0,
+          yPx,
+          canvas.width,
+          sliceH,
+          0,
+          0,
+          canvas.width,
+          sliceH,
+        );
+
+        const imgData = pageCanvas.toDataURL("image/jpeg", 0.96);
+
+        if (!first) pdf.addPage();
+
+        pdf.addImage(imgData, "JPEG", 0, 0, mmPageW, mmPageH);
+
+        yPx += sliceH;
+        first = false;
+      }
+
+      const clean = (str) =>
+        str
+          ?.replace(/[^a-z0-9_\- ]/gi, "")
+          .trim()
+          .replace(/\s+/g, "_");
+
+      const name = clean(fullName) || "CoverLetter";
+
+      pdf.save(`${name}_Cover_Letter.pdf`);
+    } catch (err) {
+      console.error("PDF download error:", err);
+    } finally {
+      if (container && container.parentNode) document.body.removeChild(container);
+    }
+  };
 
   // We bring the CoverContent directly:
   const CoverContent = () => {
@@ -677,6 +778,11 @@ const CoverLetterPreview = ({
               <RotateCcw size={12} />
             </IconBtn>
             <Divider />
+
+            <IconBtn onClick={downloadPDF} title="Download PDF">
+              <Download size={14} />
+            </IconBtn>
+            <Divider />
           </>
         )}
 
@@ -691,6 +797,103 @@ const CoverLetterPreview = ({
         >
           {isMaximized ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
         </IconBtn>
+
+        {/* compact overflow menu */}
+        {isCompact && (
+          <div style={{ position: "relative" }}>
+            <IconBtn
+              onClick={() => setMoreOpen((o) => !o)}
+              title="More"
+              active={moreOpen}
+            >
+              {moreOpen ? <X size={14} /> : <Menu size={14} />}
+            </IconBtn>
+            {moreOpen && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "calc(100% + 6px)",
+                  right: 0,
+                  background: "#ffffff",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: 10,
+                  padding: 6,
+                  zIndex: 100,
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.13)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 2,
+                  minWidth: 150,
+                }}
+              >
+                {[
+                  {
+                    icon: <RotateCcw size={13} />,
+                    label: "Reset zoom",
+                    action: () => {
+                      resetZoom();
+                      setMoreOpen(false);
+                    },
+                  },
+                  {
+                    icon: <Printer size={13} />,
+                    label: "Print",
+                    action: () => {
+                      window.print();
+                      setMoreOpen(false);
+                    },
+                  },
+                  {
+                    icon: <Download size={13} />,
+                    label: "Download PDF",
+                    action: () => {
+                      downloadPDF();
+                      setMoreOpen(false);
+                    },
+                  },
+                  {
+                    icon: showGrid ? <X size={13} /> : <Eye size={13} />,
+                    label: showGrid ? "Hide grid" : "Show grid",
+                    action: () => {
+                      setShowGrid((g) => !g);
+                      setMoreOpen(false);
+                    },
+                  },
+                ].map(({ icon, label, action }) => (
+                  <button
+                    key={label}
+                    onClick={action}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 9,
+                      padding: "7px 10px",
+                      borderRadius: 7,
+                      border: "none",
+                      background: "none",
+                      cursor: "pointer",
+                      color: "#334155",
+                      fontSize: 12,
+                      fontFamily: "system-ui, sans-serif",
+                      fontWeight: 500,
+                      textAlign: "left",
+                      whiteSpace: "nowrap",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.background = "#f8fafc")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.background = "none")
+                    }
+                  >
+                    {icon}
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -807,7 +1010,7 @@ const CoverLetterPreview = ({
         <span
           style={{ fontSize: 10, color: "#94a3b8", fontFamily: "monospace" }}
         >
-          {isNarrow ? "A4" : "A4 · 210 × 297 mm"}
+          {isNarrow ? "A4" : "A4 · 210 × 297 mm · PDF ready"}
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {!isCompact && (

@@ -210,14 +210,14 @@ const ProjectsForm = ({ formData, setFormData }) => {
                   <textarea
                     className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white resize-y min-h-[120px] scrollbar-hide"
                     value={project.description || ""}
-                    maxLength={500}
+                    maxLength={1000}
                     onChange={(e) =>
                       updateProject(project.id, "description", e.target.value)
                     }
                   />
 
                   <span className="ml-2 text-xs text-slate-500">
-                    {project.description?.length || 0}/500 Characters
+                    {project.description?.length || 0}/1000 Characters
                   </span>
                 </div>
 

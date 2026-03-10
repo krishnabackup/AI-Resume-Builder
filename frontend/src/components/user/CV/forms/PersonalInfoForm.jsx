@@ -206,13 +206,13 @@ const PersonalInfoForm = ({ formData, onInputChange }) => {
         <textarea
           className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white resize-y min-h-[120px] scrollbar-hide"
           value={formData?.summary || ""}
-          maxLength={500}
+          maxLength={1000}
           placeholder="Brief professional summary highlighting your key skills and experience..."
           onChange={(e) => onInputChange("summary", e.target.value)}
         />
 
         <span className="ml-2 text-xs text-slate-500">
-          {formData?.summary?.length || 0}/500 Characters
+          {formData?.summary?.length || 0}/1000 Characters
         </span>
 
         <span className="flex gap-2 ml-2 text-xs text-slate-500">
