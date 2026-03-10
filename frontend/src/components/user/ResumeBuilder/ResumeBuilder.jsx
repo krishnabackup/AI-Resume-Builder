@@ -641,10 +641,9 @@ const ResumeBuilder = ({ setActivePage = () => { } }) => {
         )}
 
         {renderMainContent()}
-      </div>
 
-      {/* Mobile slide-up preview overlay (mirrors CV & Cover Letter) */}
-      {showMobilePreview && !isPreviewExpanded && (
+        {/* Mobile slide-up preview overlay (mirrors CV & Cover Letter) */}
+        {showMobilePreview && !isPreviewExpanded && (
           <div className="lg:hidden fixed inset-0 z-50 flex flex-col">
             <div
               className="absolute inset-0 bg-black/50 backdrop-blur-sm"
