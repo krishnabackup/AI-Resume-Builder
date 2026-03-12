@@ -9,6 +9,7 @@ import axiosInstance from "../../../api/axios";
 import TemplateTypeSwitch from "./TemplateTypeSwitch";
 
 const CV_PLACEHOLDER = "https://via.placeholder.com/210x297.png?text=CV+Template";
+const CV_CANVAS_WIDTH = 794;
 
 export default function AdminTemplates() {
 
@@ -18,6 +19,8 @@ export default function AdminTemplates() {
 
   const [isPreviewModalOpen, setIsPreviewModalOpen] = React.useState(false);
   const [previewImage, setPreviewImage] = React.useState("");
+  const [cvPreviewViewportWidth, setCvPreviewViewportWidth] = React.useState(0);
+  const cvPreviewViewportRef = React.useRef(null);
 
   React.useEffect(() => {
     if (isPreviewModalOpen) {
@@ -29,6 +32,24 @@ export default function AdminTemplates() {
       document.body.style.overflow = 'unset';
     };
   }, [isPreviewModalOpen]);
+
+  React.useEffect(() => {
+    if (!isPreviewModalOpen || type !== "cv") return;
+
+    const viewportEl = cvPreviewViewportRef.current;
+    if (!viewportEl) return;
+
+    const updateViewportWidth = () => {
+      setCvPreviewViewportWidth(viewportEl.clientWidth || 0);
+    };
+
+    updateViewportWidth();
+
+    const resizeObserver = new ResizeObserver(updateViewportWidth);
+    resizeObserver.observe(viewportEl);
+
+    return () => resizeObserver.disconnect();
+  }, [isPreviewModalOpen, type]);
 
   const [pendingTemplates, setPendingTemplates] = React.useState([]);
   const [approvedTemplates, setApprovedTemplates] = React.useState({});
@@ -111,6 +132,20 @@ export default function AdminTemplates() {
     setPreviewImage(tpl);
     setIsPreviewModalOpen(true);
   };
+
+  const PreviewComponent =
+    type === "cv" && previewImage?.templateId
+      ? CVTemplates?.[previewImage.templateId]
+      : null;
+
+  const cvPreviewScale = React.useMemo(() => {
+    if (type !== "cv" || !cvPreviewViewportWidth) return 1;
+
+    const availableWidth = Math.max(0, cvPreviewViewportWidth - 16);
+    if (!availableWidth) return 1;
+
+    return Math.min(1, availableWidth / CV_CANVAS_WIDTH);
+  }, [type, cvPreviewViewportWidth]);
 
   const handleCreateClick = () => {
     alert(
@@ -288,14 +323,7 @@ const matchesSearch =
                       <div className="flex gap-2 mt-3 pt-2 border-t">
 
                         <button
-                          onClick={() =>
-                            window.open(
-                              type === "resume"
-                                ? `/admin/resume-editor?id=${tpl._id}`
-                                : `/admin/cv-editor?id=${tpl._id}`,
-                              "_blank"
-                            )
-                          }
+                          onClick={() => handlePreview(tpl)}
                           className="flex-1 py-1 text-xs bg-slate-50 rounded"
                         >
                           View
@@ -329,27 +357,57 @@ const matchesSearch =
         {isPreviewModalOpen && (
 
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+            className="fixed inset-0 z-[220] bg-black/80 p-4 sm:p-6"
             onClick={() => setIsPreviewModalOpen(false)}
           >
 
             <div
-              className="relative bg-white rounded-lg shadow-xl max-w-4xl max-h-[90vh]"
+              className="relative mx-auto flex h-full max-h-[95vh] w-full max-w-6xl flex-col overflow-hidden rounded-lg bg-white shadow-xl"
               onClick={(e) => e.stopPropagation()}
             >
 
+              <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 pr-14 sm:px-6">
+                <div>
+                  <h2 className="text-base font-semibold text-slate-900">
+                    {previewImage?.name || "Template Preview"}
+                  </h2>
+                  <p className="text-sm text-slate-500">
+                    {type === "resume" ? "Resume" : "CV"} template preview
+                  </p>
+                </div>
+              </div>
+
               <button
                 onClick={() => setIsPreviewModalOpen(false)}
-                className="absolute top-2 right-2 p-2 bg-black/50 text-white rounded-full"
+                className="absolute right-3 top-3 z-20 rounded-full bg-black/50 p-2 text-white"
               >
                 <X size={20} />
               </button>
 
-              <img
-                src={previewImage.image || previewImage}
-                alt="Template Preview"
-                className="w-full h-auto"
-              />
+              <div className="flex-1 overflow-auto bg-slate-100 p-4 sm:p-6">
+                {type === "resume" ? (
+                  <div className="mx-auto flex w-full max-w-4xl justify-center">
+                    <img
+                      src={previewImage.image || previewImage}
+                      alt={previewImage?.name || "Template Preview"}
+                      className="h-auto max-w-full rounded-md bg-white shadow-lg"
+                    />
+                  </div>
+                ) : PreviewComponent ? (
+                  <div ref={cvPreviewViewportRef} className="mx-auto w-full overflow-auto">
+                    <div
+                      className="mx-auto origin-top bg-white shadow-lg"
+                      style={{ width: CV_CANVAS_WIDTH, zoom: cvPreviewScale }}
+                    >
+                      <PreviewComponent formData={mergeWithSampleData({})} />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex h-full min-h-[320px] items-center justify-center rounded-md border border-dashed border-slate-300 bg-white text-slate-500">
+                    Preview is not available for this template.
+                  </div>
+                )}
+              </div>
 
             </div>
 
