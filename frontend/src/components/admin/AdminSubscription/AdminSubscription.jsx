@@ -111,10 +111,10 @@ const AdminSubscription = () => {
       const allUsers = usersResponse.data;
       const allPlans = plansResponse.data;
 
-      const paidPlanNames = allPlans.filter(p => p.price > 0).map(p => p.name.toLowerCase());
+      const paidPlanNames = allPlans.filter(p => p.price > 0 && p.name !== "Free").map(p => p.name.toLowerCase());
 
       const pro = allUsers.filter(user => user.plan && paidPlanNames.includes(user.plan.toLowerCase()));
-      const free = allUsers.filter(user => !user.plan || !paidPlanNames.includes(user.plan.toLowerCase()));
+      const free = allUsers.filter(user => user.plan === "Free" && user.isAdmin === false);
 
       setPaidUsers(pro);
       setFreeUsersCount(free.length);
@@ -148,7 +148,7 @@ const AdminSubscription = () => {
   };
 
   const handleAddPlan = () => {
-    const newPlanId = Date.now(); // Using a large unique integer ID for the local backend requirements
+    const newPlanId =  Date.now(); // Using a large unique integer ID for the local backend requirements
     setLocalPlans((prev) => [
       ...prev,
       {
@@ -319,7 +319,15 @@ const AdminSubscription = () => {
                 </button>
               </div>
             </div>
-
+            <div className="flex gap-2 items-center justify-start">
+              <h3>Badge Tag :</h3> 
+              <input
+                type="text"
+                value={plan.badge}
+                onChange={(e) => updatePlanField(plan.id, 'badge', e.target.value)}
+                className="text-lg sm:text-xl font-medium text-gray-800 bg-transparent border border-dashed border-transparent hover:border-gray-300 focus:border-blue-500 focus:outline-none rounded w-2/3 px-1.5 -ml-1.5 py-0.5"
+              />
+              </div>
             <textarea
               value={plan.description}
               onChange={(e) => updatePlanField(plan.id, 'description', e.target.value)}

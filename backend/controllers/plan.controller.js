@@ -46,6 +46,12 @@ export const updateAllPlans = async (req, res) => {
           message: "Each plan must have planId, name, and price"
         });
       }
+      //Validate plan name is unique
+      const notUniqueName = await Plan.findOne({
+        name: plan.name,
+        planId: { $ne: plan.planId }
+      });
+      if (notUniqueName) return res.status(409).json({ message: `Plan name cannot be same , Change Plan Name : ${plan.name}` });
     }
 
     // Delete missing plans dynamically
@@ -59,6 +65,7 @@ export const updateAllPlans = async (req, res) => {
         { planId: plan.planId },
         {
           name: plan.name,
+          badge: plan.badge,
           price: plan.price,
           active: plan.active,
           description: plan.description,
@@ -84,9 +91,8 @@ export const updateAllPlans = async (req, res) => {
 // -------------------- UPDATE SINGLE PLAN --------------------
 export const updatePlan = async (req, res) => {
   try {
-    const { name, price, active, description, features } = req.body;
+    const { name, badge, price, active, description, features } = req.body;
     const planId = req.params.id;
-
     const plan = await Plan.findOne({ planId });
 
     if (!plan) {
@@ -95,6 +101,7 @@ export const updatePlan = async (req, res) => {
 
     // Update fields
     if (name) plan.name = name;
+    if (badge !== undefined) plan.badge = badge;
     if (price !== undefined) plan.price = price;
     if (active !== undefined) plan.active = active;
     if (description) plan.description = description;
