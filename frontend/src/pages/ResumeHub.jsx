@@ -287,7 +287,7 @@ const ResumeHubPage = () => {
             variants={staggerContainer}
             initial="hidden"
             animate={isBentoInView ? "show" : "hidden"}
-            className="grid gap-8 md:grid-cols-2 lg:grid-cols-4"
+            className="grid grid-cols-2 gap-8 md:grid-cols-2 lg:grid-cols-4"
           >
             {[
               { icon: <Copy />, title: "Instant Cloning", desc: "Duplicate any master resume in one click." },
@@ -299,13 +299,13 @@ const ResumeHubPage = () => {
                 key={i}
                 variants={fadeUp}
                 whileHover={{ y: -10, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)" }}
-                className="p-10 bg-white rounded-[2.5rem] border border-gray-100 shadow-sm transition-all duration-300 group"
+                className="p-4 sm:p-6 md:p-10 bg-white rounded-2xl sm:rounded-[2.5rem] border border-gray-100 shadow-sm transition-all duration-300 group"
               >
-                <div className="flex items-center justify-center mb-8 text-[#0077cc] transition-all w-14 h-14 rounded-2xl bg-blue-50 group-hover:bg-[#0077cc] group-hover:text-white group-hover:rotate-6">
-                  {React.cloneElement(item.icon, { size: 28 })}
+                <div className="flex items-center justify-center mb-6 sm:mb-8 text-[#0077cc] transition-all w-10 h-10 sm:w-14 sm:h-14 rounded-lg sm:rounded-2xl bg-blue-50 group-hover:bg-[#0077cc] group-hover:text-white group-hover:rotate-6">
+                  {React.cloneElement(item.icon, { size: 20 })}
                 </div>
-                <h3 className="mb-4 text-xl font-bold text-[#1a2e52]">{item.title}</h3>
-                <p className="text-sm font-medium leading-relaxed text-gray-400">{item.desc}</p>
+                <h3 className="mb-3 text-sm sm:text-xl font-bold text-[#1a2e52]">{item.title}</h3>
+                <p className="text-xs sm:text-sm font-medium leading-relaxed text-gray-400">{item.desc}</p>
               </motion.div>
             ))}
           </motion.div>

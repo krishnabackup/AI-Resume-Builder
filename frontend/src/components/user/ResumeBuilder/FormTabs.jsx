@@ -39,16 +39,18 @@ export default function FormTabs({
           {tabs.map(({ id, label, icon: Icon }) => {
             const active = activeSection === id;
             return (
-              active && (
-                <div
-                  key={id}
-                  onClick={() => setActiveSection(id)}
-                  className="flex items-center gap-2 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all text-black select-none md:px-4 px-2"
-                >
-                  <Icon size={16} />
-                  {label}
-                </div>
-              )
+              <div
+                key={id}
+                onClick={() => setActiveSection(id)}
+                className={`flex items-center gap-2 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all select-none md:px-4 px-2 cursor-pointer ${
+                  active 
+                    ? "text-black bg-slate-100" 
+                    : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                <Icon size={16} />
+                {label}
+              </div>
             );
           })}
           {/* step progress */}

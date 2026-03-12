@@ -14,7 +14,7 @@ export const trackPageView = async (req, res) => {
     const pageView = await PageView.create({
       page,
       route,
-      userId: req.userId?._id
+      userId: req.userId || null,
     });
 
     return res.status(201).json({
@@ -41,20 +41,20 @@ export const getTopViewedPages = async (req, res) => {
         $group: {
           _id: "$page",
           views: { $sum: 1 },
-          uniqueUserSet: {
-            $addToSet: {
-              $cond: [
-                { $ifNull: ["$userId", false] },
-                "$userId",
-                "$$REMOVE",
-              ],
-            },
-          },
+          uniqueUserSet: { $addToSet: "$userId" },
         },
       },
       {
         $addFields: {
-          uniqueUsers: { $size: "$uniqueUserSet" },
+          uniqueUsers: {
+            $size: {
+              $filter: {
+                input: "$uniqueUserSet",
+                as: "uid",
+                cond: { $ne: ["$$uid", null] },
+              },
+            },
+          },
         },
       },
       { $sort: { views: -1 } },

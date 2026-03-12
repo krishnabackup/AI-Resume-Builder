@@ -177,7 +177,7 @@ const TemplatesDashboardPage = ({
   }, [previewTemplate]);
 
   const fitScale = useMemo(() => {
-    if (previewViewportWidth < 520) return 1.15; // larger default on mobile
+    if (previewViewportWidth < 520) return 1; // larger default on mobile
     const gutter = 0;
     const available = Math.max(0, previewViewportWidth - gutter);
     if (!available) return 1;
@@ -396,7 +396,7 @@ const TemplatesDashboardPage = ({
               {/* HEADER */}
               <div className="flex items-center justify-between gap-2 px-3 sm:px-4 py-3 bg-white border-b border-gray-200">
                 {/* LEFT SECTION */}
-                <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+                <div className="flex items-center gap-2 sm:gap-4 min-w-0 pl-8 md:px-20">
                   <div className="flex items-center gap-1.5">
                     <Eye size={16} className="text-gray-700" />
                     <span className="text-sm font-semibold text-gray-800">

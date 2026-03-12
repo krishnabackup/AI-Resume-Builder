@@ -18,6 +18,20 @@
   width:90%;
   margin:auto;
 }
+.social-add-btn{
+  background:#0f172a;
+  color:white;
+  border:none;
+  border-radius:6px;
+  padding:4px 10px;
+  cursor:pointer;
+}
+.profile-sidebar-card {
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 2rem;
+}
 
 /* =======================
    SINGLE CARD
@@ -269,6 +283,25 @@
 .btn-save:hover{
   background:#020617;
 }
+.profile-socials{
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.social-link{
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  color: #374151;
+  text-decoration: none;
+}
+
+.social-link:hover{
+  color: #0f172a;
+}
 
 /* =======================
    RESPONSIVE
@@ -301,7 +334,4 @@
     justify-content:center;
   }
 
-}
-.profile-form::-webkit-scrollbar{
-  display:none;
 }

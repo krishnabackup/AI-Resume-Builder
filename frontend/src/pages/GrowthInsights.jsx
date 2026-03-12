@@ -253,26 +253,6 @@ const [ctaRef, ctaVisible] = useInView(0.2);
               </div>
             ))}
           </div>
-
-          {/* Action Banner */}
-          <div className="mt-20 p-8 bg-gradient-to-r from-[#1a2e52] to-[#0077cc] rounded-[2.5rem] shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8 text-left">
-            <div className="flex items-center gap-5">
-              <div className="flex items-center justify-center text-white border w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl">
-                <Sparkles size={28} />
-              </div>
-              <div>
-                <p className="text-xl font-bold text-white">Ready to find your way?</p>
-                <p className="text-sm text-blue-100/60">Analyze your resume today and find the path to your dream job.</p>
-              </div>
-            </div>
-            <button 
-  onClick={() => handleFeatureClick("/user/dashboard")} 
-  className="group flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#e65100] to-[#f4511e] text-white rounded-xl font-bold text-lg transition-all duration-300 shadow-[0_10px_25px_rgba(230,81,0,0.3)] hover:shadow-[0_15px_35px_rgba(230,81,0,0.45)] hover:-translate-y-1 active:scale-95"
->
-  <span>Start Analysis</span>
-  <ArrowRight size={20} className="transition-transform duration-300 group-hover:translate-x-1" />
-</button>
-          </div>
         </div>
       </section>
 

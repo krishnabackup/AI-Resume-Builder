@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import FormTabs from "./FormTabs";
 import UserNavBar from "../UserNavBar/UserNavBar";
 import axios from "axios";
@@ -59,6 +60,7 @@ const createEmptyResume = () => ({
   linkedin: "",
   github: "",
   summary: "",
+  resumeText: "",
   experience: [
     {
       id: generateId(),
@@ -100,12 +102,48 @@ const PDF_PAGE_WIDTH_PX = 794;
    of how tall the scrollable topbar/banner are.
 ───────────────────────────────────────────────────────── */
 const FloatingFormPanel = ({ children, topOffset, containerRef }) => {
+  const panelRef = useRef(null);
+  const rafRef = useRef(null);
+  const currentY = useRef(0);
+  const targetY = useRef(0);
+
+  // spring animation loop
+  useEffect(() => {
+    const STIFFNESS = 0.12;
+    const tick = () => {
+      currentY.current += (targetY.current - currentY.current) * STIFFNESS;
+      if (panelRef.current) {
+        panelRef.current.style.transform = `translateY(${currentY.current}px)`;
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, []);
+
+  // update target on scroll — anchor to container's top in the DOM
+  useEffect(() => {
+    const onScroll = () => {
+      if (!containerRef?.current) {
+        targetY.current = Math.max(0, window.scrollY - topOffset);
+        return;
+      }
+      const containerTop =
+        containerRef.current.getBoundingClientRect().top + window.scrollY;
+      const desired = window.scrollY + topOffset - containerTop;
+      targetY.current = Math.max(0, desired);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [topOffset, containerRef]);
+
   return (
     <div
+      ref={panelRef}
       style={{
-        position: 'sticky',
-        top: `${topOffset}px`,
-        height: `calc(100vh - ${topOffset}px - 80px)`,
+        willChange: "transform",
+        height: `calc(100vh - ${topOffset}px)`,
       }}
       className="flex flex-col"
     >
@@ -119,10 +157,11 @@ const FloatingFormPanel = ({ children, topOffset, containerRef }) => {
    MAIN COMPONENT
 ═══════════════════════════════════════════════════════════ */
 const CVBuilder = () => {
+  const navigate = useNavigate();
   const formContainerRef = useRef(null);
   const headerRef = useRef(null);
   const leftColRef = useRef(null);
-  const [headerHeight, setHeaderHeight] = useState(64);
+const [headerHeight, setHeaderHeight] = useState(64);
 
 
   const [activeTab, setActiveTab] = useState("builder");
@@ -555,37 +594,50 @@ const CVBuilder = () => {
 
   /* ================= LOAD RESUME ================= */
   useEffect(() => {
-    const controller = new AbortController();
-    (async () => {
-      try {
-        const res = await axios.get("http://localhost:5000/api/resume", {
+  const controller = new AbortController();
+
+  (async () => {
+    try {
+      const res = await axios.get(
+        "http://localhost:5000/api/resume",
+        {
           withCredentials: true,
           signal: controller.signal,
-        });
-        if (Array.isArray(res.data) && res.data.length > 0) {
-          const latest = res.data[0];
-          setResumeId(latest._id);
-          if (latest.data) {
-            setFormData((prev) => ({
-              ...prev,
-              ...latest.data,
-              skills: {
-                technical: latest.data?.skills?.technical ?? [],
-                soft: latest.data?.skills?.soft ?? [],
-              },
-            }));
-          }
-          if (latest.templateId) setSelectedTemplate(latest.templateId);
-          toast.success("Resume loaded");
         }
-      } catch (err) {
-        if (err.name !== "CanceledError")
-          console.error("Error loading resume:", err);
-      }
-    })();
-    return () => controller.abort();
-  }, []);
+      );
 
+      const latest = res.data?.data;
+
+      if (latest) {
+        setResumeId(latest._id);
+
+        if (latest.data) {
+          setFormData((prev) => ({
+            ...prev,
+            ...latest.data,
+            skills: {
+              technical: latest.data?.skills?.technical ?? [],
+              soft: latest.data?.skills?.soft ?? [],
+            },
+          }));
+        }
+
+        if (latest.templateId) {
+          setSelectedTemplate(latest.templateId);
+        }
+
+        toast.success("Resume loaded");
+      }
+
+    } catch (err) {
+      if (err.name !== "CanceledError") {
+        console.error("Error loading resume:", err);
+      }
+    }
+  })();
+
+  return () => controller.abort();
+}, []);
 
   /* ================= SAVE ================= */
   const handleSave = async () => {
@@ -622,6 +674,265 @@ const CVBuilder = () => {
       setIsSaving(false);
     }
   };
+
+  const handleUpload = async (file) => {
+  if (!file) return;
+  
+  // Validate file format
+  const isValidFormat = file.type === "application/pdf" || 
+                        file.type === "application/msword" || 
+                        file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+                        file.name.endsWith('.pdf') || 
+                        file.name.endsWith('.doc') || 
+                        file.name.endsWith('.docx');
+  
+  if (!isValidFormat) {
+    toast.error("Please upload a PDF or Word document (.pdf, .doc, .docx)");
+    return;
+  }
+
+  toast.loading("Processing uploaded resume...");
+  
+  try {
+    const formData = new FormData();
+    formData.append("resume", file);
+    formData.append("jobTitle", "CV Builder Upload");
+    formData.append("templateId", selectedTemplate || "professional");
+    
+    // Try to get user ID from token or use a default
+    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+    
+    // Parse token to get user ID if available
+    let userId = null;
+    if (token) {
+      try {
+        const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+        userId = tokenPayload.id || tokenPayload.userId;
+      } catch (e) {
+        console.log("Could not parse user ID from token");
+      }
+    }
+    
+    // Use user ID as resumeprofileId if available, otherwise use a default
+    if (userId) {
+      formData.append("resumeprofileId", userId);
+    } else {
+      // Use a default ObjectId format - this will need to be handled by backend
+      formData.append("resumeprofileId", "000000000000000000000000");
+    }
+
+    const res = await fetch("http://localhost:5000/api/resume/upload", {
+      method: "POST",
+      body: formData,
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+
+    const rawText = await res.text();
+
+    if (!res.ok) {
+      console.error(`Server error [${res.status}]:`, rawText.slice(0, 500));
+      toast.error("Failed to upload resume");
+      return;
+    }
+
+    let data;
+    try {
+      data = JSON.parse(rawText);
+    } catch {
+      console.error("Expected JSON but got:", rawText.slice(0, 300));
+      toast.error("Invalid server response");
+      return;
+    }
+
+    if (data.success && data.data?.extractedData) {
+      // Update form data with extracted information
+      const extracted = data.data.extractedData;
+      const resumeText = data.data.text || '';
+      
+      // Create a comprehensive summary from the resume text if no summary was extracted
+      let summary = extracted.summary;
+      if (!summary && resumeText) {
+        // Take first few meaningful lines of resume as summary
+        const lines = resumeText.split('\n').filter(line => line.trim().length > 20);
+        summary = lines.slice(0, 3).join(' ').replace(/\s+/g, ' ').substring(0, 300);
+      }
+      
+      // Enhance experience data with better formatting
+      let enhancedExperience = extracted.experience || [];
+      if (enhancedExperience.length === 0 && resumeText) {
+        // Try to extract better experience from text
+        const lines = resumeText.split('\n');
+        let currentExp = null;
+        
+        for (const line of lines) {
+          const trimmedLine = line.trim();
+          
+          // Look for job title patterns
+          if (trimmedLine.length > 15 && 
+              !trimmedLine.match(/^(summary|profile|about|objective|education|skills|contact|certifications|languages|interests|references)/i)) {
+            
+            // Detect job entries with various patterns
+            const jobPatterns = [
+              /(.+?)\s+(at|@|-.+)\s+(\d{4}|\w+\s\d{4})\s*[-–—]\s*(\d{4}|\w+\s\d{4}|present|current|now)/i,
+              /(.+?)\s+(at|@|-.+)\s+(\d{4})\s*[-–—]\s*(\d{4}|present|current|now)/i,
+              /(.+?)\s+(at|@|-.+)/i
+            ];
+            
+            let matched = false;
+            for (const pattern of jobPatterns) {
+              const match = trimmedLine.match(pattern);
+              if (match) {
+                if (currentExp && currentExp.description) {
+                  enhancedExperience.push(currentExp);
+                }
+                
+                currentExp = {
+                  id: Math.random().toString(36).substr(2, 9),
+                  title: match[1] ? match[1].trim() : 'Professional',
+                  company: match[2] ? match[2].replace(/^(at|@|-)\s+/i, '').trim() : 'Organization',
+                  location: '',
+                  startDate: match[3] || '',
+                  endDate: match[4] || '',
+                  description: ''
+                };
+                matched = true;
+                break;
+              }
+            }
+            
+            if (!matched && currentExp && trimmedLine.length > 30) {
+              // Add as description if it looks like a responsibility/achievement
+              if (trimmedLine.match(/^•|^-|\*|^\d+\.|^[A-Z][a-z]/)) {
+                currentExp.description += trimmedLine + '\n';
+              }
+            }
+          }
+        }
+        
+        if (currentExp && currentExp.description) {
+          enhancedExperience.push(currentExp);
+        }
+      }
+      
+      // Clean up experience descriptions with better formatting
+      enhancedExperience = enhancedExperience.map(exp => {
+        let cleanDescription = '';
+        if (exp.description) {
+          // Split into lines and clean each one
+          const lines = exp.description.split('\n');
+          const cleanLines = lines
+            .map(line => line.trim())
+            .filter(line => line.length > 10)
+            .map(line => {
+              // Remove bullet points and clean up
+              let cleaned = line.replace(/^[-•*]\s*/, '').trim();
+              // Remove numbering
+              cleaned = cleaned.replace(/^\d+\.\s*/, '').trim();
+              // Capitalize first letter
+              if (cleaned.length > 0) {
+                cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+              }
+              return cleaned;
+            })
+            .filter(line => line.length > 5);
+          
+          // Join with proper formatting - add bullet points for clarity
+          cleanDescription = cleanLines.map(line => `• ${line}`).join('\n');
+        }
+        
+        return {
+          ...exp,
+          title: exp.title ? exp.title.trim() : 'Professional Position',
+          company: exp.company ? exp.company.trim() : 'Company Name',
+          location: exp.location ? exp.location.trim() : '',
+          startDate: exp.startDate ? exp.startDate.trim() : '',
+          endDate: exp.endDate ? exp.endDate.trim() : '',
+          description: cleanDescription
+        };
+      });
+      
+      // Enhance education data with better formatting
+      let enhancedEducation = extracted.education || [];
+      if (enhancedEducation.length === 0 && resumeText) {
+        // Extract education from text
+        const educationLines = resumeText.split('\n');
+        for (const line of educationLines) {
+          const trimmedLine = line.trim();
+          const eduPatterns = [
+            /(.+?)\s+(bachelor|master|phd|b\.sc|m\.sc|b\.tech|m\.tech|b\.e|m\.e|b\.com|m\.com|diploma|certificate).+?(\d{4})/i,
+            /(.+?)\s+(bachelor|master|phd|b\.sc|m\.sc|b\.tech|m\.tech|b\.e|m\.e|b\.com|m\.com|diploma|certificate)/i
+          ];
+          
+          for (const pattern of eduPatterns) {
+            const match = trimmedLine.match(pattern);
+            if (match) {
+              enhancedEducation.push({
+                id: Math.random().toString(36).substr(2, 9),
+                school: match[1] ? match[1].trim() : 'University',
+                degree: match[2] ? match[2].trim() : 'Degree',
+                location: '',
+                graduationDate: match[3] || '',
+                gpa: ''
+              });
+              break;
+            }
+          }
+        }
+      }
+      
+      // Clean up education data
+      enhancedEducation = enhancedEducation.map(edu => ({
+        ...edu,
+        school: edu.school ? edu.school.trim() : 'University Name',
+        degree: edu.degree ? edu.degree.trim() : 'Degree Title',
+        location: edu.location ? edu.location.trim() : '',
+        graduationDate: edu.graduationDate ? edu.graduationDate.trim() : '',
+        gpa: edu.gpa ? edu.gpa.trim() : ''
+      }));
+      
+      console.log("🔍 Enhanced Experience Data:", enhancedExperience);
+      console.log("🔍 Enhanced Education Data:", enhancedEducation);
+      console.log("🔍 Extracted Skills:", extracted.skills);
+      console.log("Parsed resume data:", extracted);
+      
+      setFormData(prev =>({
+  ...prev,
+  fullName: extracted.name || prev.fullName,
+  email: extracted.email || prev.email,
+  phone: extracted.phone || prev.phone,
+  summary: summary || prev.summary,
+
+  experience: enhancedExperience.length > 0
+    ? enhancedExperience
+    : prev.experience,
+
+  education: enhancedEducation.length > 0
+    ? enhancedEducation
+    : prev.education,
+
+  certifications: extracted.certifications?.length
+    ? extracted.certifications
+    : prev.certifications,
+
+  skills: extracted.skills || prev.skills,
+
+  resumeText: resumeText
+}));
+      
+      const expCount = enhancedExperience.length;
+      const eduCount = enhancedEducation.length;
+      const techSkills = extracted.skills?.technical?.length || 0;
+      const softSkills = extracted.skills?.soft?.length || 0;
+      
+      toast.success(`Resume uploaded successfully! Found ${expCount} experiences, ${eduCount} education entries, ${techSkills} technical skills, and ${softSkills} soft skills.`);
+    } else {
+      toast.error("Failed to parse resume content");
+    }
+  } catch (err) {
+    console.error("Upload failed:", err);
+    toast.error("Upload failed. Please try again.");
+  }
+};
 
 
   const handleInputChange = (field, value) =>
@@ -686,6 +997,9 @@ const CVBuilder = () => {
       </div>
 
 
+    
+
+
       {/* ── Scrollable: topbar + banner ── */}
       <CVBuilderTopBar
         activeTab={activeTab}
@@ -693,7 +1007,7 @@ const CVBuilder = () => {
         onSave={handleSave}
         onDownload={downloadPDF}
         onDownloadWord={downloadWord}
-        onUpload={(file) => console.log("CV upload:", file?.name)}
+        onUpload={handleUpload}
         isSaving={isSaving}
         isDownloading={isDownloading}
         title={documentTitle}

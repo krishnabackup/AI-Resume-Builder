@@ -11,6 +11,7 @@ const getSampleData = () => ({
   website: "jessicaclaire.com",
   summary:
     "Results-driven software engineer with 8+ years of experience in full-stack development. Specialized in building scalable web applications using modern technologies. Proven track record of leading cross-functional teams and delivering high-impact projects.",
+
   experience: [
     {
       id: 1,
@@ -33,6 +34,7 @@ const getSampleData = () => ({
         "• Built responsive web applications using React and Node.js\n• Implemented CI/CD pipelines reducing deployment time by 60%",
     },
   ],
+
   education: [
     {
       id: 1,
@@ -43,6 +45,7 @@ const getSampleData = () => ({
       gpa: "3.8",
     },
   ],
+
   skills: {
     technical: [
       "JavaScript",
@@ -61,12 +64,13 @@ const getSampleData = () => ({
       "Agile Methodology",
     ],
   },
+
   projects: [
     {
       id: 1,
       name: "E-Commerce Platform",
       description:
-        "Built a full-stack e-commerce platform with real-time inventory management and payment processing. Achieved 99.9% uptime with 10K+ daily active users.",
+        "Built a full-stack e-commerce platform with real-time inventory management and payment processing.",
       technologies: "React, Node.js, MongoDB, Stripe API, AWS",
       link: "github.com/jessicaclaire/ecommerce",
     },
@@ -75,10 +79,11 @@ const getSampleData = () => ({
       name: "Task Management App",
       description:
         "Developed a collaborative task management application with real-time updates using WebSockets.",
-      technologies: "React, Firebase, Socket.io, Material-UI",
+      technologies: "React, Firebase, Socket.io",
       link: "github.com/jessicaclaire/taskapp",
     },
   ],
+
   certifications: [
     {
       id: 1,
@@ -97,120 +102,133 @@ const getSampleData = () => ({
   ],
 });
 
-// Helper to check if a string field has user data
-const hasContent = (value) => {
-  return value && typeof value === "string" && value.trim().length > 0;
-};
 
-// Helper to check if an array item has meaningful data
+
+/* ================= HELPERS ================= */
+
+const hasContent = (value) =>
+  value && typeof value === "string" && value.trim().length > 0;
+
 const hasArrayItemData = (item) => {
   if (!item || typeof item !== "object") return false;
 
-  const keys = Object.keys(item).filter((key) => key !== "id");
+  const keys = Object.keys(item).filter((k) => k !== "id");
+
   return keys.some((key) => {
     const value = item[key];
-    if (typeof value === "string") return value.trim().length > 0;
-    return false;
+    return typeof value === "string" && value.trim().length > 0;
   });
 };
 
-// Merge array data intelligently
+
+
+/* ================= FIXED ARRAY MERGER ================= */
+
 const mergeArrayData = (userData = [], sampleData = []) => {
-  // If user has no data, use all sample data
-  if (!userData || userData.length === 0) {
-    return sampleData;
+
+  const userHasRealData =
+    Array.isArray(userData) && userData.some(hasArrayItemData);
+
+  // If user filled anything → use only user data
+  if (userHasRealData) {
+    return userData;
   }
 
-  // If user has data, use their data and fill remaining with sample
-  const result = [...userData];
-
-  // Count how many user items have actual content
-  const filledUserItems = userData.filter(hasArrayItemData).length;
-
-  // If user has fewer items than sample, add sample items to fill
-  if (filledUserItems < sampleData.length) {
-    const remainingSamples = sampleData.slice(filledUserItems);
-    result.push(...remainingSamples);
-  }
-
-  return result;
+  // Otherwise show template sample data
+  return sampleData;
 };
 
-// Main merge function - intelligently combines user data with sample data
+
+
+/* ================= MAIN MERGE FUNCTION ================= */
+
 export const mergeWithSampleData = (userData) => {
   const sample = getSampleData();
 
   if (!userData) return sample;
 
   return {
-    // Personal info - use user data if provided, otherwise sample
+
     fullName: hasContent(userData.fullName)
       ? userData.fullName
       : sample.fullName,
-    email: hasContent(userData.email) ? userData.email : sample.email,
-    phone: hasContent(userData.phone) ? userData.phone : sample.phone,
+
+    email: hasContent(userData.email)
+      ? userData.email
+      : sample.email,
+
+    phone: hasContent(userData.phone)
+      ? userData.phone
+      : sample.phone,
+
     location: hasContent(userData.location)
       ? userData.location
       : sample.location,
+
     linkedin: hasContent(userData.linkedin)
       ? userData.linkedin
       : sample.linkedin,
-    github: hasContent(userData.github) ? userData.github : sample.github,
-    website: hasContent(userData.website) ? userData.website : sample.website,
 
-    // Summary
-    summary: hasContent(userData.summary) ? userData.summary : sample.summary,
+    github: hasContent(userData.github)
+      ? userData.github
+      : sample.github,
 
-    // Experience - merge arrays intelligently
+    website: hasContent(userData.website)
+      ? userData.website
+      : sample.website,
+
+    summary: hasContent(userData.summary)
+      ? userData.summary
+      : sample.summary,
+
     experience: mergeArrayData(userData.experience, sample.experience),
 
-    // Education - merge arrays intelligently
     education: mergeArrayData(userData.education, sample.education),
 
-    // Skills - handle object with arrays
+    projects: mergeArrayData(userData.projects, sample.projects),
+
+    certifications: mergeArrayData(
+      userData.certifications,
+      sample.certifications
+    ),
+
     skills: {
       technical:
         userData.skills?.technical?.length > 0
           ? userData.skills.technical
           : sample.skills.technical,
+
       soft:
         userData.skills?.soft?.length > 0
           ? userData.skills.soft
           : sample.skills.soft,
     },
-
-    // Projects - merge arrays intelligently
-    projects: mergeArrayData(userData.projects, sample.projects),
-
-    // Certifications - merge arrays intelligently
-    certifications: mergeArrayData(
-      userData.certifications,
-      sample.certifications,
-    ),
   };
 };
 
-// Check if user has filled ANY data
+
+
+/* ================= USER DATA CHECK ================= */
+
 export const hasAnyUserData = (formData) => {
+
   if (!formData) return false;
 
-  // Check simple string fields
   if (hasContent(formData.fullName)) return true;
   if (hasContent(formData.email)) return true;
   if (hasContent(formData.phone)) return true;
   if (hasContent(formData.summary)) return true;
 
-  // Check arrays for meaningful data
   if (formData.experience?.some(hasArrayItemData)) return true;
   if (formData.education?.some(hasArrayItemData)) return true;
   if (formData.projects?.some(hasArrayItemData)) return true;
   if (formData.certifications?.some(hasArrayItemData)) return true;
 
-  // Check skills
   if (formData.skills?.technical?.length > 0) return true;
   if (formData.skills?.soft?.length > 0) return true;
 
   return false;
 };
+
 
 export default mergeWithSampleData;

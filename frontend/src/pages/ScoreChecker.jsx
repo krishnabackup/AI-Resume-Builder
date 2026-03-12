@@ -107,7 +107,8 @@ const ScoreChecker = () => {
     "Senior Software Engineer\n\n- Spearheaded a team of 5 developers to build a scalable React application.\n- Improved page load speed by 40% using code splitting and lazy loading.\n- Integrated RESTful APIs and optimized database queries for better performance."
   );
 
-  const [openFaq, setOpenFaq] = useState(0);
+  // default to -1 so no FAQ item is opened on initial load
+  const [openFaq, setOpenFaq] = useState(-1);
 
   const [heroRef, heroVisible] = useInView(0.2);
   const [demoRef, demoVisible] = useInView(0.15);

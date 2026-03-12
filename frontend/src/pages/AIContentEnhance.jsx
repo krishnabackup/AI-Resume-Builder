@@ -158,7 +158,7 @@ const AIEnhancementPage = () => {
       </section>
 
       {/* --- 3. DYNAMIC FEATURE GRID ---  */}
-      <section ref={featureRef} className="relative px-8 overflow-hidden py-14 bg-gray-50/50">
+      <section ref={featureRef} className="relative px-8 overflow-hidden py-8 bg-gray-50/50">
         <div className="mx-auto max-w-7xl">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -175,7 +175,7 @@ const AIEnhancementPage = () => {
             variants={staggerContainer}
             initial="hidden"
             animate={isFeatureInView ? "show" : "hidden"}
-            className="grid grid-cols-1 gap-8 md:grid-cols-3"
+            className="grid grid-cols-2 gap-6 md:grid-cols-3"
           >
             {[
               { icon: Wand2, t: "Auto-Rewrite", d: "Instantly transform one-line duties into multi-dimensional achievements." },
@@ -189,15 +189,15 @@ const AIEnhancementPage = () => {
                 key={i}
                 variants={fadeUp}
                 whileHover={{ y: -10, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)" }}
-                className="p-10 rounded-[2.5rem] border border-gray-100 bg-white transition-all duration-300 group"
+                className="p-4 sm:p-6 md:p-10 rounded-2xl sm:rounded-[2.5rem] border border-gray-100 bg-white transition-all duration-300 group"
               >
-                <div className="flex items-center justify-center w-14 h-14 mb-8 bg-blue-50 rounded-2xl group-hover:bg-[#0077cc] transition-colors duration-300">
-                  <feature.icon size={28} className="text-[#0077cc] group-hover:text-white transition-colors" />
+                <div className="flex items-center justify-center w-10 h-10 sm:w-14 sm:h-14 mb-6 sm:mb-8 bg-blue-50 rounded-lg sm:rounded-2xl group-hover:bg-[#0077cc] transition-colors duration-300">
+                  <feature.icon size={20} className="text-[#0077cc] group-hover:text-white transition-colors" />
                 </div>
-                <h4 className="mb-3 text-xl font-bold text-[#1a2e52] group-hover:text-[#0077cc] transition-colors">
+                <h4 className="mb-2 sm:mb-3 text-sm sm:text-xl font-bold text-[#1a2e52] group-hover:text-[#0077cc] transition-colors">
                   {feature.t}
                 </h4>
-                <p className="text-sm font-medium leading-relaxed text-gray-400 transition-colors group-hover:text-gray-600">
+                <p className="text-xs sm:text-sm font-medium leading-relaxed text-gray-400 transition-colors group-hover:text-gray-600">
                   {feature.d}
                 </p>
               </motion.div>
@@ -230,11 +230,11 @@ const AIEnhancementPage = () => {
             whileHover={{ y: -6 }}
             whileTap={{ scale: 0.96 }}
             onClick={() => navigate("/register")}
-            className="group relative inline-flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-[#e65100] to-[#f4511e] text-white rounded-xl font-bold text-lg transition-all duration-300 shadow-[0_10px_25px_rgba(230,81,0,0.3)] hover:shadow-[0_15px_35px_rgba(230,81,0,0.45)]"
+            className="group relative inline-flex items-center gap-2 sm:gap-3 px-6 py-3 sm:px-10 sm:py-5 bg-gradient-to-r from-[#e65100] to-[#f4511e] text-white rounded-lg sm:rounded-xl font-bold text-sm sm:text-lg transition-all duration-300 shadow-[0_8px_18px_rgba(230,81,0,0.22)] hover:shadow-[0_12px_28px_rgba(230,81,0,0.3)]"
           >
-            <Sparkles size={20} className="fill-white" />
+            <Sparkles size={16} className="fill-white" />
             <span className="relative z-10">Start Enhancing Now</span>
-            <ArrowRight size={22} className="relative z-10 transition-transform duration-300 group-hover:translate-x-2" />
+            <ArrowRight size={18} className="relative z-10 transition-transform duration-300 group-hover:translate-x-2" />
           </motion.button>
         </motion.div>
       </section>

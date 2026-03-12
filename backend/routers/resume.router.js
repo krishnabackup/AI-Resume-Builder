@@ -1,5 +1,6 @@
 import express from "express";
 import puppeteer from "puppeteer";
+
 import {
   uploadAndAnalyzeResume,
   getUserScans,
@@ -12,9 +13,12 @@ import {
   enhanceWorkExperience,
   enhanceProjectDescription,
   generateAICoverLetter,
-  generateAIResume
+  generateAIResume,
+  getUserResume   // ✅ ADDED
 } from "../controllers/Resume.controller.js";
+
 import isAuth from "../middlewares/isAuth.js";
+
 import {
   uploadSingleResume,
   handleUploadError,
@@ -22,7 +26,15 @@ import {
 
 const resumeRouter = express.Router();
 
-// Upload and analyze resume
+/* =====================================================
+   GET LATEST SAVED RESUME FOR CV BUILDER
+===================================================== */
+resumeRouter.get("/", isAuth, getUserResume); // ✅ ADDED
+
+
+/* =====================================================
+   UPLOAD AND ANALYZE RESUME (ATS SCAN)
+===================================================== */
 resumeRouter.post(
   "/upload",
   isAuth,
@@ -31,45 +43,99 @@ resumeRouter.post(
   uploadAndAnalyzeResume
 );
 
-// Get all user scans
+
+/* =====================================================
+   GET ALL USER SCANS
+===================================================== */
 resumeRouter.get("/scans", isAuth, getUserScans);
 
-// Get scan statistics
+
+/* =====================================================
+   GET SCAN STATISTICS
+===================================================== */
 resumeRouter.get("/statistics", isAuth, getScanStatistics);
 
-// Get specific scan by ID
+
+/* =====================================================
+   GET SPECIFIC SCAN BY ID
+===================================================== */
 resumeRouter.get("/scans/:id", isAuth, getScanById);
 
-// Delete scan
+
+/* =====================================================
+   DELETE SCAN
+===================================================== */
 resumeRouter.delete("/scans/:id", isAuth, deleteScan);
 
-// Download resume file
+
+/* =====================================================
+   DOWNLOAD RESUME FILE
+===================================================== */
 resumeRouter.get("/download/:filename", isAuth, downloadResume);
 
-// Get latest scan after refreshing the page
+
+/* =====================================================
+   GET LATEST ATS SCAN
+===================================================== */
 resumeRouter.get("/latest", isAuth, getLatestScan);
 
-// Generate AI Resume Summary
+
+/* =====================================================
+   GENERATE AI RESUME SUMMARY
+===================================================== */
 resumeRouter.post("/generate-summary", generateAIResume);
 
-// Generate AI Cover Letter
+
+/* =====================================================
+   GENERATE AI COVER LETTER
+===================================================== */
 resumeRouter.post("/cover-letter/generate", generateCoverLetter);
 
-//To enhance the work experience with the help of ai
-resumeRouter.post("/enhance-work-experience", isAuth, enhanceWorkExperience);
 
-//To enhance the project description with the help of ai
-resumeRouter.post("/enhance-project-description", isAuth, enhanceProjectDescription);
+/* =====================================================
+   ENHANCE WORK EXPERIENCE (AI)
+===================================================== */
+resumeRouter.post(
+  "/enhance-work-experience",
+  isAuth,
+  enhanceWorkExperience
+);
 
-//TO generate cover letter professional summary
-resumeRouter.post("/cover-letter/generate-ai", isAuth, generateAICoverLetter);
 
-// Generate PDF from HTML using Puppeteer
+/* =====================================================
+   ENHANCE PROJECT DESCRIPTION (AI)
+===================================================== */
+resumeRouter.post(
+  "/enhance-project-description",
+  isAuth,
+  enhanceProjectDescription
+);
+
+
+/* =====================================================
+   GENERATE AI COVER LETTER SECTION
+===================================================== */
+resumeRouter.post(
+  "/cover-letter/generate-ai",
+  isAuth,
+  generateAICoverLetter
+);
+
+
+/* =====================================================
+   GENERATE PDF FROM HTML USING PUPPETEER
+===================================================== */
 resumeRouter.post("/generate-pdf", async (req, res) => {
   let browser;
+
   try {
     const { html } = req.body;
-    if (!html) return res.status(400).json({ error: "HTML required" });
+
+    if (!html) {
+      return res.status(400).json({
+        error: "HTML required"
+      });
+    }
 
     browser = await puppeteer.launch({
       headless: true,
@@ -77,22 +143,36 @@ resumeRouter.post("/generate-pdf", async (req, res) => {
     });
 
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "networkidle0" });
+
+    await page.setContent(html, {
+      waitUntil: "networkidle0",
+    });
 
     const pdfBuffer = await page.pdf({
       format: "A4",
       printBackground: true,
-      margin: { top: "10mm", right: "10mm", bottom: "10mm", left: "10mm" },
+      margin: {
+        top: "10mm",
+        right: "10mm",
+        bottom: "10mm",
+        left: "10mm",
+      },
     });
 
     res.set({
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename="resume.pdf"`,
     });
+
     res.send(Buffer.from(pdfBuffer));
+
   } catch (error) {
     console.error("Resume PDF Error:", error);
-    res.status(500).json({ error: "PDF generation failed" });
+
+    res.status(500).json({
+      error: "PDF generation failed"
+    });
+
   } finally {
     if (browser) await browser.close();
   }

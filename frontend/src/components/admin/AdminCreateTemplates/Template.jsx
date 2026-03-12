@@ -175,8 +175,7 @@ export default function AdminTemplates() {
                 <option value="inactive">Inactive Only</option>
               </select>
 
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-
+              
             </div>
 
             <button

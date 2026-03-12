@@ -13,17 +13,16 @@ const atsScansSchema = new mongoose.Schema(
       required: true,
     },
     
-    resumeprofileId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "ResumeProfile",
-      required: true,
-    },
+   resumeprofileId: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "ResumeProfile",
+  required: false,
+  default: null,
+},
    
-    templateId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Template",
-      required: true,
-    },
+templateId: {
+  type: String
+},
     jobTitle: {
       type: String,
       required: true,

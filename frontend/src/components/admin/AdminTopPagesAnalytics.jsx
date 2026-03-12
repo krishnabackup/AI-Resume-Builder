@@ -1,26 +1,30 @@
-import { useEffect, useMemo, useState } from "react";
-import { FileText, BarChart3 } from "lucide-react";
+import { useEffect, useMemo, useState, useCallback } from "react";
+import { FileText, BarChart3, RefreshCw } from "lucide-react";
 import { fetchTopPages } from "../../services/analyticsService";
 
 export default function AdminTopPagesAnalytics() {
   const [topPages, setTopPages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadTopPages = useCallback(async (isRefresh = false) => {
+    if (isRefresh) setRefreshing(true);
+    else setLoading(true);
+    try {
+      const data = await fetchTopPages();
+      setTopPages(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Failed to fetch top viewed pages:", error);
+      setTopPages([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const loadTopPages = async () => {
-      try {
-        const data = await fetchTopPages();
-        setTopPages(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error("Failed to fetch top viewed pages:", error);
-        setTopPages([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadTopPages();
-  }, []);
+  }, [loadTopPages]);
 
   const totalViews = useMemo(() => {
     return topPages.reduce((sum, item) => sum + (item.views || 0), 0);
@@ -34,8 +38,21 @@ export default function AdminTopPagesAnalytics() {
     <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-slate-900">Most Viewed Pages</h2>
-        <div className="bg-indigo-50 p-2 rounded-full">
-          <BarChart3 className="text-indigo-600" size={18} />
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => loadTopPages(true)}
+            disabled={refreshing}
+            className="p-2 rounded-full hover:bg-slate-100 transition-colors disabled:opacity-50"
+            title="Refresh"
+          >
+            <RefreshCw
+              className={`text-slate-500 ${refreshing ? "animate-spin" : ""}`}
+              size={15}
+            />
+          </button>
+          <div className="bg-indigo-50 p-2 rounded-full">
+            <BarChart3 className="text-indigo-600" size={18} />
+          </div>
         </div>
       </div>
 
