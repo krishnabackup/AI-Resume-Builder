@@ -144,7 +144,7 @@ const Notification = () => {
           </div>
 
           {/* Search & Filter */}
-          <div className="flex gap-4 items-center flex-wrap">
+          <div className="flex flex-col gap-4 items-center sm:flex-row sm:items-center">
             <div className="flex-1 min-w-xs relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
@@ -155,8 +155,7 @@ const Notification = () => {
                 className="w-full pl-12 pr-4 py-3 bg-gray-100/50 border border-gray-200/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder:text-gray-500"
               />
             </div>
-
-            <div className="flex gap-2">
+            <div className="flex w-full justify-center gap-2 sm:w-auto sm:justify-start">
               {["all", "unread", "important"].map((tab) => (
                 <motion.button
                   key={tab}
