@@ -145,9 +145,12 @@ const AIResumeChecker = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    if (!isLoggedIn) navigate("/login");
-                    else fileInputRef.current?.click();
-                  }}
+  if (!isLoggedIn) {
+    navigate("/login", { state: { from: "/user/ats-checker" } });
+  } else {
+    navigate("/user/ats-checker");
+  }
+}}
                   className="group relative flex items-center justify-center gap-3 px-10 py-5 text-lg font-bold text-white bg-gradient-to-br from-[#0077cc] to-[#0056b3] rounded-[1.75rem] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_20px_40px_rgba(0,119,204,0.3)] overflow-hidden"
                 >
                   <div className="absolute inset-0 transition-transform duration-500 translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:-translate-x-full" />
