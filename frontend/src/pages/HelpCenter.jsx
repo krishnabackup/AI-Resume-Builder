@@ -1087,30 +1087,14 @@ function HelpCenter() {
             {/* Navigation */}
             <NavBar />
             {/* Hero Section */}
-            <div className="bg-gradient-to-br from-blue-600 via-indigo-700 to-blue-800 text-white relative overflow-hidden" onMouseMove={handleMouseMove}>
-                {/* Minimal 3D Background */}
-                <div className="absolute inset-0">
-                    <div className="geometric-bg">
-                        {['fas fa-file-alt', 'fas fa-user-tie', 'fas fa-briefcase', 'fas fa-graduation-cap', 'fas fa-star', 'fas fa-award'].map((icon, i) => (
-                            <div
-                                key={i}
-                                className="geometric-icon"
-                                style={{
-                                    '--mouse-x': mousePosition.x,
-                                    '--mouse-y': mousePosition.y,
-                                    '--index': i
-                                }}
-                            >
-                                <i className={`${icon} text-white/20`}></i>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+            <div className=" text-black relative overflow-hidden" onMouseMove={handleMouseMove}>
+               
+               
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-12 text-center relative z-10">
                     <h1 className="text-3xl md:text-4xl font-bold mb-4">
                         What can we help you?
                     </h1>
-                    <p className="text-lg text-blue-100 mb-8 max-w-2xl mx-auto">
+                    <p className="text-lg text-black-100 mb-8 max-w-2xl mx-auto">
                         Get help for AI Resume Builder and create the perfect resume for your dream job
                     </p>
 
@@ -1118,7 +1102,7 @@ function HelpCenter() {
                     <div className="max-w-2xl mx-auto">
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
-                                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                 </svg>
                             </div>
@@ -1127,7 +1111,7 @@ function HelpCenter() {
                                 placeholder="Search for help Guides..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-12 pr-4 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-blue-200 focus:outline-none focus:bg-white/20 focus:border-white/40 text-lg transition-all"
+                                className="w-full pl-12 pr-4 py-4 bg-white/10 backdrop-blur-sm border border-black/400 rounded-xl text-black placeholder-gray-600 focus:outline-none focus:bg-black/20 focus:border-white/40 text-lg transition-all"
                             />
                         </div>
                     </div>

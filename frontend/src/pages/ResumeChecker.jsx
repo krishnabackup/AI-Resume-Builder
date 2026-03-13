@@ -130,7 +130,7 @@ const AIResumeChecker = () => {
 
               <h1 className="mb-6 text-5xl font-black leading-[1.3] lg:text-7xl text-[#1a2e52]">
                 Is your resume
-                <span className="block text-transparent bg-gradient-to-r from-[#0077cc] via-[#0056b3] to-[#e65100] bg-clip-text mt-8">
+                <span className="block text-transparent bg-gradient-to-r from-[#0077cc] via-[#0077cc] to-[#0077cc] bg-clip-text mt-8">
                   ATS-Proof?
                 </span>
               </h1>

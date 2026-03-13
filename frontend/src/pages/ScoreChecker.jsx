@@ -191,7 +191,7 @@ const ScoreChecker = () => {
 
               <h1 className="mb-6 text-6xl font-black leading-tight tracking-tight sm:text-7xl md:text-8xl xl:text-[96px] text-[#1a2e52]">
                 Write Better. <br />
-                <span className="text-transparent bg-gradient-to-r from-[#e65100] to-[#ff8f00] bg-clip-text">
+                <span className="text-[#0077cc]">
                   Rank Higher.
                 </span>
               </h1>

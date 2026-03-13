@@ -203,7 +203,7 @@ const ATSCheckerFeature = () => {
 
               <button
                 onClick={handleCTA}
-                className="group relative inline-flex items-center gap-3 px-8 py-4 bg-[#1a2e52] text-white rounded-xl font-bold text-lg transition-all duration-300 shadow-xl hover:bg-[#0077cc] hover:-translate-y-1"
+                className="group relative inline-flex items-center gap-3 px-8 py-4  bg-gradient-to-br from-[#f59e0b] via-[#e65100] to-[#f4511e] text-white rounded-xl font-bold text-lg transition-all duration-300 shadow-xl hover:bg-[#0077cc] hover:-translate-y-1"
               >
                 <span>Run Free Scan</span>
                 <ArrowRight size={20} className="transition-transform group-hover:translate-x-1" />
