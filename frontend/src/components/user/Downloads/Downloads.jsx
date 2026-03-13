@@ -563,8 +563,8 @@ const Downloads = () => {
   return (
     <>
       <UserNavBar />
-      <div className="min-h-screen" style={{ backgroundColor: "#f8f9fb" }}>
-        <div className="w-full px-4 sm:px-6 lg:px-10 py-8">
+          <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#f8f9fb" }}>  
+          <div className="flex-1 w-full px-4 sm:px-6 lg:px-10 py-8">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
             <div>
@@ -789,10 +789,11 @@ const Downloads = () => {
             </div>
           )}
 
-          <footer className="mt-auto text-center py-4 bg-white border-t text-sm text-gray-600">
-            © {new Date().getFullYear()} ResumeAI Inc. All rights reserved.
-          </footer>
+          
         </div>
+        <footer className="text-center py-4 bg-white border-t text-sm text-gray-600">
+    © {new Date().getFullYear()} ResumeAI Inc. All rights reserved.
+  </footer>
       </div>
 
       {/* ========== PREVIEW MODAL (FLOATING + MOBILE RESPONSIVE) ========== */}
