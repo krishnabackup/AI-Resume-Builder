@@ -5,7 +5,7 @@ export const PAGE_WIDTH = 794;
 export const PAGE_HEIGHT = 1123;
 export const PAGE_PADDING = 52;
 export const FOOTER_HEIGHT = 32;
-export const USABLE_HEIGHT = PAGE_HEIGHT - PAGE_PADDING * 2 - FOOTER_HEIGHT;
+export const USABLE_HEIGHT = PAGE_HEIGHT - PAGE_PADDING * 2 - FOOTER_HEIGHT - 10;
 export const MIN_REMAINING = 150;
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
@@ -190,7 +190,7 @@ const PaginatedPreview = ({
               left: PAGE_PADDING,
               right: PAGE_PADDING,
               height: USABLE_HEIGHT,
-              overflow: "visible",
+              overflow: "hidden",
             }}
           >
             <div
