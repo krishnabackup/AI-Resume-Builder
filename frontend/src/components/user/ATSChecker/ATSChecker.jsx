@@ -426,15 +426,27 @@ const ATSChecker = ({ onSidebarToggle }) => {
   useEffect(() => {
     const run = async () => {
       if (pdfInstance && analysisResult?.misspelledWords?.length) {
+        // PDF path — unchanged
         const located = await buildErrorLocationsFromPdf(
           pdfInstance,
+          analysisResult.misspelledWords,
+        );
+        setSpellingErrors(located);
+      } else if (
+        previewType === "doc" &&
+        resumeText &&
+        analysisResult?.misspelledWords?.length
+      ) {
+        // DOCX path — locate errors from plain text
+        const located = buildErrorLocationsFromText(
+          resumeText,
           analysisResult.misspelledWords,
         );
         setSpellingErrors(located);
       }
     };
     run();
-  }, [pdfInstance, analysisResult]);
+  }, [pdfInstance, analysisResult, resumeText, previewType]);
 
   /* ── Highlight active error ── */
   const applyHighlights = () => {
@@ -609,6 +621,29 @@ const handleFileChange = async (e) => {
         });
       });
     }
+    return errors;
+  };
+
+  /* ── Text-based error locator for DOCX ── */
+  const buildErrorLocationsFromText = (text, wrongWords) => {
+    if (!text || !wrongWords?.length) return [];
+    const errors = [];
+    const wordCount = {};
+    const lines = text.split(/\n/);
+    lines.forEach((line, li) => {
+      line.split(/\s+/).forEach((token) => {
+        const clean = token.toLowerCase().replace(/[^a-z]/g, "");
+        if (wrongWords.includes(clean)) {
+          wordCount[clean] = (wordCount[clean] || 0) + 1;
+          errors.push({
+            word: clean,
+            page: 1,
+            line: li + 1,
+            index: wordCount[clean] - 1,
+          });
+        }
+      });
+    });
     return errors;
   };
 
