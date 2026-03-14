@@ -193,9 +193,8 @@ Warm regards,
               <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => navigate("/login")}
-                  className="px-6 py-3 rounded-xl text-white bg-gradient-to-br from-[#f59e0b] via-[#e65100] to-[#f4511e] hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
-                >
-                  Create Your Cover letter
+                  className="px-6 py-3 rounded-xl text-white bg-gradient-to-r from-blue-500 to-blue-700 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
+                  >Create Your Cover letter
                 </button>
 
                 <button
