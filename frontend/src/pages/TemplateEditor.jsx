@@ -11,6 +11,8 @@ function TemplateEditor({ template }) {
     summary: '',
     experience: [{ company: '', position: '', duration: '', description: '' }],
     education: [{ school: '', degree: '', field: '', year: '' }],
+    projects: [{ title: '', description: '', link: '', technologies: '' }],
+    certifications: [{ name: '', issuer: '', date: '' }],
     skills: ''
   })
 
@@ -328,37 +330,91 @@ function TemplateEditor({ template }) {
             )}
 
             {/* PREVIEW EXPERIENCE */}
-            {formData.experience.some(e => e.company) && (
-              <div className="mb-6">
-                <h2 className="text-lg font-bold mb-3 text-[#1a2e52]">Experience</h2>
-                {formData.experience.map((exp, idx) => exp.company && (
-                  <div key={idx} className="mb-4">
-                    <div className="flex justify-between">
-                      <h3 className="font-semibold text-gray-800">{exp.position}</h3>
-                      <span className="text-sm text-gray-500">{exp.duration}</span>
-                    </div>
-                    <p className="text-sm text-[#0077cc] font-medium">{exp.company}</p>
-                    {exp.description && <p className="mt-1 text-sm text-gray-700">{exp.description}</p>}
-                  </div>
-                ))}
-              </div>
-            )}
+           {formData.experience.some(e => 
+  e.company?.trim() || e.position?.trim() || e.description?.trim()
+) && (
+  <div className="mb-6">
+    <h2 className="text-lg font-bold mb-3 text-[#1a2e52]">Experience</h2>
+    {formData.experience
+      .filter(exp => exp.company?.trim() || exp.position?.trim() || exp.description?.trim())
+      .map((exp, idx) => (
+        <div key={idx} className="mb-4">
+          <div className="flex justify-between">
+            <h3 className="font-semibold text-gray-800">{exp.position}</h3>
+            <span className="text-sm text-gray-500">{exp.duration}</span>
+          </div>
+          <p className="text-sm text-[#0077cc] font-medium">{exp.company}</p>
+          {exp.description && <p className="mt-1 text-sm text-gray-700">{exp.description}</p>}
+        </div>
+      ))}
+  </div>
+)}
 
             {/* PREVIEW EDUCATION */}
-            {formData.education.some(e => e.school) && (
-              <div className="mb-6">
-                <h2 className="text-lg font-bold mb-3 text-[#1a2e52]">Education</h2>
-                {formData.education.map((edu, idx) => edu.school && (
-                  <div key={idx} className="mb-4">
-                    <div className="flex justify-between">
-                      <h3 className="font-semibold text-gray-800">{edu.degree} in {edu.field}</h3>
-                      <span className="text-sm text-gray-500">{edu.year}</span>
-                    </div>
-                    <p className="text-sm text-gray-600">{edu.school}</p>
-                  </div>
-                ))}
-              </div>
+           {formData.education.some(e => 
+  e.school?.trim() || e.degree?.trim() || e.field?.trim() || e.year?.trim()
+) && (
+  <div className="mb-6">
+    <h2 className="text-lg font-bold mb-3 text-[#1a2e52]">Education</h2>
+    {formData.education
+      .filter(edu => edu.school?.trim() || edu.degree?.trim() || edu.field?.trim() || edu.year?.trim())
+      .map((edu, idx) => (
+        <div key={idx} className="mb-4">
+          <div className="flex justify-between">
+            <h3 className="font-semibold text-gray-800">{edu.degree} {edu.field && `in ${edu.field}`}</h3>
+            <span className="text-sm text-gray-500">{edu.year}</span>
+          </div>
+          <p className="text-sm text-gray-600">{edu.school}</p>
+        </div>
+      ))}
+  </div>
+)}
+
+{/* PREVIEW PROJECTS - Hide if no meaningful data */}
+{formData.projects?.some(p => 
+  p.title?.trim() || p.description?.trim() || p.link?.trim() || p.technologies?.trim()
+) && (
+  <div className="mb-6">
+    <h2 className="text-lg font-bold mb-3 text-[#1a2e52]">Projects</h2>
+    {formData.projects
+      .filter(proj => proj.title?.trim() || proj.description?.trim() || proj.link?.trim())
+      .map((proj, idx) => (
+        <div key={idx} className="mb-4">
+          <div className="flex justify-between items-start">
+            <h3 className="font-semibold text-gray-800">{proj.title}</h3>
+            {proj.link && (
+              <a href={proj.link} target="_blank" rel="noopener" className="text-xs text-[#0077cc] hover:underline">
+                View →
+              </a>
             )}
+          </div>
+          {proj.technologies && (
+            <p className="text-xs text-gray-500 mt-1">{proj.technologies}</p>
+          )}
+          {proj.description && (
+            <p className="mt-2 text-sm text-gray-700">{proj.description}</p>
+          )}
+        </div>
+      ))}
+  </div>
+)}
+{/* PREVIEW CERTIFICATIONS - Hide if no meaningful data */}
+{formData.certifications?.some(c => 
+  c.name?.trim() || c.issuer?.trim() || c.date?.trim()
+) && (
+  <div className="mb-6">
+    <h2 className="text-lg font-bold mb-3 text-[#1a2e52]">Certifications</h2>
+    <div className="flex flex-wrap gap-2">
+      {formData.certifications
+        .filter(cert => cert.name?.trim() || cert.issuer?.trim())
+        .map((cert, idx) => (
+          <span key={idx} className="bg-gray-100 text-gray-800 text-xs px-3 py-1 rounded border border-gray-200">
+            {cert.name} {cert.issuer && `• ${cert.issuer}`} {cert.date && `• ${cert.date}`}
+          </span>
+        ))}
+    </div>
+  </div>
+)}
 
             {/* PREVIEW SKILLS */}
             {formData.skills && (
