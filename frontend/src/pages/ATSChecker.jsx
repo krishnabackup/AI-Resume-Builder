@@ -67,16 +67,16 @@ const faqData = [
 function ATSDonutCard({ score = 78 }) {
   return (
     <div className="relative w-full rounded-[2.2rem] bg-white border border-gray-100 shadow-[0_25px_60px_rgba(26,46,82,0.14)] overflow-hidden">
-      <div className="px-7 pt-7 pb-5">
-        <div className="flex items-start justify-between">
+      <div className="px-4 sm:px-6 md:px-7 pt-5 sm:pt-6 md:pt-7 pb-4 sm:pb-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-[11px] font-black tracking-widest uppercase text-gray-400">
               ATS Score Overview
             </p>
-            <h3 className="mt-2 text-3xl font-black text-[#1a2e52]">
+            <h3 className="mt-2 text-2xl sm:text-3xl font-black text-[#1a2e52]">
               {score}/100
             </h3>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-xs sm:text-sm text-gray-500">
               Breakdown of ATS scanning factors
             </p>
           </div>
@@ -86,14 +86,14 @@ function ATSDonutCard({ score = 78 }) {
           </span>
         </div>
 
-        <div className="relative mt-6 h-[230px]">
+        <div className="relative mt-5 sm:mt-6 h-[190px] sm:h-[230px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={atsBreakdown}
                 dataKey="value"
-                innerRadius={74}
-                outerRadius={98}
+                innerRadius={58}
+                outerRadius={80}
                 paddingAngle={3}
                 stroke="transparent"
               >
@@ -106,7 +106,7 @@ function ATSDonutCard({ score = 78 }) {
 
           {/* center label */}
           <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
-            <div className="text-4xl font-black text-[#1a2e52] tabular-nums">
+            <div className="text-3xl sm:text-4xl font-black text-[#1a2e52] tabular-nums">
               {score}%
             </div>
             <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
@@ -118,7 +118,7 @@ function ATSDonutCard({ score = 78 }) {
         {/* legend */}
         <div className="mt-1 space-y-2">
           {atsBreakdown.map((item, i) => (
-            <div key={item.name} className="flex items-center justify-between text-sm">
+            <div key={item.name} className="flex items-center justify-between text-xs sm:text-sm">
               <div className="flex items-center gap-2">
                 <span
                   className="inline-block w-3 h-3 rounded-full"
@@ -133,7 +133,7 @@ function ATSDonutCard({ score = 78 }) {
       </div>
 
       {/* footer chips */}
-      <div className="grid grid-cols-3 gap-2 px-7 pb-7">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 px-4 sm:px-6 md:px-7 pb-5 sm:pb-7">
         <div className="rounded-xl bg-slate-50 border border-gray-100 p-3 text-center">
           <p className="text-[10px] font-black tracking-widest uppercase text-gray-400">
             Keywords
@@ -173,44 +173,44 @@ const ATSCheckerFeature = () => {
   const [openFaq, setOpenFaq] = useState(0);
 
   return (
-    <div className="min-h-screen bg-[#FDFDFD] font-['Outfit'] select-none">
+    <div className="min-h-screen bg-[#FDFDFD] font-['Outfit'] select-none overflow-x-hidden">
       <NavBar />
 
       {/* 1) HERO SECTION */}
-      <section ref={heroRef} className="relative px-6 pt-16 pb-20 overflow-hidden bg-white">
+      <section ref={heroRef} className="relative px-4 sm:px-6 lg:px-8 pt-12 sm:pt-14 lg:pt-16 pb-14 sm:pb-16 lg:pb-20 overflow-hidden bg-white">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-50/50 rounded-full blur-3xl -z-10 opacity-60" />
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-orange-50/50 rounded-full blur-3xl -z-10 opacity-60" />
 
         <div className="mx-auto max-w-7xl">
-          <div className="grid items-center gap-16 lg:grid-cols-2">
-            <div className={`transition-all duration-700 ${heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
-              <div className="inline-flex items-center gap-2 px-4 py-2 mb-8 border rounded-full bg-slate-50 border-slate-100">
+          <div className="grid items-center gap-10 md:gap-12 lg:gap-16 lg:grid-cols-2">
+            <div className={`min-w-0 transition-all duration-700 ${heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
+              <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 mb-6 sm:mb-8 border rounded-full bg-slate-50 border-slate-100">
                 <Shield size={14} className="text-[#0077cc]" />
                 <span className="text-xs font-bold tracking-widest text-slate-500 uppercase">
                   Recruiter Screening
                 </span>
               </div>
 
-              <h1 className="mb-6 text-5xl font-black leading-[1.1] text-[#1a2e52] md:text-6xl tracking-tight">
+              <h1 className="mb-5 sm:mb-6 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-[1.1] text-[#1a2e52] tracking-tight break-words">
                 Get Past the Bots. <br />
                 <span className="text-transparent bg-gradient-to-r from-[#0077cc] to-[#00a3ff] bg-clip-text">
                   Land the Interview.
                 </span>
               </h1>
 
-              <p className="mb-10 text-xl leading-relaxed text-gray-500 max-w-md">
+              <p className="mb-8 sm:mb-10 text-base sm:text-lg md:text-xl leading-relaxed text-gray-500 max-w-xl break-words">
                 Our free ATS Checker simulates corporate screening algorithms to ensure your resume is robust, parseable, and keyword-optimized.
               </p>
 
               <button
                 onClick={handleCTA}
-                className="group relative inline-flex items-center gap-3 px-8 py-4 bg-[#1a2e52] text-white rounded-xl font-bold text-lg transition-all duration-300 shadow-xl hover:bg-[#0077cc] hover:-translate-y-1"
+                className="group relative inline-flex w-full sm:w-auto max-w-full justify-center items-center gap-3 px-6 sm:px-8 py-3.5 sm:py-4 bg-[#1a2e52] text-white rounded-xl font-bold text-base sm:text-lg transition-all duration-300 shadow-xl hover:bg-[#0077cc] hover:-translate-y-1"
               >
                 <span>Run Free Scan</span>
                 <ArrowRight size={20} className="transition-transform group-hover:translate-x-1" />
               </button>
 
-              <div className="flex items-center gap-4 mt-8 text-sm font-medium text-gray-400">
+              <div className="flex flex-wrap items-center gap-3 sm:gap-4 mt-6 sm:mt-8 text-sm font-medium text-gray-400">
                 <div className="flex -space-x-2">
                   {[1, 2, 3].map(i => (
                     <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-gray-200" />
@@ -220,14 +220,18 @@ const ATSCheckerFeature = () => {
               </div>
             </div>
 
-            <div className={`relative transition-all duration-700 delay-100 ${heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+            <div className={`relative min-w-0 transition-all duration-700 delay-100 ${heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
               <div className="relative max-w-md mx-auto lg:mr-0">
-                <img
-                  src={Lady}
-                  alt="Character pointing to ATS score"
-                  className="hidden md:block absolute left-[-13rem] bottom-0 w-100 xl:w-48 2xl:w-56 object-contain"
-                />
-                <ATSDonutCard score={82} />
+                <div className="relative pl-14 sm:pl-16 md:pl-20 lg:pl-24">
+                  <div className="absolute left-0 bottom-0 z-20 pointer-events-none">
+                    <img
+                      src={Lady}
+                      alt="Character pointing to ATS score"
+                      className="w-24 sm:w-28 md:w-32 lg:w-36 xl:w-40 2xl:w-48 object-contain"
+                    />
+                  </div>
+                  <ATSDonutCard score={82} />
+                </div>
               </div>
             </div>
           </div>
@@ -235,8 +239,8 @@ const ATSCheckerFeature = () => {
       </section>
 
       {/* 2) PROCESS ROW */}
-      <section ref={procRef} className="py-10 bg-white border-y border-gray-50">
-        <div className={`max-w-4xl mx-auto px-6 transition-all duration-700 ${procVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
+      <section ref={procRef} className="py-10 sm:py-12 bg-white border-y border-gray-50">
+        <div className={`max-w-4xl mx-auto px-4 sm:px-6 transition-all duration-700 ${procVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
           <div className="flex flex-col md:flex-row items-center justify-between gap-8 relative">
             <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gray-100 -z-10 hidden md:block" />
             {[
@@ -257,21 +261,21 @@ const ATSCheckerFeature = () => {
       </section>
 
       {/* 3) SPLIT SECTION: UPLOAD & CHECKLIST */}
-      <section ref={uploadRef} className="px-6 py-24 bg-[#FAFAFA]">
+      <section ref={uploadRef} className="px-4 sm:px-6 lg:px-8 py-14 sm:py-16 lg:py-24 bg-[#FAFAFA]">
         <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-12 gap-12 items-start">
+          <div className="grid lg:grid-cols-12 gap-8 sm:gap-10 lg:gap-12 items-start">
             
             {/* LEFT: Upload Box */}
             <div className={`lg:col-span-5 transition-all duration-700 ${uploadVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-8"}`}>
               <div
-                className="bg-white border-2 border-dashed border-gray-200 rounded-[2rem] p-10 text-center cursor-pointer hover:border-[#0077cc] hover:bg-blue-50/30 transition-all group"
+                className="bg-white border-2 border-dashed border-gray-200 rounded-[2rem] p-6 sm:p-8 md:p-10 text-center cursor-pointer hover:border-[#0077cc] hover:bg-blue-50/30 transition-all group"
                 onClick={handleCTA}
               >
                 <div className="w-20 h-20 rounded-full bg-blue-50 text-[#0077cc] flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                   <UploadCloud size={32} />
                 </div>
-                <h3 className="text-2xl font-black text-[#1a2e52] mb-3">Check your resume</h3>
-                <p className="text-gray-500 mb-8">
+                <h3 className="text-xl sm:text-2xl font-black text-[#1a2e52] mb-3">Check your resume</h3>
+                <p className="text-sm sm:text-base text-gray-500 mb-6 sm:mb-8">
                   Drag and drop your file here, or click to browse. <br />
                   Supports PDF and Word.
                 </p>
@@ -284,7 +288,7 @@ const ATSCheckerFeature = () => {
 
             {/* RIGHT: Checklist */}
             <div className={`lg:col-span-7 transition-all duration-700 delay-100 ${uploadVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8"}`}>
-              <h2 className="text-3xl font-black text-[#1a2e52] mb-8">
+              <h2 className="text-2xl sm:text-3xl font-black text-[#1a2e52] mb-6 sm:mb-8">
                 Comprehensive <span className="text-[#0077cc]">Checklist</span>
               </h2>
               <div className="grid md:grid-cols-2 gap-6">
@@ -313,11 +317,11 @@ const ATSCheckerFeature = () => {
       </section>
 
       {/* 4) TOP ATS FIXES */}
-      <section ref={fixesRef} className="px-6 py-20 bg-white">
+      <section ref={fixesRef} className="px-4 sm:px-6 lg:px-8 py-14 sm:py-16 lg:py-20 bg-white">
         <div className={`max-w-6xl mx-auto transition-all duration-700 ${fixesVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-          <div className="text-center mb-16">
+          <div className="text-center mb-10 sm:mb-12 lg:mb-16">
             <h2 className="text-3xl md:text-4xl font-black text-[#1a2e52]">Top ATS Fixes</h2>
-            <p className="mt-4 text-gray-500">Most common reasons resumes get rejected.</p>
+            <p className="mt-4 text-sm sm:text-base text-gray-500">Most common reasons resumes get rejected.</p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -327,11 +331,11 @@ const ATSCheckerFeature = () => {
               { icon: Target, title: "Generic Titles", desc: "Use standard job titles (e.g. 'Sales Manager' vs 'Revenue Ninja')." },
               { icon: Activity, title: "Dateless Experience", desc: "ATS needs standardized dates to calculate years of experience." },
             ].map((card, i) => (
-              <div key={i} className="p-8 bg-slate-50 rounded-[2rem] hover:bg-[#f0f7ff] transition-colors group">
+              <div key={i} className="p-6 sm:p-8 bg-slate-50 rounded-[2rem] hover:bg-[#f0f7ff] transition-colors group">
                 <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-[#1a2e52] shadow-sm mb-6 group-hover:text-[#0077cc] group-hover:scale-110 transition-all">
                   <card.icon size={28} />
                 </div>
-                <h3 className="text-xl font-bold text-[#1a2e52] mb-3">{card.title}</h3>
+                <h3 className="text-lg sm:text-xl font-bold text-[#1a2e52] mb-3">{card.title}</h3>
                 <p className="text-sm text-gray-500 leading-relaxed">{card.desc}</p>
               </div>
             ))}
@@ -340,9 +344,9 @@ const ATSCheckerFeature = () => {
       </section>
 
       {/* 5) FAQ ACCORDION */}
-      <section ref={faqRef} className="px-6 py-20 bg-[#f8f9fc]">
+      <section ref={faqRef} className="px-4 sm:px-6 lg:px-8 py-14 sm:py-16 lg:py-20 bg-[#f8f9fc]">
         <div className={`max-w-3xl mx-auto transition-all duration-700 ${faqVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-          <h2 className="text-3xl font-black text-center text-[#1a2e52] mb-12">
+          <h2 className="text-2xl sm:text-3xl font-black text-center text-[#1a2e52] mb-8 sm:mb-12">
             Frequently Asked Questions
           </h2>
           <div className="space-y-4">
@@ -352,8 +356,8 @@ const ATSCheckerFeature = () => {
                 className="bg-white rounded-2xl border border-gray-100 overflow-hidden cursor-pointer"
                 onClick={() => setOpenFaq(openFaq === i ? -1 : i)}
               >
-                <div className="p-6 flex items-center justify-between">
-                  <h3 className={`font-bold text-lg ${openFaq === i ? "text-[#0077cc]" : "text-[#1a2e52]"}`}>
+                <div className="p-4 sm:p-6 flex items-center justify-between gap-4">
+                  <h3 className={`font-bold text-base sm:text-lg ${openFaq === i ? "text-[#0077cc]" : "text-[#1a2e52]"}`}>
                     {item.q}
                   </h3>
                   <ChevronDown
@@ -361,7 +365,7 @@ const ATSCheckerFeature = () => {
                   />
                 </div>
                 <div
-                  className={`px-6 text-gray-500 leading-relaxed overflow-hidden transition-all duration-300 ${openFaq === i ? "max-h-40 pb-6 opacity-100" : "max-h-0 opacity-0"}`}
+                  className={`px-4 sm:px-6 text-sm sm:text-base text-gray-500 leading-relaxed overflow-hidden transition-all duration-300 ${openFaq === i ? "max-h-64 pb-5 sm:pb-6 opacity-100" : "max-h-0 opacity-0"}`}
                 >
                   {item.a}
                 </div>
