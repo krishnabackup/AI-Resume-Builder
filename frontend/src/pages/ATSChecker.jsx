@@ -183,7 +183,7 @@ const ATSCheckerFeature = () => {
       <NavBar />
 
       {/* 1) HERO SECTION */}
-      <section ref={heroRef} className="relative px-6 pt-16 pb-20 overflow-hidden bg-white">
+      <section ref={heroRef} className="relative px-6 pt-16 md:pt-28 lg:pt-17 pb-20 overflow-hidden bg-white">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-50/50 rounded-full blur-3xl -z-10 opacity-60" />
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-orange-50/50 rounded-full blur-3xl -z-10 opacity-60" />
 
@@ -228,11 +228,22 @@ const ATSCheckerFeature = () => {
 
             <div className={`relative transition-all duration-700 delay-100 ${heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
               <div className="relative max-w-md mx-auto lg:mr-0">
-                <img
-                  src={Lady}
-                  alt="Character pointing to ATS score"
-                  className="hidden md:block absolute left-[-13rem] bottom-0 w-100 xl:w-48 2xl:w-56 object-contain"
-                />
+                {/* <img
+  src={Lady}
+  alt="Character pointing to ATS score"
+  className="hidden md:block absolute md:left-[-4rem] lg:left-[-9rem] bottom-0 w-[160px] md:w-[230px] lg:w-[260px] xl:w-[300px] object-contain"
+/> */}
+<img
+  src={Lady}
+  alt="Character pointing to ATS score"
+  className="hidden md:block absolute 
+  md:left-[-4rem] 
+  lg:left-[-8rem] 
+  xl:left-[-9rem] 
+  bottom-0 
+  w-[160px] md:w-[230px] lg:w-[260px] xl:w-[300px] 
+  object-contain"
+/>
                 <ATSDonutCard score={82} />
               </div>
             </div>

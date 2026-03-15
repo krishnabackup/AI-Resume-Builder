@@ -49,19 +49,6 @@ const TemplatesFeature = () => {
         ref={heroRef}
         className="relative px-4 sm:px-6 lg:px-8 overflow-hidden bg-gradient-to-br from-blue-50 via-white to-blue-50"
       >
-        {/* Back To Home Button */}
-        <div className="absolute z-20 top-16 sm:top-20 left-4 sm:left-6">
-          <button
-            onClick={handleBackHome}
-            className="inline-flex items-center gap-2 sm:gap-3 text-xs sm:text-sm font-bold text-blue-500 transition-all group hover:text-blue-800"
-          >
-            <i className="transition-transform fas fa-arrow-left group-hover:-translate-x-1"></i>
-            <span className="relative transition-transform duration-300 group-hover:scale-105">
-              Back to home
-            </span>
-          </button>
-        </div>
-
         {/* Background blobs */}
         <div className="absolute rounded-full -top-24 -left-24 w-72 h-72 bg-blue-200/30 blur-3xl animate-pulse" />
         <div className="absolute rounded-full -bottom-24 -right-24 w-72 h-72 bg-indigo-200/30 blur-3xl animate-pulse" />
