@@ -105,7 +105,7 @@ function Footer() {
               ))}
             </div>
 
-            <div className="mt-auto">
+            <div className="mt-2">
               <h4 className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-[#1a2e52] mb-3">
                 Stay Connected
               </h4>

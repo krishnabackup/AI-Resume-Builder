@@ -55,10 +55,10 @@ const TemplatesFeature = () => {
 
         <div className="mx-auto max-w-7xl">
           {/* HERO GRID */}
-          <div className="grid items-center min-h-[80vh] gap-8 sm:gap-10 lg:gap-12 pt-28 sm:pt-32 lg:pt-20 pb-12 sm:pb-14 lg:pb-16 lg:grid-cols-2">
-            {/* LEFT CONTENT */}
+          <div className="grid items-center xl:min-h-[80vh] gap-8 sm:gap-10 lg:gap-12 pt-20 sm:pt-24 lg:pt-28 xl:pt-16 pb-12 sm:pb-14 lg:pb-16 lg:grid-cols-2">
+             {/* LEFT CONTENT */}
             <div
-              className={`min-w-0 transition-all duration-700 ${
+              className={`min-w-0 text-center lg:text-left flex flex-col items-center lg:items-start transition-all duration-700 ${
                 heroVisible
                   ? "opacity-100 translate-y-0"
                   : "opacity-0 translate-y-6"
@@ -73,7 +73,7 @@ const TemplatesFeature = () => {
                 <span className="text-blue-600">Templates</span>
               </h1>
 
-              <p className="max-w-xl mb-5 sm:mb-6 text-base sm:text-lg md:text-xl leading-relaxed text-gray-600 break-words">
+              <p className="max-w-md lg:max-w-xl mx-auto lg:mx-0 mb-5 sm:mb-6 text-base sm:text-lg md:text-xl leading-relaxed text-gray-600 break-words">
                 Choose from ATS-optimized templates designed by experts. Trusted
                 by 100,000+ professionals worldwide.
               </p>
@@ -86,7 +86,7 @@ const TemplatesFeature = () => {
 
             {/* RIGHT IMAGE */}
             <div
-              className={`relative min-w-0 flex justify-center lg:justify-end transition-all duration-700 ${
+              className={`relative min-w-0 hidden lg:flex justify-end transition-all duration-700 ${
                 heroVisible
                   ? "opacity-100 translate-y-0"
                   : "opacity-0 translate-y-8"

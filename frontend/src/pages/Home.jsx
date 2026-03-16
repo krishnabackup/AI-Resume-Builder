@@ -294,7 +294,7 @@ function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col bg-white text-[#1a2e52] font-['Outfit']">
       <NavBar />
-      <div className="h-12" />
+      <div className="" />
       {/* OVERLAY */}
       <div
         onClick={toggleMobileMenu}
@@ -302,19 +302,19 @@ function LandingPage() {
           }`}
       ></div>
 
-      {/* HERO SECTION - padding added and mobile padding reudced */}
+     {/* HERO SECTION - padding added and mobile padding reudced */}
       <motion.section
         variants={staggerContainer}
         initial="hidden"
         whileInView="show"
         viewport={{ once: true, amount: 0.25 }}
-        className="relative px-4 md:px-8  bg-white  ml-2 md:ml-5  lg:min-h-[calc(100vh-80px)] flex items-center lg:items-start pt-[100px] md:pt-[120px] lg:pt-6 -mt-12 lg:mt-0"
+        className="relative px-4 md:px-8 bg-white flex items-center pt-16 md:pt-20 lg:pt-23 "
       >
         <div className="absolute top-0 right-0 w-1/3 h-1/4 bg-orange-50 rounded-full blur-[120px] -z-10 opacity-50"></div>
         <div className="absolute bottom-0 left-0 w-1/3 h-1/4 bg-blue-50 rounded-full blur-[120px] -z-10 opacity-50"></div>
 
-        <div className="max-w-[1400px] mx-0 md:mx-auto grid lg:grid-cols-2 gap-8 md:gap-6 items-center">
-          <div className="flex flex-col gap-4 md:gap-6 text-center md:text-left items-center md:items-start max-w-md mx-0 md:max-w-none md:mx-0">
+        <div className="max-w-[1400px] w-full mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-6 items-center">
+          <div className="flex flex-col gap-4 md:gap-6 text-center md:text-left items-center md:items-start w-full max-w-xl mx-auto md:mx-0">
             <motion.h1 variants={fadeUp} className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight select-none font-jakarta">
               <span className="bg-gradient-to-r from-[#e65100] to-[#ff8f00] bg-clip-text text-transparent">
                 UptoSkills AI
@@ -336,10 +336,10 @@ function LandingPage() {
               AI-Powered Content, Professional Templates, ATS-Friendly.
             </motion.p>
 
-            <motion.div variants={fadeUp} className="flex flex-row md:flex-col gap-3 mt-3 select-none justify-center md:items-start">
+            <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-3 mt-3 select-none justify-center md:justify-start">
               <button
                 onClick={() => navigate("/login")}
-                className="flex items-center justify-center gap-2 md:gap-3 px-4 md:px-10 py-3 md:py-5 text-sm md:text-lg font-bold text-white bg-gradient-to-r from-[#e65100] to-[#f4511e] rounded-xl whitespace-nowrap transition-all duration-300 hover:-translate-y-1 shadow-[0_10px_25px_rgba(230,81,0,0.3)] hover:shadow-[0_15px_35px_rgba(230,81,0,0.45)]"
+                className="flex w-full sm:w-auto items-center justify-center gap-2 md:gap-3 px-4 md:px-10 py-3 md:py-5 text-sm md:text-lg font-bold text-white bg-gradient-to-r from-[#e65100] to-[#f4511e] rounded-xl whitespace-nowrap transition-all duration-300 hover:-translate-y-1 shadow-[0_10px_25px_rgba(230,81,0,0.3)] hover:shadow-[0_15px_35px_rgba(230,81,0,0.45)]"
               >
                 <i className="fas fa-graduation-cap"></i>
                 Start Building for Free
@@ -359,8 +359,8 @@ function LandingPage() {
           </div>
 
           {/* Image carousel -  size reduced, Hidden on mobile, visible on md and up */}
-          <motion.div variants={fadeUp} className="hidden md:flex items-center justify-center">
-            <div className="w-full max-w-2xl lg:max-w-[90%] relative h-[400px] md:h-[600px] lg:h-[600px]">
+          <motion.div variants={fadeUp} className="hidden lg:flex items-center justify-center">
+            <div className="w-full max-w-xl lg:max-w-[90%] relative h-[260px] md:h-[420px] lg:h-[520px]">
               {templates.map((template, idx) => (
                 <div
                   key={idx}
@@ -394,7 +394,7 @@ function LandingPage() {
         initial="hidden"
         whileInView="show"
         viewport={{ once: true, amount: 0.2 }}
-        className="px-4 md:px-8 py-12 md:py-24 bg-gray-50"
+        className="px-4 md:px-8 py-12 md:py-16 lg:py-20 bg-gray-50"
       >
         <div className="max-w-[1200px] mx-auto">
           <div className="mb-10 md:mb-20 text-center">
@@ -406,12 +406,12 @@ function LandingPage() {
             </motion.p>
           </div>
 
-          <div className="space-y-6 md:space-y-24">
+          <div className="space-y-8 md:space-y-16">
             {howItWorksSteps.map((step, index) => (
               <motion.div
                 key={index}
                 variants={fadeUp}
-                className={`flex flex-col md:flex-row items-center gap-6 md:gap-12 ${index % 2 !== 0 ? "md:flex-row-reverse" : ""
+                className={`flex flex-col md:flex-row items-center gap-6 md:gap-12 w-full ${index % 2 !== 0 ? "md:flex-row-reverse" : ""
                   }`}
               >
                 {/* MOBILE BADGE - Hidden on Desktop */}
@@ -423,7 +423,7 @@ function LandingPage() {
                 <img
                   src={step.image}
                   alt={step.heading}
-                  className="w-full md:w-1/2 h-auto object-contain rounded-xl md:rounded-3xl transition-transform duration-500"
+                  className="w-full md:w-1/2 max-w-md md:max-w-none h-auto object-contain rounded-xl"
                 />
 
                 {/* TEXT CONTENT */}
@@ -526,6 +526,8 @@ function LandingPage() {
           </div>
         </div>
       </motion.section>
+
+
 
       {/* FEATURES GRID - Reduced mobile padding and spacing */}
       <motion.section
