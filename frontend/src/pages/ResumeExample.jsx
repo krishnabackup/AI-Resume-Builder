@@ -1,11 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Search,
-  Filter,
-  Eye,
-  Download,
   ArrowRight,
-  Sparkles,
   Briefcase,
   TrendingUp,
   ShieldCheck,
@@ -160,53 +156,55 @@ const ResumeExamplesPage = () => {
     },
   ];
 
-  const filteredSections = sections
-    .map((section) => ({
-      ...section,
-      items: section.items.filter(
-        (item) =>
-          item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.tags.some((tag) =>
-            tag.toLowerCase().includes(searchQuery.toLowerCase()),
-          ),
-      ),
-    }))
-    .filter((section) => section.items.length > 0);
+  const filteredSections = useMemo(() => {
+    return sections
+      .map((section) => ({
+        ...section,
+        items: section.items.filter(
+          (item) =>
+            item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            item.tags.some((tag) =>
+              tag.toLowerCase().includes(searchQuery.toLowerCase())
+            )
+        ),
+      }))
+      .filter((section) => section.items.length > 0);
+  }, [searchQuery]);
 
   return (
-    <div className="min-h-screen bg-[#fcfcfd] font-['Outfit'] text-[#1a2e52]">
+    <div className="min-h-screen bg-[#fcfcfd] font-['Outfit'] text-[#1a2e52] overflow-x-hidden">
       <NavBar />
 
       {/* --- HERO SECTION --- */}
-      <section className="relative pt-12 pb-16 bg-white border-b lg:pt-16 border-gray-50">
+      <section className="relative pt-28 pb-16 bg-white border-b lg:pt-28 border-gray-50">
         <motion.div
           variants={staggerContainer}
           initial="hidden"
           animate="show"
-          className="flex flex-col items-center gap-12 px-8 mx-auto max-w-7xl lg:flex-row"
+          className="flex flex-col items-center gap-12 px-6 sm:px-8 mx-auto max-w-7xl lg:flex-row"
         >
           {/* Left Side: Content */}
-          <motion.div variants={fadeUp} className="flex-1 text-left">
-            <h1 className="text-5xl lg:text-7xl font-[1000] tracking-tight font-jakarta mb-6 leading-[1.1]">
-              The <span className="text-[#0077cc]">Blueprints</span> of <br />
+          <motion.div variants={fadeUp} className="flex-1 text-center lg:text-left">
+            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-[1000] tracking-tight font-jakarta mb-6 leading-[1.1]">
+              The <span className="text-[#0077cc]">Blueprints</span> of <br className="hidden lg:block" />
               Great Careers.
             </h1>
 
-            <p className="max-w-lg mb-10 text-xl leading-relaxed text-gray-600">
+            <p className="max-w-lg mx-auto lg:mx-0 mb-10 text-lg sm:text-xl leading-relaxed text-gray-600">
               Stop staring at a blank page. Access a library of 500+
               battle-tested resume templates designed by industry experts to get
               you past the ATS and into the interview.
             </p>
 
-            <div className="relative max-w-xl">
+            <div className="relative max-w-xl mx-auto lg:mx-0">
               <div className="relative flex items-center p-1 overflow-hidden transition-all border border-gray-200 shadow-sm bg-gray-50 rounded-2xl focus-within:bg-white focus-within:ring-4 ring-blue-50 focus-within:border-blue-400">
-                <Search className="ml-5 text-gray-400" size={20} />
+                <Search className="ml-3 sm:ml-5 text-gray-400 shrink-0" size={20} />
                 <input
                   type="text"
-                  placeholder="Search 500+ templates (e.g. Sales, React)..."
+                  placeholder="Search 500+ templates..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full py-4 pl-4 pr-6 text-lg font-medium text-gray-800 bg-transparent outline-none placeholder:text-gray-400"
+                  className="w-full py-3 sm:py-4 pl-2 sm:pl-4 pr-4 text-base sm:text-lg font-medium text-gray-800 bg-transparent outline-none placeholder:text-gray-400"
                 />
                 <button
                   className="
@@ -219,31 +217,30 @@ const ResumeExamplesPage = () => {
   hover:shadow-[0_6px_20px_rgba(230,81,0,0.45)]
   hover:-translate-y-0.5
   active:scale-95
-  mx-auto lg:mx-0
 "
                 >
                   Search
                 </button>
               </div>
-              <div className="flex gap-4 mt-4 ml-2">
-                <span className="text-sm font-semibold text-gray-400">
+              <div className="flex flex-wrap justify-center lg:justify-start gap-3 sm:gap-4 mt-4 ml-0 lg:ml-2">
+                <span className="text-xs sm:text-sm font-semibold text-gray-400">
                   Popular:
                 </span>
-                <span className="text-sm font-medium text-gray-600 cursor-pointer hover:text-blue-600">
-                  Marketing
-                </span>
-                <span className="text-sm font-medium text-gray-600 cursor-pointer hover:text-blue-600">
-                  Engineering
-                </span>
-                <span className="text-sm font-medium text-gray-600 cursor-pointer hover:text-blue-600">
-                  Product
-                </span>
+                {["Marketing", "Engineering", "Product"].map((tag) => (
+                  <span
+                    key={tag}
+                    onClick={() => setSearchQuery(tag)}
+                    className="text-xs sm:text-sm font-medium text-gray-600 cursor-pointer hover:text-blue-600"
+                  >
+                    {tag}
+                  </span>
+                ))}
               </div>
             </div>
           </motion.div>
 
           {/* Right Side: Image/Illustration */}
-          <motion.div variants={fadeUp} className="flex-1 w-full lg:block">
+          <motion.div variants={fadeUp} className="flex-1 w-full hidden lg:block">
             <div className="relative">
               {/* Subtle decorative background element */}
               <div className="absolute top-0 right-0 rounded-full w-72 h-72 bg-blue-50 blur-3xl -z-10 opacity-60"></div>
@@ -258,7 +255,7 @@ const ResumeExamplesPage = () => {
       </section>
 
       {/* --- RESUME EXPLORER --- */}
-      <section className="px-16 lg:px-24 py-10 mx-auto max-w-[1700px]">
+      <section className="px-6 sm:px-16 lg:px-24 py-10 mx-auto max-w-[1700px]">
         {/* Increased max-width to 1700px to allow more horizontal expansion for the images */}
         {filteredSections.map((section, sIdx) => (
           <motion.div
@@ -267,14 +264,14 @@ const ResumeExamplesPage = () => {
             initial="hidden"
             whileInView="show"
             viewport={{ once: true }}
-            className="mb-20"
+            className="mb-16 sm:mb-20"
           >
             {/* Section Header */}
-            <div className="flex items-center gap-4 pb-4 mb-10 border-b border-gray-100">
-              <div className="flex items-center justify-center w-12 h-12 bg-white border shadow-md border-gray-50 rounded-xl">
+            <div className="flex items-center gap-4 pb-4 mb-8 sm:mb-10 border-b border-gray-100">
+              <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-white border shadow-md border-gray-50 rounded-xl shrink-0">
                 {section.icon}
               </div>
-              <h2 className="text-3xl font-black font-jakarta text-[#1a2e52]">
+              <h2 className="text-2xl sm:text-3xl font-black font-jakarta text-[#1a2e52]">
                 {section.title}
               </h2>
             </div>
@@ -297,24 +294,26 @@ const ResumeExamplesPage = () => {
                 border border-gray-100
                 shadow-md
                 transition-all duration-500 ease-out
-                group-hover/card:scale-105
-                group-hover/card:shadow-2xl
+                lg:group-hover/card:scale-105
+                lg:group-hover/card:shadow-2xl
                 group-hover/card:z-20
                 overflow-hidden
                 will-change-transform
+                rounded-lg sm:rounded-none
               "
                   >
                     {/* Image - object-contain ensures the full document is visible within the frame */}
                     <img
                       src={resume.image}
                       alt={resume.title}
+                      loading="lazy"
                       className="object-contain w-full h-full bg-white"
                     />
                   </div>
 
                   {/* Text UI */}
-                  <div className="px-4 mt-8 text-center transition-all duration-500 lg:text-left">
-                    <h3 className="text-xl font-black text-[#1a2e52] group-hover/card:text-[#0077cc] transition-colors mb-1">
+                  <div className="px-4 mt-6 sm:mt-8 text-center transition-all duration-500 lg:text-left">
+                    <h3 className="text-lg sm:text-xl font-black text-[#1a2e52] group-hover/card:text-[#0077cc] transition-colors mb-1">
                       {resume.title}
                     </h3>
 
@@ -343,21 +342,21 @@ const ResumeExamplesPage = () => {
           initial="hidden"
           whileInView="show"
           viewport={{ once: true }}
-          className="flex flex-col items-center max-w-6xl gap-16 px-8 mx-auto lg:flex-row"
+          className="flex flex-col items-center max-w-6xl gap-12 lg:gap-16 px-6 sm:px-8 mx-auto lg:flex-row"
         >
-          <div className="flex-1">
+          <div className="flex-1 text-center lg:text-left">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-orange-50 rounded-lg text-[#ff6b35] text-[10px] font-black uppercase mb-6">
               Expert Insights
             </div>
-            <h2 className="text-5xl font-[1000] tracking-tight font-jakarta mb-6 leading-tight">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-[1000] tracking-tight font-jakarta mb-6 leading-tight">
               Built for the <br />
               <span className="text-[#ff6b35]">6-Second Scan.</span>
             </h2>
-            <p className="mb-8 text-lg font-medium text-gray-500">
+            <p className="mb-8 text-base sm:text-lg font-medium text-gray-500">
               Our field-tested templates are engineered to ensure your key value
               is seen first by recruiters.
             </p>
-            <button className="flex items-center gap-2 font-black text-[#1a2e52] group">
+            <button onClick={() => navigate("/how-to-write-a-resume")} className="flex items-center gap-2 font-black text-[#1a2e52] group mx-auto lg:mx-0">
               Explore Resume Guide{" "}
               <ArrowRight
                 size={20}
@@ -385,12 +384,12 @@ const ResumeExamplesPage = () => {
             ].map((tip, idx) => (
               <div
                 key={idx}
-                className="bg-white p-6 rounded-[2rem] border border-gray-100 flex items-start gap-5 hover:shadow-xl transition-all"
+                className="bg-white p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] border border-gray-100 flex items-start gap-4 sm:gap-5 hover:shadow-xl transition-all"
               >
-                <div className="p-4 bg-gray-50 rounded-2xl">{tip.icon}</div>
+                <div className="p-3 sm:p-4 bg-gray-50 rounded-2xl shrink-0">{tip.icon}</div>
                 <div>
-                  <h4 className="mb-1 text-lg font-black">{tip.title}</h4>
-                  <p className="text-sm font-medium text-gray-400">
+                  <h4 className="mb-1 text-base sm:text-lg font-black">{tip.title}</h4>
+                  <p className="text-xs sm:text-sm font-medium text-gray-400">
                     {tip.desc}
                   </p>
                 </div>
