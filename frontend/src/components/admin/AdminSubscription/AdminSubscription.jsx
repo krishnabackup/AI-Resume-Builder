@@ -52,7 +52,7 @@ const SortableFeatureItem = ({ id, feature, onChange, onRemove }) => {
         type="text"
         value={feature.text}
         onChange={(e) => onChange(e.target.value)}
-        className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:border-blue-500 focus:outline-none"
+        className="flex-1 min-w-0 px-2 py-1 text-sm border border-gray-300 rounded focus:border-blue-500 focus:outline-none"
         placeholder="Feature description"
       />
       <button
@@ -323,13 +323,13 @@ const AdminSubscription = () => {
           items={localPlans.map(p => p.id)}
           strategy={rectSortingStrategy}
         >
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
             {localPlans.map((plan) => (
               <SortablePlanCard key={plan.id} plan={plan}>
                 {({ attributes, listeners }) => (
                   <div
                     key={plan.id}
-                    className=" relative rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow h-full flex flex-col"
+                    className="relative rounded-2xl border border-gray-200 bg-white p-4 sm:p-6 shadow h-full flex flex-col min-w-0"
                   >
                     <div
                       {...attributes}
@@ -343,7 +343,7 @@ const AdminSubscription = () => {
                         type="text"
                         value={plan.name}
                         onChange={(e) => updatePlanField(plan.id, 'name', e.target.value)}
-                        className="text-lg sm:text-xl font-semibold text-gray-900 bg-transparent border border-dashed border-transparent hover:border-gray-300 focus:border-blue-500 focus:outline-none rounded w-2/3 px-1.5 -ml-1.5 py-0.5"
+                        className="text-lg sm:text-xl font-semibold text-gray-900 bg-transparent border border-dashed border-transparent hover:border-gray-300 focus:border-blue-500 focus:outline-none rounded w-full max-w-[70%] px-1.5 py-0.5"
                       />
                       <div className="flex items-center gap-1">
                         <button onClick={() => togglePlan(plan.id)}>
@@ -362,7 +362,7 @@ const AdminSubscription = () => {
                         </button>
                       </div>
                     </div>
-                    <div className="flex gap-2 items-center justify-start">
+                    <div className="flex flex-wrap gap-2 items-center">
                       <h3>Badge Tag :</h3>
                       <input
                         type="text"
@@ -461,7 +461,7 @@ const AdminSubscription = () => {
             {/* Add Plan Card */}
             <div
               onClick={handleAddPlan}
-              className="rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 p-4 sm:p-6 shadow h-full flex flex-col items-center justify-center cursor-pointer transition-colors min-h-[300px]"
+              className="rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 p-4 sm:p-6 shadow h-full flex flex-col items-center justify-center cursor-pointer transition-colors min-h-[250px] sm:min-h-[300px]"
             >
               <div className="flex flex-col items-center justify-center opacity-60">
                 <Plus className="w-10 h-10 text-gray-500 mb-2" />
@@ -489,7 +489,7 @@ const AdminSubscription = () => {
         </div>
 
         {/* Desktop Table View */}
-        <div className="hidden md:block overflow-x-auto">
+        <div className="hidden lg:block overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-gray-500">
               <tr>
