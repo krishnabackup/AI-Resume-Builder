@@ -1,6 +1,6 @@
 import { Send } from "lucide-react";
 
-const ClosingForm = ({ formData, onInputChange }) => {
+const ClosingForm = ({ formData, onInputChange, highlightEmpty }) => {
   const salutationOptions = [
     { value: "Sincerely", label: "Sincerely" },
     { value: "Best regards", label: "Best regards" },
@@ -29,7 +29,7 @@ const ClosingForm = ({ formData, onInputChange }) => {
             Salutation <span className="text-red-500">*</span>
           </label>
           <select
-            className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
+            className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white ${highlightEmpty && !formData.salutation?.trim() ? 'border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-500/10' : 'border-slate-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10'}`}
             value={formData.salutation}
             onChange={(e) => onInputChange("salutation", e.target.value)}
           >

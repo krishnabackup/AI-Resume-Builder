@@ -525,7 +525,7 @@ const Downloads = () => {
   return (
     <>
       <UserNavBar />
-          <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#f8f9fb" }}>  
+          <div className="min-h-screen flex flex-col md:pt-0 pt-16" style={{ backgroundColor: "#f8f9fb" }}>  
           <div className="flex-1 w-full px-4 sm:px-6 lg:px-10 py-8">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">

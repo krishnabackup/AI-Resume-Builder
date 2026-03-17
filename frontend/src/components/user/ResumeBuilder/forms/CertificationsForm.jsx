@@ -1,9 +1,16 @@
 import { useEffect, useState } from "react";
+import MonthYearPicker from "../../MonthYearPicker";
 import { Award, Check, EditIcon, Plus, Trash2 } from "lucide-react";
 import { getCompletionStatus } from "../completion";
 
-const CertificationsForm = ({ formData, setFormData }) => {
+const CertificationsForm = ({ formData, setFormData, highlightEmpty }) => {
   const [editingId, setEditingId] = useState(null);
+
+  // Helper to get border class for required fields
+  const getBorderClass = (value) => {
+    if (highlightEmpty && !value?.trim()) return 'border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-500/10';
+    return 'border-slate-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10';
+  };
 
   useEffect(() => {
     const { sectionValidationStatus } = getCompletionStatus(formData);
@@ -115,7 +122,7 @@ const CertificationsForm = ({ formData, setFormData }) => {
                     </label>
                     <input
                       type="text"
-                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
+                      className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white ${getBorderClass(cert.name)}`}
                       value={cert.name || ""}
                       placeholder="AWS Solutions Architect"
                       onChange={(e) => {
@@ -139,7 +146,7 @@ const CertificationsForm = ({ formData, setFormData }) => {
                     </label>
                     <input
                       type="text"
-                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
+                      className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white ${getBorderClass(cert.issuer)}`}
                       value={cert.issuer || ""}
                       placeholder="Amazon Web Services"
                       onChange={(e) => {
@@ -161,10 +168,9 @@ const CertificationsForm = ({ formData, setFormData }) => {
                     <label className="text-sm font-semibold text-slate-700">
                       Date Obtained <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="month"
-                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
-                      value={cert.date || ""}
+                    <MonthYearPicker
+                      className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white ${getBorderClass(cert.date)}`}
+                      value={cert.date}
                       onChange={(e) => {
                         const updated = (formData?.certifications ?? []).map(
                           (item) =>

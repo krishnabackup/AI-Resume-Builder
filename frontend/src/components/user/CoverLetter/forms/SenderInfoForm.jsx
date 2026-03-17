@@ -1,9 +1,16 @@
 import { useState } from "react";
 import { User } from "lucide-react";
 
-const SenderInfoForm = ({ formData, onInputChange }) => {
+const SenderInfoForm = ({ formData, onInputChange, highlightEmpty }) => {
   const [emailError, setEmailError] = useState(false);
   const [phoneError, setPhoneError] = useState(false);
+
+  // Helper to get border class for required fields
+  const getBorderClass = (value, hasFormatError = false) => {
+    if (hasFormatError) return 'border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-500/10';
+    if (highlightEmpty && !value?.trim()) return 'border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-500/10';
+    return 'border-slate-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10';
+  };
 
   const handleEmailChange = (e) => {
     const val = e.target.value;
@@ -44,7 +51,7 @@ const SenderInfoForm = ({ formData, onInputChange }) => {
           <input
             type="text"
             placeholder="John Doe"
-            className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
+            className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white ${getBorderClass(formData.fullName)}`}
             value={formData.fullName}
             onChange={(e) => onInputChange("fullName", e.target.value)}
           />
@@ -58,7 +65,7 @@ const SenderInfoForm = ({ formData, onInputChange }) => {
           <input
             type="email"
             placeholder="john.doe@example.com"
-            className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white ${emailError ? "border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-500/10" : "border-slate-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"}`}
+            className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white ${getBorderClass(formData.email, emailError)}`}
             value={formData.email}
             onChange={handleEmailChange}
           />

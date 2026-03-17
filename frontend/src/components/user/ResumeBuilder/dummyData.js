@@ -75,3 +75,21 @@ export const dummyData = {
         },
     ],
 };
+
+export const emptyData = {
+    fullName: "",
+    email: "",
+    linkedin: "",
+    location: "",
+    phone: "",
+    summary: "",
+    website: "",
+    education: [],
+    experience: [],
+    projects: [],
+    skills: {
+        technical: [],
+        soft: [],
+      },
+    certifications: [],
+};

@@ -382,10 +382,26 @@ const LivePreview = forwardRef((props, ref) => {
     : null;
 
   const renderPreviewContent = () => {
+    // Merge formData with placeholders for the preview
+    const placeholderData = {
+      ...formData,
+      fullName: formData.fullName || "YOUR NAME",
+      summary: formData.summary || "Your professional summary goes here...",
+      location: formData.location || "City, Country",
+      email: formData.email || "email@example.com",
+      phone: formData.phone || "+1 234 567 890",
+      // Ensure arrays are preserved correctly
+      experience: formData.experience || [],
+      education: formData.education || [],
+      projects: formData.projects || [],
+      certifications: formData.certifications || [],
+      skills: formData.skills || { technical: [], soft: [] },
+    };
+
     if (ResolvedTemplate) {
       return (
         <div ref={resume_doc}>
-          <ResolvedTemplate data={formData} />
+          <ResolvedTemplate data={placeholderData} />
         </div>
       );
     }
@@ -397,27 +413,19 @@ const LivePreview = forwardRef((props, ref) => {
         className="w-full text-slate-800 text-sm leading-relaxed relative bg-white min-h-[1123px] p-12 overflow-hidden box-border"
       >
         <div className="pb-6 w-full">
-          {fullName && (
-            <h1 className="text-3xl font-semibold text-gray-900 mb-1 tracking-tight">
-              {fullName}
-            </h1>
-          )}
+          <h1 className={`text-3xl font-semibold mb-1 tracking-tight ${!fullName ? "text-gray-300 italic" : "text-gray-900"}`}>
+            {fullName || "YOUR NAME"}
+          </h1>
           <div className="text-slate-500 flex flex-wrap gap-3 text-xs mt-2 break-all">
-            {location && (
-              <span className="flex gap-1 items-center">
-                <MapPin size={14} /> {location}
-              </span>
-            )}
-            {email && (
-              <span className="flex gap-1 items-center break-all">
-                <Mail size={14} /> {email}
-              </span>
-            )}
-            {phone && (
-              <span className="flex gap-1 items-center">
-                <Phone size={14} /> {phone}
-              </span>
-            )}
+            <span className={`flex gap-1 items-center ${!location ? "text-gray-300 italic" : ""}`}>
+              <MapPin size={14} /> {location || "Your Address, City, Country"}
+            </span>
+            <span className={`flex gap-1 items-center break-all ${!email ? "text-gray-300 italic" : ""}`}>
+              <Mail size={14} /> {email || "email@example.com"}
+            </span>
+            <span className={`flex gap-1 items-center ${!phone ? "text-gray-300 italic" : ""}`}>
+              <Phone size={14} /> {phone || "+1 234 567 890"}
+            </span>
             {linkedin && (
               <span className="flex gap-1 items-center break-all">
                 <FaLinkedin /> {linkedin}
@@ -430,16 +438,14 @@ const LivePreview = forwardRef((props, ref) => {
             )}
           </div>
 
-          {(fullName || email || phone || location || linkedin || website) && (
-            <hr className="text-slate-200 mt-4" />
-          )}
+          <hr className="text-slate-200 mt-4" />
         </div>
 
-        {summary && (
-          <Section title="Professional Summary">
-            <p className="break-words overflow-wrap-anywhere">{summary}</p>
-          </Section>
-        )}
+        <Section title="Professional Summary">
+          <p className={`break-words overflow-wrap-anywhere ${!summary ? "text-gray-300 italic" : ""}`}>
+            {summary || "Your professional summary goes here. Briefly describe your career objective, key achievements, and skills."}
+          </p>
+        </Section>
 
         {education?.some(
           (edu) =>

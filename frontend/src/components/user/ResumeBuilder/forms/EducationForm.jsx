@@ -1,9 +1,16 @@
 import { useEffect, useState } from "react";
+import MonthYearPicker from "../../MonthYearPicker";
 import { Check, EditIcon, GraduationCap, Plus, Trash2 } from "lucide-react";
 import { getCompletionStatus } from "../completion";
 
-const EducationForm = ({ formData, setFormData }) => {
+const EducationForm = ({ formData, setFormData, highlightEmpty }) => {
   const [editingId, setEditingId] = useState(null);
+
+  // Helper to get border class for required fields
+  const getBorderClass = (value) => {
+    if (highlightEmpty && !value?.trim()) return 'border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-500/10';
+    return 'border-slate-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10';
+  };
 
   useEffect(() => {
     const { sectionValidationStatus } = getCompletionStatus(formData);
@@ -135,7 +142,7 @@ const EducationForm = ({ formData, setFormData }) => {
                     </label>
                     <input
                       type="text"
-                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
+                      className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white ${getBorderClass(edu.degree)}`}
                       value={edu.degree || ""}
                       placeholder="Bachelor of Science in Computer Science"
                       onChange={(e) => {
@@ -153,7 +160,7 @@ const EducationForm = ({ formData, setFormData }) => {
                     </label>
                     <input
                       type="text"
-                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
+                      className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white ${getBorderClass(edu.school)}`}
                       value={edu.school || ""}
                       placeholder="University Name"
                       onChange={(e) => {
@@ -169,10 +176,9 @@ const EducationForm = ({ formData, setFormData }) => {
                     <label className="text-sm font-semibold text-slate-700">
                       Start Date <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="month"
-                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
-                      value={edu.startDate || ""}
+                    <MonthYearPicker
+                      className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white ${getBorderClass(edu.startDate)}`}
+                      value={edu.startDate}
                       onChange={(e) => {
                         const val = e.target.value;
                         const updated = (formData?.education ?? []).map((item) =>
@@ -186,10 +192,10 @@ const EducationForm = ({ formData, setFormData }) => {
                     <label className="text-sm font-semibold text-slate-700">
                       Graduation Date <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="month"
-                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
-                      value={edu.graduationDate || ""}
+                    <MonthYearPicker
+                      alignRight={true}
+                      className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white ${getBorderClass(edu.graduationDate)}`}
+                      value={edu.graduationDate}
                       onChange={(e) => {
                         const val = e.target.value;
                         const updated = (formData?.education ?? []).map((item) =>

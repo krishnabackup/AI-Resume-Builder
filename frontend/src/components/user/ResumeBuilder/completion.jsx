@@ -5,17 +5,16 @@ export const getCompletionStatus = (formData) => {
   const hasPersonalInfo =
     formData?.fullName?.trim() &&
     formData?.email?.trim() &&
-    formData?.linkedin?.trim() &&
-    formData?.location?.trim() &&
     formData?.phone?.trim() &&
-    formData?.website?.trim();
+    formData?.location?.trim();
 
   if (!hasPersonalInfo) missing.push("Personal");
 
   /* ---------- EXPERIENCE ---------- */
+  // Empty experience is allowed (user can skip); only validate if entries exist
   const hasValidExperience =
-    Array.isArray(formData?.experience) &&
-    formData.experience.length > 0 &&
+    !Array.isArray(formData?.experience) ||
+    formData.experience.length === 0 ||
     formData.experience.every(
       (exp) =>
         exp.title?.trim() &&
@@ -32,31 +31,22 @@ export const getCompletionStatus = (formData) => {
   /* ----------  EDUCATION ---------- */
   const hasValidEducation =
     Array.isArray(formData?.education) &&
-    formData.education.length > 0 &&
-    formData.education.every(
-      (edu) =>
-        edu.school?.trim() &&
-        edu.degree?.trim() &&
-        edu.startDate?.trim() &&
-        edu.graduationDate?.trim(),
-    );
+    formData.education.length > 0;
 
   if (!hasValidEducation) {
     missing.push("Education");
   }
 
   /* ---------- Project INFO ---------- */
+  // Empty projects list is allowed; only validate if entries exist
   const hasValidProject =
-    Array.isArray(formData?.projects) &&
-    formData.projects.length > 0 &&
+    !Array.isArray(formData?.projects) ||
+    formData.projects.length === 0 ||
     formData.projects.every(
       (project) =>
         project.name?.trim() &&
         project.description?.trim() &&
-        project.technologies?.trim() &&
-        (project.link?.github?.trim() ||
-          project.link?.liveLink?.trim() ||
-          project.link?.other?.trim()),
+        project.technologies?.trim(),
     );
 
   if (!hasValidProject) {
@@ -64,9 +54,10 @@ export const getCompletionStatus = (formData) => {
   }
 
   /* ---------- Certification INFO ---------- */
+  // Empty certifications list is allowed; only validate if entries exist
   const hasValidCertificationInfo =
-    Array.isArray(formData?.certifications) &&
-    formData.certifications.length > 0 &&
+    !Array.isArray(formData?.certifications) ||
+    formData.certifications.length === 0 ||
     formData.certifications.every(
       (cert) => cert.name?.trim() && cert.issuer?.trim() && cert.date?.trim(),
     );

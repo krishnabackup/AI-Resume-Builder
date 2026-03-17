@@ -10,9 +10,15 @@ import {
 import { getCompletionStatus } from "../completion";
 import axiosInstance from "../../../../api/axios";
 
-const ProjectsForm = ({ formData, setFormData }) => {
+const ProjectsForm = ({ formData, setFormData, highlightEmpty }) => {
   const [editingId, setEditingId] = useState(null);
   const [generatingId, setGeneratingId] = useState(null);
+
+  // Helper to get border class for required fields
+  const getBorderClass = (value) => {
+    if (highlightEmpty && !value?.trim()) return 'border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-500/10';
+    return 'border-slate-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10';
+  };
 
   useEffect(() => {
     // Only auto-open the first project on initial mount if there are no valid projects.
@@ -174,7 +180,7 @@ const ProjectsForm = ({ formData, setFormData }) => {
                   <label>Project Name *</label>
                   <input
                     type="text"
-                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
+                    className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white ${getBorderClass(project.name)}`}
                     value={project.name || ""}
                     placeholder="E-commerce Platform"
                     onChange={(e) =>
@@ -187,7 +193,7 @@ const ProjectsForm = ({ formData, setFormData }) => {
                   <label>Technologies Used *</label>
                   <input
                     type="text"
-                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
+                    className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white ${getBorderClass(project.technologies)}`}
                     value={project.technologies || ""}
                     placeholder="React, Node.js, MongoDB"
                     onChange={(e) =>
@@ -213,7 +219,7 @@ const ProjectsForm = ({ formData, setFormData }) => {
                   </div>
 
                   <textarea
-                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white resize-y min-h-[120px] scrollbar-hide"
+                    className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white resize-y min-h-[120px] scrollbar-hide ${getBorderClass(project.description)}`}
                     value={project.description || ""}
                     maxLength={1000}
                     onChange={(e) =>

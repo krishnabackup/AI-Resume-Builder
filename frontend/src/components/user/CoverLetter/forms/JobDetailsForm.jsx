@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Briefcase, RefreshCw, Sparkles } from "lucide-react";
 import axiosInstance from "./../../../../api/axios";
 
-const JobDetailsForm = ({ formData, onInputChange }) => {
+const JobDetailsForm = ({ formData, onInputChange, highlightEmpty }) => {
   const whereFoundOptions = [
     "Company Website",
     "LinkedIn",
@@ -83,7 +83,7 @@ const JobDetailsForm = ({ formData, onInputChange }) => {
           <input
             type="text"
             placeholder="Software Engineer"
-            className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
+            className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white ${highlightEmpty && !localData.jobTitle?.trim() ? 'border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-500/10' : 'border-slate-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10'}`}
             value={localData.jobTitle}
             onChange={(e) => handleChange("jobTitle", e.target.value)}
           />

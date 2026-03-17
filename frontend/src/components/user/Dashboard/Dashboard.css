@@ -191,7 +191,7 @@
   max-width: none;
   /* REMOVE constraint */
   margin: 0;
-  padding: 24px 24px 40px;
+  /* padding: 24px 24px 40px; */
   /* controlled inner spacing */
 }
 

@@ -22,6 +22,7 @@ const CVBuilderTopBar = ({
   showUpload = true,
   showDesigner = true,
   downloadDisabled = false,
+  showDownloadWord = true,
   extraButtons = null,
 }) => {
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
@@ -148,92 +149,7 @@ const CVBuilderTopBar = ({
           </div>
         )}
 
-        {/* AI Mode Toggle */}
-        {showAiToggle && activeTab === "builder" && (
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            <button
-              onClick={onToggleAiMode}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all border ${
-                isAiMode
-                  ? "bg-purple-50 border-purple-200 text-purple-700 shadow-sm"
-                  : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-              }`}
-            >
-              <Zap
-                size={16}
-                className={`transition-colors ${isAiMode ? "fill-purple-700 text-purple-700" : "text-slate-400"}`}
-              />
-              <span>AI Mode</span>
-              <div
-                className={`relative w-8 h-4 rounded-full transition-colors ml-1 ${
-                  isAiMode ? "bg-purple-600" : "bg-slate-300"
-                }`}
-              >
-                <div
-                  className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-transform shadow-sm ${
-                    isAiMode ? "left-[18px]" : "left-0.5"
-                  }`}
-                />
-              </div>
-            </button>
-
-            {/* Mobile-only actions: place Upload & Download beside AI Mode */}
-            <div className="flex items-center gap-2 ml-auto md:hidden">
-              {showUpload && (
-                <button
-                  onClick={handleUploadClick}
-                  className="flex items-center justify-center text-white bg-black rounded-lg text-sm transition-all duration-200 hover:bg-black/80 py-2 px-3"
-                >
-                  <Upload size={18} />
-                </button>
-              )}
-
-              <div className="relative" ref={downloadDropdownMobileRef}>
-                <button
-                  onClick={() => setShowDownloadMenu((v) => !v)}
-                  disabled={isDownloading || downloadDisabled}
-                  className="flex items-center justify-center text-white bg-indigo-600 rounded-lg text-sm transition-all duration-200 hover:bg-indigo-700 py-2 px-3 disabled:bg-indigo-400 disabled:cursor-not-allowed"
-                >
-                  {isDownloading ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <Download size={18} />
-                  )}
-                  <ChevronDown
-                    size={14}
-                    className={`ml-1 transition-transform duration-200 ${showDownloadMenu ? "rotate-180" : ""}`}
-                  />
-                </button>
-
-                {showDownloadMenu && (
-                  <div className="absolute right-0 mt-1 w-44 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden">
-                    <button
-                      onClick={() => {
-                        setShowDownloadMenu(false);
-                        onDownload?.();
-                      }}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      <Download size={15} className="text-red-500" />
-                      Download PDF
-                    </button>
-                    <div className="border-t border-gray-100" />
-                    <button
-                      onClick={() => {
-                        setShowDownloadMenu(false);
-                        onDownloadWord?.();
-                      }}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      <Download size={15} className="text-blue-500" />
-                      Download Word
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+       
       </div>
 
       {/* ── Right section (desktop / tablet) ── */}
@@ -260,10 +176,15 @@ const CVBuilderTopBar = ({
           </button>
         )}
 
-        {/* Download dropdown */}
         <div className="relative" ref={downloadDropdownDesktopRef}>
           <button
-            onClick={() => setShowDownloadMenu((v) => !v)}
+            onClick={() => {
+              if (showDownloadWord) {
+                setShowDownloadMenu((v) => !v);
+              } else {
+                onDownload?.();
+              }
+            }}
             disabled={isDownloading || downloadDisabled}
             className="flex items-center gap-2 text-white bg-indigo-600 rounded-lg text-sm transition-all duration-200 hover:bg-indigo-700 py-2 px-3 sm:px-5 disabled:bg-indigo-400 disabled:cursor-not-allowed whitespace-nowrap"
           >
@@ -275,13 +196,15 @@ const CVBuilderTopBar = ({
             <span className="hidden sm:inline">
               {isDownloading ? "Downloading…" : "Download"}
             </span>
-            <ChevronDown
-              size={14}
-              className={`transition-transform duration-200 ${showDownloadMenu ? "rotate-180" : ""}`}
-            />
+            {showDownloadWord && (
+              <ChevronDown
+                size={14}
+                className={`transition-transform duration-200 ${showDownloadMenu ? "rotate-180" : ""}`}
+              />
+            )}
           </button>
 
-          {showDownloadMenu && (
+          {showDownloadMenu && showDownloadWord && (
             <div className="absolute right-0 mt-1 w-44 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden">
               <button
                 onClick={() => {

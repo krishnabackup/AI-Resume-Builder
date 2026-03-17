@@ -253,10 +253,10 @@ const Dashboard = ({ setActivePage }) => {
   };
 
   return (
-    <div className="dashboard-page bg-[#f8fafc] min-h-screen pb-10">
+    <div className="dashboard-page bg-[#f8fafc] min-h-screen pb-10 ">
       <UserNavBar />
 
-      <div className="dashboard-content-container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+      <div className="dashboard-content-container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 md:pt-0 pt-24">
         {/* --- Page Header --- */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>

@@ -10,17 +10,17 @@ import {
 import { getCompletionStatus } from "../completion";
 import axiosInstance from "../../../../api/axios";
 
-const ProjectsForm = ({ formData, setFormData }) => {
+const ProjectsForm = ({ formData, setFormData, highlightEmpty }) => {
   const [editingId, setEditingId] = useState(null);
   const [generatingId, setGeneratingId] = useState(null);
-  useEffect(() => {
-    const { sectionValidationStatus } = getCompletionStatus(formData);
-    if (sectionValidationStatus.hasValidProject) {
-      setEditingId(null);
-    } else {
-      setEditingId((formData?.projects?.[0]?.id) ?? null);
-    }
-  }, [formData]);
+
+  // Helper to get border class for required fields
+  const getBorderClass = (value) => {
+    if (highlightEmpty && !value?.trim()) return 'border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-500/10';
+    return 'border-slate-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10';
+  };
+  // Removed intrusive useEffect that switched components mid-typing based on validation status.
+  // The user should manually click "Done" to collapse the form.
 
   const addProject = () => {
     const id = crypto.randomUUID();
@@ -175,7 +175,7 @@ const ProjectsForm = ({ formData, setFormData }) => {
                     </label>
                     <input
                       type="text"
-                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
+                      className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white ${getBorderClass(project.name)}`}
                       value={project.name || ""}
                       placeholder="E-commerce Platform"
                       onChange={(e) => updateProject(project.id, "name", e.target.value)}
@@ -188,7 +188,7 @@ const ProjectsForm = ({ formData, setFormData }) => {
                     </label>
                     <input
                       type="text"
-                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
+                      className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white ${getBorderClass(project.technologies)}`}
                       value={project.technologies || ""}
                       placeholder="React, Node.js, MongoDB"
                       onChange={(e) => updateProject(project.id, "technologies", e.target.value)}
@@ -213,7 +213,7 @@ const ProjectsForm = ({ formData, setFormData }) => {
                       </button>
                     </div>
                     <textarea
-                      className="w-full px-4 py-3 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white resize-y min-h-[140px] leading-relaxed"
+                      className={`w-full px-4 py-3 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white resize-y min-h-[140px] leading-relaxed ${getBorderClass(project.description)}`}
                       value={project.description || ""}
                       maxLength={500}
                       onChange={(e) => updateProject(project.id, "description", e.target.value)}

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import {
   ArrowLeft,
   Search,
@@ -13,6 +13,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUserNotifications } from "../../../context/UserNotificationContext";
+import UserNavbar from "../UserNavBar/UserNavBar";
 
 const Notification = () => {
   const navigate = useNavigate();
@@ -103,7 +104,9 @@ const Notification = () => {
   const unreadCount = notifications.filter((n) => n.isUnread).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50/30 via-white to-purple-50/30">
+    <>
+    <UserNavbar/>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50/30 via-white to-purple-50/30 md:pt-0 pt-16">
       {/* Header */}
       <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-2xl border-b border-gray-100/50 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-6">
@@ -223,6 +226,7 @@ const Notification = () => {
                       index={index}
                       onDelete={() => deleteNotification(notif.id)}
                       onClick={() => handleNotificationClick(notif)}
+                      markAsRead={markAsRead}
                       getTypeIcon={getTypeIcon}
                       getAvatarColor={getAvatarColor}
                     />
@@ -249,6 +253,7 @@ const Notification = () => {
                       index={index}
                       onDelete={() => deleteNotification(notif.id)}
                       onClick={() => handleNotificationClick(notif)}
+                      markAsRead={markAsRead}
                       getTypeIcon={getTypeIcon}
                       getAvatarColor={getAvatarColor}
                     />
@@ -382,6 +387,7 @@ const Notification = () => {
         © {new Date().getFullYear()} ResumeAI Inc. All rights reserved.
       </footer>
     </div>
+    </>
   );
 };
 
@@ -391,11 +397,39 @@ const NotificationCard = ({
   index,
   onDelete,
   onClick,
+  markAsRead,
   getTypeIcon,
   getAvatarColor,
 }) => {
+  const cardRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && notif.isUnread) {
+            markAsRead(notif.id);
+          }
+        });
+      },
+      {
+        threshold: 0.6,
+      },
+    );
+
+    if (cardRef.current) {
+      observer.observe(cardRef.current);
+    }
+
+    return () => {
+      if (cardRef.current) {
+        observer.unobserve(cardRef.current);
+      }
+    };
+  }, []);
   return (
     <motion.div
+      ref={cardRef}
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.05 }}

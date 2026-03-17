@@ -648,7 +648,7 @@ const handleFileChange = async (e) => {
   };
 
   return (
-    <div className="ats-checker-page user-page min-h-screen bg-[#f8f9fc]">
+    <div className="ats-checker-page user-page min-h-screen bg-[#f8f9fc] md:mt-0 mt-20">
       <UserNavBar onMenuClick={onSidebarToggle || (() => {})} />
 
       {/* ── Page Header ── */}

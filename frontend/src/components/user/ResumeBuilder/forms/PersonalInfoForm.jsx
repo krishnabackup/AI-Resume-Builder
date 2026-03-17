@@ -2,16 +2,21 @@ import { useState } from "react";
 import { RefreshCw, Sparkles, User } from "lucide-react";
 import axiosInstance from "../../../../api/axios";
 
-const PersonalInfoForm = ({ formData, onInputChange, onUseSummary }) => {
+const PersonalInfoForm = ({ formData, onInputChange, onUseSummary, highlightEmpty }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [emailError, setEmailError] = useState(false);
   const [phoneError, setPhoneError] = useState(false);
 
+  // Helper to get border class for required fields
+  const getBorderClass = (value, hasFormatError = false) => {
+    if (hasFormatError) return 'border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-500/10';
+    if (highlightEmpty && !value?.trim()) return 'border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-500/10';
+    return 'border-slate-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10';
+  };
 
   const autoGenerateSummary = async () => {
     try {
       setIsGenerating(true);
-      // Convert experience and projects objects to strings
       const data = {
         fullName: formData.fullName,
         skills: formData.skills,
@@ -25,15 +30,13 @@ const PersonalInfoForm = ({ formData, onInputChange, onUseSummary }) => {
         "/api/resume/generate-summary",
         data,
       );
-      // console.log("Response received:", response);
-      // console.log("Summary generated:", response.data.aiResume);
       onInputChange("summary", response.data.aiResume);
     } catch (error) {
       console.error("Failed to generate summary:", error);
       console.error("Error details:", error.response?.data || error.message);
-      alert(
-        `Failed to generate summary: ${error.response?.data?.error || error.message}`,
-      );
+      // alert(
+      //   `Failed to generate summary: ${error.response?.data?.error || error.message}`,
+      // );
     } finally {
       setIsGenerating(false);
     }
@@ -77,7 +80,7 @@ const PersonalInfoForm = ({ formData, onInputChange, onUseSummary }) => {
           </label>
           <input
             type="text"
-            className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
+            className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white ${getBorderClass(formData?.fullName)}`}
             value={formData?.fullName || ""}
             placeholder="John Doe"
             onChange={(e) => onInputChange("fullName", e.target.value)}
@@ -91,7 +94,7 @@ const PersonalInfoForm = ({ formData, onInputChange, onUseSummary }) => {
           </label>
           <input
             type="email"
-            className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white ${emailError ? 'border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-500/10' : 'border-slate-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10'}`}
+            className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white ${getBorderClass(formData?.email, emailError)}`}
             value={formData?.email || ""}
             placeholder="john.doe@example.com"
             onChange={handleEmailChange}
@@ -106,7 +109,7 @@ const PersonalInfoForm = ({ formData, onInputChange, onUseSummary }) => {
           </label>
           <input
             type="tel"
-            className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white ${phoneError ? 'border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-500/10' : 'border-slate-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10'}`}
+            className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white ${getBorderClass(formData?.phone, phoneError)}`}
             value={formData?.phone || ""}
             maxLength={15}
             placeholder="1234567890"
@@ -122,7 +125,7 @@ const PersonalInfoForm = ({ formData, onInputChange, onUseSummary }) => {
           </label>
           <input
             type="text"
-            className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all bg-white"
+            className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white ${getBorderClass(formData?.location)}`}
             value={formData?.location || ""}
             placeholder="San Francisco, CA"
             onChange={(e) => onInputChange("location", e.target.value)}

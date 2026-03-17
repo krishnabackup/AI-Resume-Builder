@@ -885,6 +885,7 @@ const CVBuilder = () => {
 
   /* ================= SECTION NAV ================= */
   const [warning, setWarning] = useState(false);
+  const [highlightEmpty, setHighlightEmpty] = useState(false);
   const [completion, setcompletion] = useState({});
   const [showCompletionPopup, setShowCompletionPopup] = useState(false);
 
@@ -999,8 +1000,10 @@ const CVBuilder = () => {
     if (currentIndex < sections.length - 1 && isSectionValid()) {
       setActiveSection(sections[currentIndex + 1]);
       setWarning(false);
+      setHighlightEmpty(false);
     } else {
       setWarning(true);
+      setHighlightEmpty(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
@@ -1008,6 +1011,7 @@ const CVBuilder = () => {
     if (currentIndex > 0) {
       setActiveSection(sections[currentIndex - 1]);
       setWarning(false);
+      setHighlightEmpty(false);
     }
   };
 
@@ -1019,19 +1023,20 @@ const CVBuilder = () => {
           <PersonalInfoForm
             formData={formData}
             onInputChange={handleInputChange}
+            highlightEmpty={highlightEmpty}
           />
         );
       case "work":
-        return <ExperienceForm formData={formData} setFormData={setFormData} />;
+        return <ExperienceForm formData={formData} setFormData={setFormData} highlightEmpty={highlightEmpty} />;
       case "education":
-        return <EducationForm formData={formData} setFormData={setFormData} />;
+        return <EducationForm formData={formData} setFormData={setFormData} highlightEmpty={highlightEmpty} />;
       case "skills":
         return <SkillsForm formData={formData} setFormData={setFormData} />;
       case "projects":
-        return <ProjectsForm formData={formData} setFormData={setFormData} />;
+        return <ProjectsForm formData={formData} setFormData={setFormData} highlightEmpty={highlightEmpty} />;
       case "certifications":
         return (
-          <CertificationsForm formData={formData} setFormData={setFormData} />
+          <CertificationsForm formData={formData} setFormData={setFormData} highlightEmpty={highlightEmpty} />
         );
       default:
         return null;
@@ -1042,7 +1047,7 @@ const CVBuilder = () => {
 
   /* ================= RENDER ================= */
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50 relative z-0 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-50 relative z-0 flex flex-col md:pt-0 pt-20">
       {/* ── Sticky: navbar only ── */}
       <div
         ref={headerRef}
@@ -1067,7 +1072,7 @@ const CVBuilder = () => {
         onToggleAiMode={() => setIsAiMode((v) => !v)}
       />
 
-      <div className="px-2 py-4 sm:px-4 lg:px-4 w-screen max-w-full mx-0">
+      <div className="px-2 pt-4 pb-9 sm:px-4 lg:px-4 w-screen max-w-full mx-0">
         {activeTab === "builder" && <ResumeCompletionBanner />}
 
         {/* ════ BUILDER TAB ════ */}
@@ -1144,14 +1149,14 @@ const CVBuilder = () => {
                         scrollbarColor: "#e2e8f0 transparent",
                       }}
                     >
-                      {renderFormContent()}
-
                       {/* Validation warning */}
                       {warning && (
                         <div className="text-sm text-red-700 bg-yellow-100 border border-yellow-300 px-4 py-2 mb-3 rounded-lg">
                           {getRequiredFieldsMessage()}
                         </div>
                       )}
+
+                      {renderFormContent()}
                     </div>
 
                     {/* Prev / Next */}

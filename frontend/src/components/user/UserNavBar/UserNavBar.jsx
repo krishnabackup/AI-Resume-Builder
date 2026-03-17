@@ -139,17 +139,43 @@ export default function UserNavbar() {
   }, []);
 
   // =================== LOGOUT ===================
-  const logout = async () => {
-    try {
-      await axiosInstance.post("/api/auth/logout");
-    } finally {
-      navigate("/login");
-    }
-  };
+ const logout = async () => {
+  try {
+    // Call backend logout endpoint
+    await axiosInstance.post("/api/auth/logout");
+  } catch (err) {
+    console.error("Logout API error:", err);
+    // Continue with local cleanup even if API call fails
+  } finally {
+    // Clear local storage tokens
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("resumeFormData");
+    localStorage.removeItem("currentTemplate");
+    sessionStorage.clear();
+    
+    // Clear any axios default auth headers
+    axiosInstance.defaults.headers.common["Authorization"] = "";
+    
+    // Reset user state
+    setUser({
+      name: "User",
+      email: "",
+      isAdmin: false,
+    });
+    
+    // Close any open menus
+    setShowUserMenu(false);
+    setShowNotifications(false);
+    
+    // Navigate to login
+    navigate("/login", { replace: true });
+  }
+};
 
   return (
     <>
-      <header className="flex items-center justify-between px-4 h-16 bg-white/95 backdrop-blur-xl border-b border-slate-200 sticky top-0 z-[999]">
+      <header className="flex items-center justify-between px-4 h-16 bg-white/95 backdrop-blur-xl border-b border-slate-200 md:sticky fixed w-full top-0 z-[999]">
         {/* Left: Hamburger + Logo */}
         <div className="flex items-center gap-4">
           <motion.div
@@ -409,16 +435,16 @@ const NotificationItemDropdown = ({
     animate={{ opacity: 1, x: 0 }}
     transition={{ duration: 0.3, delay: index * 0.05 }}
     className={`px-6 py-5 hover:bg-gradient-to-r hover:from-yellow-50/70 hover:to-amber-50/40 transition-all duration-300 group cursor-pointer border-b border-transparent hover:border-yellow-200/40 ${notif.isUnread
-        ? "bg-gradient-to-r from-yellow-50/40 to-transparent shadow-sm ring-1 ring-yellow-200/30"
-        : ""
+      ? "bg-gradient-to-r from-yellow-50/40 to-transparent shadow-sm ring-1 ring-yellow-200/30"
+      : ""
       }`}
     onClick={onClick}
   >
     <div className="flex items-start gap-4">
       <motion.div
         className={`flex-shrink-0 p-2.5 rounded-xl shadow-md border border-white/50 backdrop-blur-sm transition-all duration-300 hover:scale-110 group-hover:shadow-xl ${notif.isUnread
-            ? "bg-white shadow-yellow-100/50 ring-2 ring-yellow-200/60"
-            : "bg-white/90"
+          ? "bg-white shadow-yellow-100/50 ring-2 ring-yellow-200/60"
+          : "bg-white/90"
           }`}
       >
         {getTypeIcon(notif.type)}
@@ -426,8 +452,8 @@ const NotificationItemDropdown = ({
       <div className="flex-1 min-w-0">
         <p
           className={`font-bold text-sm leading-relaxed mb-2.5 line-clamp-2 transition-all duration-300 group-hover:line-clamp-none ${notif.isUnread
-              ? "bg-gradient-to-r from-gray-900 via-gray-800 to-yellow-900 bg-clip-text text-transparent"
-              : "text-gray-700"
+            ? "bg-gradient-to-r from-gray-900 via-gray-800 to-yellow-900 bg-clip-text text-transparent"
+            : "text-gray-700"
             }`}
         >
           {notif.title}
