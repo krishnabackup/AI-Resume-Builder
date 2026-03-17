@@ -28,8 +28,8 @@ import BodyContentForm from "./forms/BodyContentForm";
 import ClosingForm from "./forms/ClosingForm";
 
 import CoverLetterPreview from "./CoverLetterPreview";
-
-import CoverLetterTemplates from "./CoverLetterTemplates";
+import CoverLetterTemplatesGallery from "./CoverLetterTemplates";
+import CoverLetterTemplatesMap from "./CoverLetterTemplatesMap";
 
 import UserNavBar from "../UserNavBar/UserNavBar";
 
@@ -210,7 +210,7 @@ const CoverLetterBuilder = () => {
 
   useEffect(() => {
     const saveEditActivity = async () => {
-      const TemplateComponent = CoverLetterTemplates[selectedTemplate];
+      const TemplateComponent = CoverLetterTemplatesMap[selectedTemplate] || CoverLetterTemplatesMap.professional;
 
       if (!TemplateComponent) return;
 
@@ -358,7 +358,7 @@ const CoverLetterBuilder = () => {
     if (sessionStorage.getItem("coverletter-builder-visited")) return;
 
     const saveVisit = async () => {
-      const TemplateComponent = CoverLetterTemplates[selectedTemplate];
+      const TemplateComponent = CoverLetterTemplatesMap[selectedTemplate] || CoverLetterTemplatesMap.professional;
 
       if (!TemplateComponent) return;
 
@@ -414,7 +414,7 @@ const CoverLetterBuilder = () => {
 
   const saveCoverLetterToDownloads = async () => {
     try {
-      const TemplateComponent = CoverLetterTemplates[selectedTemplate];
+      const TemplateComponent = CoverLetterTemplatesMap[selectedTemplate] || CoverLetterTemplatesMap.professional;
 
       if (!TemplateComponent) return;
 
@@ -1266,7 +1266,7 @@ ${
       />
 
       {activeTab === "templates" ? (
-        <CoverLetterTemplates
+        <CoverLetterTemplatesGallery
           selectedTemplate={selectedTemplate}
           onSelectTemplate={(tid) => {
             setSelectedTemplate(tid);
@@ -1319,7 +1319,7 @@ ${
                   setActiveSection={setActiveSection}
                   onTogglePreview={async () => {
                     const TemplateComponent =
-                      CoverLetterTemplates[selectedTemplate];
+                      CoverLetterTemplatesMap[selectedTemplate] || CoverLetterTemplatesMap.professional;
 
                     if (!TemplateComponent) {
                       setShowMobilePreview((v) => !v);
@@ -1433,7 +1433,7 @@ ${
               setActiveSection={setActiveSection}
               onTogglePreview={async () => {
                 const TemplateComponent =
-                  CoverLetterTemplates[selectedTemplate];
+                  CoverLetterTemplatesMap[selectedTemplate] || CoverLetterTemplatesMap.professional;
 
                 if (!TemplateComponent) {
                   setShowMobilePreview((v) => !v);
@@ -1528,7 +1528,7 @@ ${
           {/* PREVIEW PANEL */}
 
           <div className="hidden lg:flex flex-col flex-1 min-w-0 bg-[#eef2f7] rounded-xl overflow-hidden border border-slate-200 relative order-1 lg:order-2 z-10">
-            <CoverLetterPreview formData={formData} exportDate={date} />
+            <CoverLetterPreview formData={formData} selectedTemplate={selectedTemplate} exportDate={date} />
           </div>
         </div>
       </div>
@@ -1569,7 +1569,7 @@ ${
             </div>
 
             <div className="flex-1 min-h-0 overflow-y-auto">
-              <CoverLetterPreview formData={formData} exportDate={date} />
+              <CoverLetterPreview formData={formData} selectedTemplate={selectedTemplate} exportDate={date} />
             </div>
           </div>
         </div>
