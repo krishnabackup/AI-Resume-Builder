@@ -1,10 +1,11 @@
 /* =======================
    PAGE WRAPPER
 ======================= */
-.admin-profile-page {
+.edit-profile-page {
   background: #f8f9fa;
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
 }
 
 
@@ -14,29 +15,35 @@
 ======================= */
 .profile-page-content {
   flex: 1;
-  padding: 1.5rem;
+  padding:16px;
+  max-width:1400px;
+  width:90%;
+  margin:auto;
 }
 
 /* =======================
    GRID LAYOUT
 ======================= */
-.profile-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: 360px 1fr;
-  gap: 2rem;
+.profile-card {
+  display:grid;
+  grid-template-columns:320px 1fr;
+  gap:32px;
+
+  background:#ffffff;
+  border-radius:16px;
+  padding:32px;
+
+  box-shadow:0 8px 30px rgba(0,0,0,0.08);
 }
 
 /* =======================
    SIDEBAR CARD
 ======================= */
 .profile-sidebar-card {
-  background: #ffffff;
-  border-radius: 14px;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
   padding: 2rem;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-  height: fit-content;
 }
 
 .profile-header-section {
@@ -114,11 +121,8 @@
 /* =======================
    MAIN CARD
 ======================= */
-.profile-main-card {
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
+.profile-form {
+  width: 100%;
 }
 
 .card-header {
@@ -159,6 +163,10 @@
   grid-template-columns: 1fr 1fr;
   gap: 1.25rem;
   margin-bottom: 1.25rem;
+}
+
+.profile-sidebar-card .field-row {
+  grid-template-columns: 1fr;
 }
 
 .field-group {
@@ -260,7 +268,7 @@
    RESPONSIVE (MOBILE)
 ======================= */
 @media (max-width: 1024px) {
-  .profile-container {
+  .profile-card {
     grid-template-columns: 1fr;
   }
 }
@@ -298,11 +306,6 @@
   /* Reduce top spacing */
   .profile-page-content {
     padding: 0.75rem;
-  }
-
-  /* Compact sidebar */
-  .profile-sidebar-card {
-    padding: 1.25rem 1rem;
   }
 
   .avatar-frame {
