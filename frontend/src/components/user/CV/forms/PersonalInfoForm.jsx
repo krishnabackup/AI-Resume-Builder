@@ -121,16 +121,16 @@ const PersonalInfoForm = ({ formData, onInputChange, highlightEmpty }) => {
           {phoneError && <span className="text-xs text-red-500 font-medium">Please enter a valid phone number</span>}
         </div>
 
-        {/* Location */}
+        {/* Address */}
         <div className="flex flex-col gap-1.5">
           <label className="block text-sm font-semibold text-slate-700">
-            Location <span className="text-red-500">*</span>
+            Address <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white ${getBorderClass(formData?.location)}`}
             value={formData?.location || ""}
-            placeholder="San Francisco, CA"
+            placeholder="123 Main St, City, State, ZIP"
             onChange={(e) => onInputChange("location", e.target.value)}
           />
         </div>

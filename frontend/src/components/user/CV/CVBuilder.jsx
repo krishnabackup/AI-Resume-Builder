@@ -22,7 +22,7 @@ import SkillsForm from "./forms/skillsForm";
 import CVPreview from "./CVPreview";
 import TemplatesGallery from "./Templatesgallery";
 import CVTemplates from "./Cvtemplates";
-import mergeWithSampleData from "../../../utils/Datahelpers";
+import mergeWithSampleData, { getFilteredDisplayData } from "../../../utils/Datahelpers";
 
 import CVBuilderTopBar from "./Cvbuildernavbar";
 import "./CVBuilder.css";
@@ -163,7 +163,14 @@ const CVBuilder = () => {
   const [activeTab, setActiveTab] = useState("builder");
   const [activeSection, setActiveSection] = useState("personal");
   const [selectedTemplate, setSelectedTemplate] = useState("professional");
-  const [formData, setFormData] = useState(() => createEmptyResume());
+  const [formData, setFormData] = useState(() => {
+    try {
+      const saved = localStorage.getItem("cvBuilderFormData");
+      return saved ? { ...createEmptyResume(), ...JSON.parse(saved) } : createEmptyResume();
+    } catch {
+      return createEmptyResume();
+    }
+  });
 
   /* ======================================================
    SAVE RECENT ACTIVITY (visited / preview / download)
@@ -171,7 +178,7 @@ const CVBuilder = () => {
 
   const saveRecentActivity = async (html, action = "visited") => {
     try {
-      const displayData = mergeWithSampleData(formData);
+      const displayData = getFilteredDisplayData(formData);
 
       const sanitize = (s) =>
         (s || "")
@@ -218,7 +225,7 @@ const CVBuilder = () => {
 
       const { createRoot } = await import("react-dom/client");
 
-      const displayData = mergeWithSampleData(formData);
+      const displayData = getFilteredDisplayData(formData);
 
       await new Promise((resolve) => {
         const root = createRoot(container);
@@ -276,7 +283,7 @@ const CVBuilder = () => {
   const saveDownloadRecord = async (html, format = "PDF") => {
     try {
       // Use document title first, then merged data for consistent naming
-      const displayData = mergeWithSampleData(formData);
+      const displayData = getFilteredDisplayData(formData);
       const nameToUse = documentTitle || displayData.fullName || "Document";
       await axiosInstance.post("/api/downloads", {
         name: `CV - ${nameToUse}`,
@@ -313,7 +320,7 @@ const CVBuilder = () => {
 
       const { createRoot } = await import("react-dom/client");
 
-      const displayData = mergeWithSampleData(formData);
+      const displayData = getFilteredDisplayData(formData);
 
       await new Promise((resolve) => {
         const root = createRoot(container);
@@ -355,7 +362,7 @@ const CVBuilder = () => {
       document.body.appendChild(container);
 
       const { createRoot } = await import("react-dom/client");
-      const displayData = mergeWithSampleData(formData);
+      const displayData = getFilteredDisplayData(formData);
 
       await new Promise((resolve) => {
         const root = createRoot(container);
@@ -371,7 +378,7 @@ const CVBuilder = () => {
     }
   };
 
-  /* ================= DOWNLOAD WORD ================= */
+  /* ================= DOWNLOAD WORD (kept for reference, hidden in UI) ================= */
   const downloadWord = async () => {
     const TemplateComponent = CVTemplates[selectedTemplate];
     if (!TemplateComponent) {
@@ -392,7 +399,7 @@ const CVBuilder = () => {
 
     try {
       const { createRoot } = await import("react-dom/client");
-      const displayData = mergeWithSampleData(formData);
+      const displayData = getFilteredDisplayData(formData);
       await new Promise((resolve) => {
         const root = createRoot(container);
         root.render(<TemplateComponent formData={displayData} />);
@@ -447,7 +454,7 @@ const CVBuilder = () => {
     document.body.appendChild(container);
 
     const { createRoot } = await import("react-dom/client");
-    const displayData = mergeWithSampleData(formData);
+    const displayData = getFilteredDisplayData(formData);
 
     await new Promise((resolve) => {
       const root = createRoot(container);
@@ -536,7 +543,9 @@ const CVBuilder = () => {
         if (latest) {
           setResumeId(latest._id);
 
-          if (latest.data) {
+          // Only load from API if there's no local save (local is more recent)
+          const localSaved = localStorage.getItem("cvBuilderFormData");
+          if (latest.data && (!localSaved || localSaved === "undefined" || localSaved === "null")) {
             setFormData((prev) => ({
               ...prev,
               ...latest.data,
@@ -598,6 +607,70 @@ const CVBuilder = () => {
       setIsSaving(false);
     }
   };
+
+  /* ================= AUTO SAVE (localStorage & API) ================= */
+  useEffect(() => {
+    // 1. Always save to LocalStorage immediately on change
+    try {
+      localStorage.setItem("cvBuilderFormData", JSON.stringify(formData));
+    } catch (e) {
+      console.warn("CV auto-save to localStorage failed:", e);
+    }
+
+    // 2. Debounced save to Database (only if it's an existing resume)
+    if (!resumeId) return;
+
+    const timer = setTimeout(() => {
+      // Don't call handleSave to avoid showing the loading spinner/toast every few words
+      const autoSaveToDb = async () => {
+        try {
+          const payload = {
+            title: formData.fullName
+              ? `${formData.fullName}'s Resume`
+              : "My Resume",
+            templateId: selectedTemplate,
+            data: formData,
+          };
+          
+          await axios.put(
+            `http://localhost:5000/api/resume/${resumeId}`,
+            payload,
+            { withCredentials: true },
+          );
+          
+          // Generate html for background preview download saving
+          const TemplateComponent = CVTemplates[selectedTemplate];
+          if (TemplateComponent) {
+            const container = document.createElement("div");
+            Object.assign(container.style, {
+              position: "fixed", top: "0", left: "-9999px",
+              width: `${PDF_PAGE_WIDTH_PX}px`, background: "#ffffff",
+            });
+            document.body.appendChild(container);
+            
+            const { createRoot } = await import("react-dom/client");
+            const displayData = getFilteredDisplayData(formData);
+            
+            await new Promise((resolve) => {
+              const root = createRoot(container);
+              root.render(<TemplateComponent formData={displayData} />);
+              setTimeout(resolve, 400);
+            });
+            
+            const html = container.innerHTML;
+            await saveRecentActivity(html, "preview");
+            document.body.removeChild(container);
+          }
+        } catch (err) {
+          console.error("Auto-save failed implicitly:", err);
+        }
+      };
+
+      autoSaveToDb();
+    }, 2000); // 2 second debounce
+
+    return () => clearTimeout(timer);
+  }, [formData, resumeId, selectedTemplate]);
 
   const handleUpload = async (file) => {
     if (!file) return;
@@ -889,56 +962,31 @@ const CVBuilder = () => {
   const [completion, setcompletion] = useState({});
   const [showCompletionPopup, setShowCompletionPopup] = useState(false);
 
-  // CV-specific completion logic
-  const getCVCompletionStatus = (formData) => {
+  // CV-specific completion logic (certifications & projects are optional)
+  const getCVCompletionStatus = (data) => {
     const missing = [];
-
-    console.log('CV Completion Check - formData:', formData); // Debug log
 
     /* ---------- PERSONAL INFO ---------- */
     const hasPersonalInfo =
-      formData?.fullName?.trim() &&
-      formData?.email?.trim() &&
-      formData?.phone?.trim() &&
-      formData?.location?.trim();
-
-    console.log('CV Completion Check - hasPersonalInfo:', hasPersonalInfo); // Debug log
-
+      data?.fullName?.trim() &&
+      data?.email?.trim() &&
+      data?.phone?.trim() &&
+      data?.location?.trim();
     if (!hasPersonalInfo) missing.push("Personal");
 
-    /* ---------- EXPERIENCE ---------- */
-    const hasValidExperience =
-      Array.isArray(formData?.experience) &&
-      formData.experience.length > 0 &&
-      formData.experience.some(
-        (exp) => exp.title?.trim() && exp.company?.trim()
-      );
-
-    console.log('CV Completion Check - hasValidExperience:', hasValidExperience); // Debug log
-
-    if (!hasValidExperience) missing.push("Work");
-
-    /* ---------- EDUCATION ---------- */
+    /* ---------- EDUCATION (required) ---------- */
     const hasValidEducation =
-      Array.isArray(formData?.education) &&
-      formData.education.length > 0 &&
-      formData.education.some(
-        (edu) => edu.school?.trim() && edu.degree?.trim()
-      );
-
-    console.log('CV Completion Check - hasValidEducation:', hasValidEducation); // Debug log
-
+      Array.isArray(data?.education) &&
+      data.education.some((edu) => edu.school?.trim() && edu.degree?.trim());
     if (!hasValidEducation) missing.push("Education");
 
-    /* ---------- SKILLS ---------- */
+    /* ---------- SKILLS (required) ---------- */
     const hasSkills =
-      (formData?.skills?.technical?.length ?? 0) > 0 ||
-      (formData?.skills?.soft?.length ?? 0) > 0;
+      (data?.skills?.technical?.length ?? 0) > 0 ||
+      (data?.skills?.soft?.length ?? 0) > 0;
+    if (!hasSkills) missing.push("Skills");
 
-    console.log('CV Completion Check - hasSkills:', hasSkills); // Debug log
-    console.log('CV Completion Check - missing sections:', missing); // Debug log
-
-    // Projects and Certifications are optional for completion
+    // Experience, Projects, Certifications are optional
 
     return {
       isComplete: missing.length === 0,
@@ -947,30 +995,38 @@ const CVBuilder = () => {
   };
 
   useEffect(() => {
-    const statusInfo = getCVCompletionStatus(formData);
-    console.log('CV Completion Status:', statusInfo); // Debug log
-    setcompletion(statusInfo);
+    setcompletion(getCVCompletionStatus(formData));
   }, [formData]);
 
-  // Enhanced validation for section navigation
+  // Section navigation validation — certifications is optional, always passes
   const isSectionValid = () => {
     switch (activeSection) {
       case "personal":
-        return formData?.fullName?.trim() &&
+        return (
+          formData?.fullName?.trim() &&
           formData?.email?.trim() &&
           formData?.phone?.trim() &&
-          formData?.location?.trim();
+          formData?.location?.trim()
+        );
       case "work":
-        return formData?.experience && formData.experience.length > 0;
+        // Optional — allow empty
+        return true;
       case "education":
-        return formData?.education && formData.education.length > 0;
+        return (
+          Array.isArray(formData?.education) &&
+          formData.education.some((edu) => edu.school?.trim() && edu.degree?.trim())
+        );
       case "skills":
-        return (formData?.skills?.technical?.length ?? 0) > 0 ||
-          (formData?.skills?.soft?.length ?? 0) > 0;
+        return (
+          (formData?.skills?.technical?.length ?? 0) > 0 ||
+          (formData?.skills?.soft?.length ?? 0) > 0
+        );
       case "projects":
-        return formData?.projects && formData.projects.length > 0;
+        // Optional — allow empty
+        return true;
       case "certifications":
-        return formData?.certifications && formData.certifications.length > 0;
+        // Optional — always passes
+        return true;
       default:
         return true;
     }
@@ -979,17 +1035,11 @@ const CVBuilder = () => {
   const getRequiredFieldsMessage = () => {
     switch (activeSection) {
       case "personal":
-        return "Full Name, Email, Phone, and Location are required";
-      case "work":
-        return "At least one work experience is required";
+        return "Full Name, Email, Phone, and Address are required";
       case "education":
-        return "At least one education entry is required";
+        return "At least one education entry with school and degree is required";
       case "skills":
         return "At least one skill is required";
-      case "projects":
-        return "At least one project is required";
-      case "certifications":
-        return "At least one certification is required";
       default:
         return "";
     }
@@ -1063,6 +1113,7 @@ const CVBuilder = () => {
         onSave={handleSave}
         onDownload={downloadPDF}
         onDownloadWord={downloadWord}
+        showDownloadWord={false}
         onUpload={handleUpload}
         isSaving={isSaving}
         isDownloading={isDownloading}
@@ -1073,7 +1124,7 @@ const CVBuilder = () => {
       />
 
       <div className="px-2 pt-4 pb-9 sm:px-4 lg:px-4 w-screen max-w-full mx-0">
-        {activeTab === "builder" && <ResumeCompletionBanner />}
+        {activeTab === "builder" && <ResumeCompletionBanner missingSections={completion?.missingSections || []} />}
 
         {/* ════ BUILDER TAB ════ */}
         {activeTab === "builder" && (
@@ -1119,7 +1170,7 @@ const CVBuilder = () => {
                           const { createRoot } =
                             await import("react-dom/client");
 
-                          const displayData = mergeWithSampleData(formData);
+                          const displayData = getFilteredDisplayData(formData);
 
                           await new Promise((resolve) => {
                             const root = createRoot(container);
@@ -1218,7 +1269,7 @@ const CVBuilder = () => {
 
                       const { createRoot } = await import("react-dom/client");
 
-                      const displayData = mergeWithSampleData(formData);
+                      const displayData = getFilteredDisplayData(formData);
 
                       await new Promise((resolve) => {
                         const root = createRoot(container);

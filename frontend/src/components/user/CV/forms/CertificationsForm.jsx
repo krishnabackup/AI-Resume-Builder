@@ -11,8 +11,6 @@ const CertificationsForm = ({ formData, setFormData, highlightEmpty }) => {
     return 'border-slate-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10';
   };
   
-  // Debug log to track form data
-  console.log('Certifications Form - formData:', formData);
 
   const addCertification = () => {
     try {
@@ -128,10 +126,10 @@ const CertificationsForm = ({ formData, setFormData, highlightEmpty }) => {
             <>
               <div className="px-3 py-4">
                 <div className="flex flex-col gap-2 mb-3">
-                  <label>Certification Name *</label>
+                  <label>Certification Name</label>
                   <input
                     type="text"
-                    className={`px-2.5 py-2 border text-sm rounded focus:outline-none focus:shadow-sm ${getBorderClass(cert.name)}`}
+                    className="px-2.5 py-2 border border-slate-200 text-sm rounded focus:outline-none focus:border-blue-500 focus:shadow-sm"
                     placeholder="AWS Solutions Architect"
                     value={cert.name}
                     onChange={(e) =>
@@ -141,10 +139,10 @@ const CertificationsForm = ({ formData, setFormData, highlightEmpty }) => {
                 </div>
 
                 <div className="flex flex-col gap-2 mb-3">
-                  <label>Issuing Organization *</label>
+                  <label>Issuing Organization</label>
                   <input
                     type="text"
-                    className={`px-2.5 py-2 border text-sm rounded focus:outline-none focus:shadow-sm ${getBorderClass(cert.issuer)}`}
+                    className="px-2.5 py-2 border border-slate-200 text-sm rounded focus:outline-none focus:border-blue-500 focus:shadow-sm"
                     placeholder="Amazon Web Services"
                     value={cert.issuer}
                     onChange={(e) =>
@@ -154,10 +152,10 @@ const CertificationsForm = ({ formData, setFormData, highlightEmpty }) => {
                 </div>
 
                 <div className="flex flex-col gap-2 mb-3">
-                  <label>Date Obtained *</label>
+                  <label>Date Obtained</label>
                   <MonthYearPicker
                     alignRight={true}
-                    className={`px-2.5 py-2 border text-sm rounded focus:outline-none focus:shadow-sm ${getBorderClass(cert.date)}`}
+                    className="px-2.5 py-2 border border-slate-200 text-sm rounded focus:outline-none focus:shadow-sm"
                     value={cert.date}
                     onChange={(e) =>
                       handleChange(cert.id, "date", e.target.value)
