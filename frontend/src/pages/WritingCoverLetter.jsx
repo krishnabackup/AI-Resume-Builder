@@ -183,7 +183,7 @@ Warm regards,
                 </button>
 
                 <button
-                  onClick={() => navigate("/cover-letter-examples")}
+                  onClick={() => navigate("/cover-letter")}
                   className="px-6 py-3 rounded-xl bg-slate-100 text-slate-900 font-semibold hover:bg-slate-200 hover:-translate-y-0.5 transition-all duration-300"
                 >
                   View Examples
