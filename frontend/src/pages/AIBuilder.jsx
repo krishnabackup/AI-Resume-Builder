@@ -68,7 +68,7 @@ const AIBuilderFeature = () => {
       {/* HERO */}
       <section
         ref={heroRef}
-         className="relative px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 lg:pt-24 pb-10 sm:pb-14 overflow-hidden bg-white"
+         className="relative px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 lg:pt-32 pb-10 sm:pb-14 overflow-hidden bg-white"
       >
         {/* Brand Theme Blurs */}
         <div className="absolute rounded-full -top-24 -left-24 w-72 h-72 bg-blue-50 blur-3xl opacity-60" />
@@ -258,7 +258,7 @@ const AIBuilderFeature = () => {
             Create a professional resume with AI assistance in three simple steps
           </p>
 
-          <div className="p-5 sm:p-8 md:p-10 bg-white border border-gray-100 shadow-2xl rounded-[2rem] sm:rounded-[2.5rem] md:p-14">
+          <div className="p-5 sm:p-8 bg-white border border-gray-100 shadow-2xl rounded-[2rem] sm:rounded-[2.5rem] md:p-14">
             <h3 className="mb-8 sm:mb-10 text-xl sm:text-2xl font-bold text-center text-[#1a2e52]">
               Simple 3-Step Process:
             </h3>

@@ -95,9 +95,12 @@ export default function UserSidebar() {
   const handleLogout = () => {
     // Clear all authentication data
     localStorage.removeItem("token");
+    localStorage.removeItem("isAdmin");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("isAdmin");
     localStorage.clear(); // Clear all localStorage to ensure clean logout
     setIsMobileOpen(false);
-    // Navigate after ensuring localStorage is cleared
+    // Navigate after ensuring storage is cleared
     setTimeout(() => {
       navigate("/", { replace: true });
       window.location.reload(); // Force reload to clear any cached state

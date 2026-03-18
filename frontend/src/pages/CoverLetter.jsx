@@ -48,6 +48,9 @@ const BENTO_FEATURES = [
   { icon: FileCheck, color: "cyan", title: "Recruiter Approved", desc: "Designed to pass every ATS screen." },
 ];
 
+const isLoggedIn =
+    typeof window !== "undefined" && !!localStorage.getItem("token");
+
 const SimpleCoverLetterPage = () => {
   const navigate = useNavigate();
 
@@ -84,7 +87,10 @@ const SimpleCoverLetterPage = () => {
               </p>
 
               <button
-                onClick={() => navigate("/register")}
+                            onClick={() => {
+                    if (!isLoggedIn) navigate("/login");
+                    else navigate("/user/cover-letter");
+                  }}
                 className="group relative inline-flex items-center gap-3 px-8 sm:px-10 py-4 sm:py-5 bg-gradient-to-r from-[#e65100] to-[#f4511e] text-white rounded-xl font-bold text-lg transition-all duration-300 shadow-[0_10px_25px_rgba(230,81,0,0.3)] hover:shadow-[0_15px_35px_rgba(230,81,0,0.45)] hover:-translate-y-1 active:scale-95"
               >
                 <span>Generate Now — It's Free</span>
@@ -214,7 +220,10 @@ const SimpleCoverLetterPage = () => {
           </h2>
           <p className="mb-10 text-lg sm:text-xl font-medium text-gray-500">Our AI reads your resume and job description to write a perfect letter that gets you hired.</p>
           <button
-            onClick={() => navigate("/login")}
+            onClick={() => {
+                    if (!isLoggedIn) navigate("/login");
+                    else navigate("/user/cover-letter");
+                  }}
             className="group relative inline-flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-[#e65100] to-[#f4511e] text-white rounded-xl font-bold text-lg transition-all duration-300 shadow-[0_10px_25px_rgba(230,81,0,0.3)] hover:shadow-[0_15px_35px_rgba(230,81,0,0.45)] hover:-translate-y-1 active:scale-95"
           >
             <span>Generate Now — It's Free</span>

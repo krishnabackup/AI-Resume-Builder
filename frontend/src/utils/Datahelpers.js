@@ -240,4 +240,47 @@ export const hasAnyUserData = (formData) => {
 };
 
 
+/* ================= FILTERED DISPLAY DATA ================= */
+// Same as mergeWithSampleData but strips sample data for sections
+// where the user has entered nothing — matches CVPreview's display logic.
+
+export const getFilteredDisplayData = (formData) => {
+  const merged = mergeWithSampleData(formData);
+
+  const hasUserEnteredExperience = formData?.experience?.some(
+    (exp) => exp?.company?.trim() || exp?.title?.trim() || exp?.description?.trim()
+  );
+
+  const hasUserEnteredEducation = formData?.education?.some(
+    (edu) => edu?.school?.trim() || edu?.degree?.trim()
+  );
+
+  const hasUserEnteredProjects = formData?.projects?.some((proj) => {
+    const linkStr =
+      typeof proj?.link === "string"
+        ? proj.link
+        : proj?.link?.github || proj?.link?.liveLink || proj?.link?.other || "";
+    return proj?.title?.trim() || proj?.name?.trim() || proj?.description?.trim() || linkStr?.trim();
+  });
+
+  const hasUserEnteredCertifications = formData?.certifications?.some(
+    (cert) => cert?.name?.trim() || cert?.issuer?.trim() || cert?.date?.trim()
+  );
+
+  if (!hasUserEnteredExperience && Array.isArray(merged.experience)) {
+    merged.experience = [];
+  }
+  if (!hasUserEnteredEducation && Array.isArray(merged.education)) {
+    merged.education = [];
+  }
+  if (!hasUserEnteredProjects && Array.isArray(merged.projects)) {
+    merged.projects = [];
+  }
+  if (!hasUserEnteredCertifications && Array.isArray(merged.certifications)) {
+    merged.certifications = [];
+  }
+
+  return merged;
+};
+
 export default mergeWithSampleData;

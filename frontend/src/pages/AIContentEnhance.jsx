@@ -51,6 +51,8 @@ const AIEnhancementPage = () => {
   const isWhatInView = useInView(whatRef, { once: true, margin: "-100px" });
   const isFeatureInView = useInView(featureRef, { once: true, margin: "-100px" });
   const isCtaInView = useInView(ctaRef, { once: true, margin: "-100px" });
+  const isLoggedIn =
+    typeof window !== "undefined" && !!localStorage.getItem("token");
 
   return (
     <div className="min-h-screen bg-white font-['Outfit'] text-[#1a2e52] selection:bg-orange-100 overflow-x-hidden select-none">
@@ -88,7 +90,10 @@ const AIEnhancementPage = () => {
               </p>
 
               <button
-                onClick={() => navigate("/register")}
+                   onClick={() => {
+                    if (!isLoggedIn) navigate("/login");
+                    else navigate("/user/resume-builder");
+                  }}
                 className="group inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#e65100] to-[#f4511e] text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl hover:-translate-y-1 active:scale-95 transition-all"
               >
                 Enhance My Content
@@ -228,7 +233,7 @@ const AIEnhancementPage = () => {
             variants={fadeUp}
             whileHover={{ y: -6 }}
             whileTap={{ scale: 0.96 }}
-            onClick={() => navigate("/register")}
+            onClick={() => navigate("/user/resume-builder")}
             className="group relative inline-flex items-center gap-2 sm:gap-3 px-6 py-3 sm:px-10 sm:py-5 bg-gradient-to-r from-[#e65100] to-[#f4511e] text-white rounded-lg sm:rounded-xl font-bold text-sm sm:text-lg transition-all duration-300 shadow-[0_8px_18px_rgba(230,81,0,0.22)] hover:shadow-[0_12px_28px_rgba(230,81,0,0.3)]"
           >
             <Sparkles size={16} className="fill-white" />

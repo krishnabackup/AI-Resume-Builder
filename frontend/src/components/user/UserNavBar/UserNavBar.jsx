@@ -139,39 +139,40 @@ export default function UserNavbar() {
   }, []);
 
   // =================== LOGOUT ===================
- const logout = async () => {
-  try {
-    // Call backend logout endpoint
-    await axiosInstance.post("/api/auth/logout");
-  } catch (err) {
-    console.error("Logout API error:", err);
-    // Continue with local cleanup even if API call fails
-  } finally {
-    // Clear local storage tokens
-    localStorage.removeItem("token");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("resumeFormData");
-    localStorage.removeItem("currentTemplate");
-    sessionStorage.clear();
-    
-    // Clear any axios default auth headers
-    axiosInstance.defaults.headers.common["Authorization"] = "";
-    
-    // Reset user state
-    setUser({
-      name: "User",
-      email: "",
-      isAdmin: false,
-    });
-    
-    // Close any open menus
-    setShowUserMenu(false);
-    setShowNotifications(false);
-    
-    // Navigate to login
-    navigate("/login", { replace: true });
-  }
-};
+  const logout = async () => {
+    try {
+      // Call backend logout endpoint
+      await axiosInstance.post("/api/auth/logout");
+    } catch (err) {
+      console.error("Logout API error:", err);
+      // Continue with local cleanup even if API call fails
+    } finally {
+      // Clear local storage tokens
+      localStorage.removeItem("token");
+      localStorage.removeItem("isAdmin");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("resumeFormData");
+      localStorage.removeItem("currentTemplate");
+      sessionStorage.clear();
+
+      // Clear any axios default auth headers
+      axiosInstance.defaults.headers.common["Authorization"] = "";
+
+      // Reset user state
+      setUser({
+        name: "User",
+        email: "",
+        isAdmin: false,
+      });
+
+      // Close any open menus
+      setShowUserMenu(false);
+      setShowNotifications(false);
+
+      // Navigate to login
+      navigate("/login", { replace: true });
+    }
+  };
 
   return (
     <>
@@ -197,7 +198,14 @@ export default function UserNavbar() {
           {/* Notifications Toggle Button */}
           <div className="relative" ref={notificationDropdownRef}>
             <motion.button
-              onClick={() => setShowNotifications((prev) => !prev)}
+              onClick={() => {
+                setShowNotifications((prev) => {
+                  if (!prev) {
+                    markAllAsRead(); // ✅ THIS IS THE MAIN FIX
+                  }
+                  return !prev;
+                });
+              }}
               className="relative p-2.5 text-gray-700 hover:text-gray-900 hover:bg-gradient-to-r hover:from-yellow-50 hover:to-amber-50 rounded-2xl transition-all duration-300 hover:shadow-xl hover:rotate-3 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
@@ -230,13 +238,26 @@ export default function UserNavbar() {
               <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white shadow-md group-hover:shadow-lg transition-all font-bold">
                 {user.name?.charAt(0)?.toUpperCase() || "U"}
               </div>
-              <div className="hidden md:flex flex-col items-start" style={{ minWidth: 'max-content' }}>
-                <span className="text-sm font-bold text-slate-800 leading-none whitespace-nowrap" style={{ display: 'inline-block', width: 'max-content' }}>{user.name}</span>
-                <span className="text-[10px] font-medium text-slate-500 whitespace-nowrap" style={{ display: 'inline-block', width: 'max-content' }}>User</span>
+              <div
+                className="hidden md:flex flex-col items-start"
+                style={{ minWidth: "max-content" }}
+              >
+                <span
+                  className="text-sm font-bold text-slate-800 leading-none whitespace-nowrap"
+                  style={{ display: "inline-block", width: "max-content" }}
+                >
+                  {user.name}
+                </span>
+                <span
+                  className="text-[10px] font-medium text-slate-500 whitespace-nowrap"
+                  style={{ display: "inline-block", width: "max-content" }}
+                >
+                  User
+                </span>
               </div>
               <ChevronDown
                 size={16}
-                className={`text-slate-400 transition-transform duration-300 ${showUserMenu ? 'rotate-180' : ''}`}
+                className={`text-slate-400 transition-transform duration-300 ${showUserMenu ? "rotate-180" : ""}`}
               />
             </motion.button>
 
@@ -256,33 +277,99 @@ export default function UserNavbar() {
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <p className="font-semibold text-slate-900 whitespace-nowrap" style={{ display: 'inline-block', width: 'max-content' }}>{user.name}</p>
-                        <span className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-bold whitespace-nowrap border border-indigo-100" style={{ display: 'inline-block', width: 'max-content' }}>
+                        <p
+                          className="font-semibold text-slate-900 whitespace-nowrap"
+                          style={{
+                            display: "inline-block",
+                            width: "max-content",
+                          }}
+                        >
+                          {user.name}
+                        </p>
+                        <span
+                          className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-bold whitespace-nowrap border border-indigo-100"
+                          style={{
+                            display: "inline-block",
+                            width: "max-content",
+                          }}
+                        >
                           User
                         </span>
                       </div>
-                      <p className="text-sm text-slate-500 truncate">{user.email}</p>
+                      <p className="text-sm text-slate-500 truncate">
+                        {user.email}
+                      </p>
                     </div>
                   </div>
 
                   {/* Menu */}
                   <div className="px-2 pb-2 space-y-0.5">
-                    <DropdownItem icon={UserCog} label="Edit Profile" onClick={() => { setShowUserMenu(false); navigate('/user/edit-profile'); }} />
-                    <DropdownItem icon={Key} label="Change Password" onClick={() => { setShowUserMenu(false); navigate('/user/security'); }} />
-                    <DropdownItem icon={CreditCard} label="Plans & Billing" onClick={() => { setShowUserMenu(false); navigate('/pricing'); }} />
-                    <DropdownItem icon={Info} label="About Us" onClick={() => { setShowUserMenu(false); navigate('/about'); }} />
-                    <DropdownItem icon={HelpCircle} label="Help Center" onClick={() => { setShowUserMenu(false); navigate('/help-center'); }} />
+                    <DropdownItem
+                      icon={UserCog}
+                      label="Edit Profile"
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        navigate("/user/edit-profile");
+                      }}
+                    />
+                    <DropdownItem
+                      icon={Key}
+                      label="Change Password"
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        navigate("/user/security");
+                      }}
+                    />
+                    <DropdownItem
+                      icon={CreditCard}
+                      label="Plans & Billing"
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        navigate("/pricing");
+                      }}
+                    />
+                    <DropdownItem
+                      icon={Info}
+                      label="About Us"
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        navigate("/about");
+                      }}
+                    />
+                    <DropdownItem
+                      icon={HelpCircle}
+                      label="Help Center"
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        navigate("/help-center");
+                      }}
+                    />
 
                     {user.isAdmin && (
                       <div className="bg-slate-50 rounded-xl mt-1">
-                        <DropdownItem icon={Repeat} label="Switch to Admin Dashboard" onClick={() => { setShowUserMenu(false); navigate('/admin'); }} />
+                        <DropdownItem
+                          icon={Repeat}
+                          label="Switch to Admin Dashboard"
+                          onClick={() => {
+                            setShowUserMenu(false);
+                            navigate("/admin");
+                          }}
+                        />
                       </div>
                     )}
                   </div>
 
                   {/* Logout */}
                   <div className="border-t px-2 py-2">
-                    <DropdownItem icon={LogOut} label="Logout" variant="danger" onClick={() => { setShowUserMenu(false); logout(); }} />
+                    <DropdownItem
+                      icon={LogOut}
+                      label="Logout"
+                      variant="danger"
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        logout();
+                      }}
+                    />
                   </div>
                 </motion.div>
               )}
@@ -344,54 +431,54 @@ export default function UserNavbar() {
                   <>
                     {notifications.filter((n) => n.category === "today")
                       .length > 0 && (
-                        <div className="mb-4">
-                          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
-                            Today
-                          </h3>
-                          <div className="space-y-4">
-                            {notifications
-                              .filter((n) => n.category === "today")
-                              .map((n, i) => (
-                                <NotificationItemDropdown
-                                  key={n.id}
-                                  notif={n}
-                                  index={i}
-                                  getTypeIcon={getTypeIcon}
-                                  getAvatarColor={getAvatarColor}
-                                  onClick={() => {
-                                    setShowNotifications(false);
-                                    navigate("/user/notifications");
-                                  }}
-                                />
-                              ))}
-                          </div>
+                      <div className="mb-4">
+                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
+                          Today
+                        </h3>
+                        <div className="space-y-4">
+                          {notifications
+                            .filter((n) => n.category === "today")
+                            .map((n, i) => (
+                              <NotificationItemDropdown
+                                key={n.id}
+                                notif={n}
+                                index={i}
+                                getTypeIcon={getTypeIcon}
+                                getAvatarColor={getAvatarColor}
+                                onClick={() => {
+                                  setShowNotifications(false);
+                                  navigate("/user/notifications");
+                                }}
+                              />
+                            ))}
                         </div>
-                      )}
+                      </div>
+                    )}
                     {notifications.filter((n) => n.category === "older")
                       .length > 0 && (
-                        <div className="mt-6">
-                          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
-                            Earlier
-                          </h3>
-                          <div className="space-y-4">
-                            {notifications
-                              .filter((n) => n.category === "older")
-                              .map((n, i) => (
-                                <NotificationItemDropdown
-                                  key={n.id}
-                                  notif={n}
-                                  index={i}
-                                  getTypeIcon={getTypeIcon}
-                                  getAvatarColor={getAvatarColor}
-                                  onClick={() => {
-                                    setShowNotifications(false);
-                                    navigate("/user/notifications");
-                                  }}
-                                />
-                              ))}
-                          </div>
+                      <div className="mt-6">
+                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
+                          Earlier
+                        </h3>
+                        <div className="space-y-4">
+                          {notifications
+                            .filter((n) => n.category === "older")
+                            .map((n, i) => (
+                              <NotificationItemDropdown
+                                key={n.id}
+                                notif={n}
+                                index={i}
+                                getTypeIcon={getTypeIcon}
+                                getAvatarColor={getAvatarColor}
+                                onClick={() => {
+                                  setShowNotifications(false);
+                                  navigate("/user/notifications");
+                                }}
+                              />
+                            ))}
                         </div>
-                      )}
+                      </div>
+                    )}
                   </>
                 )}
               </div>
