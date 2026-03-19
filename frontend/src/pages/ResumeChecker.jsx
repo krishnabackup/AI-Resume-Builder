@@ -127,8 +127,12 @@ const AIResumeChecker = () => {
   return (
     <div className="min-h-screen bg-slate-50 font-jakarta text-[#1a2e52] select-none">
       <NavBar />
-      <div className="h-12" />
-      <section className="relative min-h-[70vh] flex items-start md:items-center px-6 md:px-8 py-10 md:py-16 overflow-hidden bg-white border-b border-gray-50">
+      <div className="" />
+      {/* --- HERO SECTION: FULL WIDTH/HEIGHT --- */}
+   <section className="relative min-h-[60vh] flex items-center px-6 md:px-8 pt-20 md:pt-24 pb-6">
+        <div className="absolute top-0 right-0 w-[40%] h-full -translate-y-1/4 translate-x-1/4 opacity-20 bg-gradient-to-bl from-blue-200 to-transparent blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 bg-blue-100 rounded-full w-72 h-72 -translate-x-1/3 opacity-10 blur-3xl"></div>
+
         <div className="relative z-10 w-full max-w-[1400px] mx-auto">
           <motion.div
             variants={staggerContainer}
@@ -147,7 +151,7 @@ const AIResumeChecker = () => {
 
               <h1 className="mb-6 text-5xl font-black leading-[1.3] lg:text-7xl text-[#1a2e52]">
                 Is your resume
-                <span className="block text-transparent bg-gradient-to-r from-[#0077cc] via-[#0077cc] to-[#0077cc] bg-clip-text mt-8">
+                <span className="block text-transparent bg-gradient-to-r from-[#0077cc] via-[#0077cc] to-[#0077cc] bg-clip-text mt-2">
                   ATS-Proof?
                 </span>
               </h1>

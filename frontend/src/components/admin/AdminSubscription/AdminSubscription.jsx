@@ -40,11 +40,11 @@ const SortableFeatureItem = ({ id, feature, onChange, onRemove }) => {
   };
 
   return (
-    <li ref={setNodeRef} style={style} className="flex items-center gap-2 bg-white">
+    <li ref={setNodeRef} style={style} className="flex items-center w-full gap-2 mb-2 bg-white">
       <div
         {...attributes}
         {...listeners}
-        className="cursor-grab text-black hover:text-gray-700 p-1 touch-none"
+        className="cursor-grab text-black hover:text-gray-700 p-1 touch-none shrink-0"
       >
         <GripVertical className="w-5 h-5" />
       </div>
@@ -52,12 +52,12 @@ const SortableFeatureItem = ({ id, feature, onChange, onRemove }) => {
         type="text"
         value={feature.text}
         onChange={(e) => onChange(e.target.value)}
-        className="flex-1 min-w-0 break-words px-2 py-1 text-sm border border-gray-300 rounded focus:border-blue-500 focus:outline-none"
+        className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:border-blue-500 focus:outline-none"
         placeholder="Feature description"
       />
       <button
         onClick={onRemove}
-        className="p-1 text-red-500 hover:bg-red-50 rounded"
+        className="p-1 text-red-500 hover:bg-red-50 rounded shrink-0"
         title="Remove feature"
       >
         <Trash2 className="w-4 h-4" />
@@ -362,13 +362,13 @@ const AdminSubscription = () => {
                         </button>
                       </div>
                     </div>
-                    <div className="flex flex-wrap gap-2 items-center">
+                    <div className="flex gap-2 items-center justify-start">
                       <h3>Badge Tag :</h3>
                       <input
                         type="text"
                         value={plan.badge}
                         onChange={(e) => updatePlanField(plan.id, 'badge', e.target.value)}
-                        className="text-lg sm:text-xl font-medium text-gray-800 bg-transparent border border-dashed border-transparent hover:border-gray-300 focus:border-blue-500 focus:outline-none rounded w-full min-w-0 break-words px-1.5 py-0.5"
+                        className="text-lg sm:text-xl font-medium text-gray-800 bg-transparent border border-dashed border-transparent hover:border-gray-300 focus:border-blue-500 focus:outline-none rounded w-2/3 px-1.5 -ml-1.5 py-0.5"
                       />
                     </div>
                     <textarea

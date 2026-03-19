@@ -14,7 +14,8 @@ import {
   enhanceProjectDescription,
   generateAICoverLetter,
   generateAIResume,
-  getUserResume   // ✅ ADDED
+  getUserResume,
+  getJobRecommendations
 } from "../controllers/Resume.controller.js";
 
 import isAuth from "../middlewares/isAuth.js";
@@ -84,6 +85,12 @@ resumeRouter.get("/latest", isAuth, getLatestScan);
    GENERATE AI RESUME SUMMARY
 ===================================================== */
 resumeRouter.post("/generate-summary", generateAIResume);
+
+
+/* =====================================================
+   GENERATE JOB RECOMMENDATIONS
+===================================================== */
+resumeRouter.post("/job-recommendations", isAuth, getJobRecommendations);
 
 
 /* =====================================================

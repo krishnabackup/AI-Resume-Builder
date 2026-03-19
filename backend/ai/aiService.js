@@ -327,6 +327,56 @@ export async function extractResumeData(resumeText) {
   }
 }
 
+export async function generateJobRecommendationsAI(parsedData) {
+  try {
+    console.log("Generating Job Recommendations from parsed data...");
+
+    const prompt = `
+      You are an expert career counselor and ATS specialist. 
+      Based on the candidate's resume data below, recommend 5 to 7 highly relevant job titles.
+      
+      Candidate Data:
+      - Skills: ${JSON.stringify(parsedData.skills || {})}
+      - Experience: ${JSON.stringify(parsedData.experience || [])}
+      - Education: ${JSON.stringify(parsedData.education || [])}
+      - Projects: ${JSON.stringify(parsedData.projects || [])}
+      
+      Requirements:
+      1. Return EXACTLY a JSON array of objects. Do not include any markdown formatting like \`\`\`json or \`\`\`. Just the raw JSON string.
+      2. Each object must have these exactly matching keys:
+         - "title": (string) The recommended job title.
+         - "description": (string) 1-2 lines describing what this role does, tailored to the candidate's skills.
+         - "skills": (array of strings) 3-5 key skills from the candidate's resume that match this job.
+         - "level": (string) e.g., "Intern", "Junior", "Mid-Level", "Senior". Infer realistically from their experience duration/depth. If they look like a student, suggest Intern/Junior.
+         
+      Example output format:
+      [
+        {
+          "title": "Frontend Developer Intern",
+          "description": "Work on building responsive UI using React and modern web tools.",
+          "skills": ["React", "JavaScript", "CSS"],
+          "level": "Intern"
+        }
+      ]
+    `;
+
+    const response = await getAIResponse(prompt, 0.4);
+    
+    // Clean up potential markdown formatting from the AI response
+    let cleanJson = response.trim();
+    if (cleanJson.startsWith('\`\`\`json')) {
+      cleanJson = cleanJson.replace(/^\`\`\`json\n?/, '').replace(/\n?\`\`\`$/, '');
+    } else if (cleanJson.startsWith('\`\`\`')) {
+      cleanJson = cleanJson.replace(/^\`\`\`\n?/, '').replace(/\n?\`\`\`$/, '');
+    }
+
+    return JSON.parse(cleanJson);
+  } catch (error) {
+    console.error("Job Recommendation Generation failed:", error);
+    return [];
+  }
+}
+
 // ✅ 5. Parse Resume File (FIX #2 - CURRENT ERROR)
 export async function parseResume(resumeFilePath) {
   try {

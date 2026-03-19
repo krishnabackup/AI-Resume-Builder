@@ -2,6 +2,7 @@ import "./ATSChecker.css";
 import ATSPdfPreview from "./ATSPdfPreview";
 import ATSDocPreview from "./ATSDocPreview";
 import UserNavBar from "../UserNavBar/UserNavBar";
+import JobRecommendations from "./JobRecommendations";
 import {
   Upload,
   FileText,
@@ -686,11 +687,10 @@ const handleFileChange = async (e) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col md:flex-row gap-5 items-stretch">
         {/* ── LEFT PANEL: Analysis ── */}
         <div
-          className="w-full md:w-[340px] flex-shrink-0 flex flex-col gap-4 order-2 md:order-1"
-          style={{ minHeight: PANEL_HEIGHT }}
+          className="w-full md:w-[340px] flex-shrink-0 flex flex-col gap-4 order-2 md:order-1 self-stretch"
         >
           <div
-            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col"
+            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col h-full"
             style={{ minHeight: PANEL_HEIGHT }}
           >
             {/* Panel header */}
@@ -716,7 +716,7 @@ const handleFileChange = async (e) => {
               </div>
             </div>
 
-      <div className="p-5 flex-1 flex flex-col relative">
+      <div className="p-5 flex-1 flex flex-col relative overflow-y-auto">
   {/* 📦 Content Container - Blurred when analyzing */}
   <div className={`transition-all duration-300 ${isAnalyzing && uploadedFile ? 'blur-sm opacity-50 pointer-events-none' : ''}`}>
     
@@ -771,6 +771,12 @@ const handleFileChange = async (e) => {
         </motion.div>
       )}
     </AnimatePresence>
+
+    {/* Job Recommendations Section */}
+    <JobRecommendations 
+      extractedData={analysisResult?.extractedData} 
+      isAnalyzing={isAnalyzing} 
+    />
   </div>
 
   {/* 🌀 BLUR OVERLAY - Shows during analysis */}

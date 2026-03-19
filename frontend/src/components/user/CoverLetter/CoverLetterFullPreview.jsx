@@ -1,37 +1,27 @@
 import { ArrowLeft, Download, Printer, Share2 } from "lucide-react";
-
+import CoverLetterTemplatesMap from "./CoverLetterTemplatesMap";
 
 const CoverLetterFullPreview = ({
   formData,
   selectedTemplate,
   setActiveTab,
 }) => {
-  const formatDate = (dateStr) => {
-    if (!dateStr) {
-      return new Date().toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-    }
-    return new Date(dateStr).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
+  const exportDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
   const handleDownload = () => {
     // Placeholder for download functionality
     console.log("Downloading cover letter...");
   };
 
-
   const handlePrint = () => {
     window.print();
   };
 
+  const TemplateComponent = CoverLetterTemplatesMap[selectedTemplate] || CoverLetterTemplatesMap.professional;
 
   return (
     <div className="full-preview-container">
@@ -40,39 +30,10 @@ const CoverLetterFullPreview = ({
           size: A4;
           margin: 10mm;
         }
-       
-        /* Ensure content flows to next page instead of being cut */
-        .letter-page {
-          page-break-inside: avoid;
-          break-inside: avoid;
-        }
-       
-        /* Allow specific elements to break between pages */
-        .sender-info,
-        .recipient-info,
-        .letter-body,
-        .letter-closing {
-          page-break-inside: avoid;
-          break-inside: avoid;
-        }
-       
-        /* If content is too long, allow it to break */
-        .letter-body {
-          page-break-inside: auto;
-          break-inside: auto;
-        }
-       
-        /* Prevent small elements from being orphaned */
-        .subject-line,
-        .greeting,
-        .salutation {
-          page-break-after: avoid;
-          break-after: avoid;
-        }
-       
-        /* Ensure paragraphs don't break awkwardly */
-        .letter-body p {
-          page-break-inside: avoid;
+        @media print {
+          .full-preview-toolbar { display: none; }
+          .full-preview-container { padding: 0 !important; background: white !important; }
+          .full-preview-wrapper { padding: 0 !important; box-shadow: none !important; }
         }
       `}</style>
       <div className="full-preview-toolbar">
@@ -99,95 +60,13 @@ const CoverLetterFullPreview = ({
         </div>
       </div>
 
-
-      <div className="full-preview-wrapper">
-        <div className={`full-preview-document template-${selectedTemplate}`}>
-          <div className="letter-page">
-            {/* Sender Info */}
-            <div className="sender-info">
-              <p className="sender-name">{formData.fullName || "Your Name"}</p>
-              {formData.address && <p>{formData.address}</p>}
-              <div className="contact-row">
-                {formData.email && <span>{formData.email}</span>}
-                {formData.email && formData.phone && (
-                  <span className="separator">|</span>
-                )}
-                {formData.phone && <span>{formData.phone}</span>}
-              </div>
-              {formData.linkedin && (
-                <p className="linkedin">{formData.linkedin}</p>
-              )}
-            </div>
-
-
-            {/* Date */}
-            <p className="letter-date">{formatDate(formData.letterDate)}</p>
-
-
-            {/* Recipient Info */}
-            <div className="recipient-info">
-              {formData.recipientName ? (
-                <>
-                  <p className="recipient-name">{formData.recipientName}</p>
-                  {formData.recipientTitle && <p>{formData.recipientTitle}</p>}
-                </>
-              ) : (
-                <p className="recipient-name">Hiring Manager</p>
-              )}
-              {formData.companyName && (
-                <p className="company">{formData.companyName}</p>
-              )}
-              {formData.companyAddress && <p>{formData.companyAddress}</p>}
-            </div>
-
-
-            {/* Subject Line */}
-            {formData.jobTitle && (
-              <p className="subject-line">
-                <strong>
-                  Re: Application for {formData.jobTitle} Position
-                </strong>
-                {formData.jobReference && (
-                  <span> (Ref: {formData.jobReference})</span>
-                )}
-              </p>
-            )}
-
-
-            {/* Greeting */}
-            <p className="greeting">
-              Dear {formData.recipientName || "Hiring Manager"},
-            </p>
-
-
-            {/* Body */}
-            <div className="letter-body">
-              {formData.openingParagraph && <p>{formData.openingParagraph}</p>}
-              {formData.bodyParagraph1 && <p>{formData.bodyParagraph1}</p>}
-              {formData.bodyParagraph2 && <p>{formData.bodyParagraph2}</p>}
-              {formData.closingParagraph && <p>{formData.closingParagraph}</p>}
-            </div>
-
-
-            {/* Closing */}
-            <div className="letter-closing">
-              <p className="salutation">
-                {formData.salutation === "custom"
-                  ? formData.customSalutation
-                  : formData.salutation}
-                ,
-              </p>
-              <p className="signature">{formData.fullName || "Your Name"}</p>
-            </div>
-          </div>
+      <div className="full-preview-wrapper flex justify-center py-8 bg-slate-100 min-h-screen overflow-y-auto">
+        <div className="bg-white shadow-2xl w-[210mm] min-h-[297mm] h-fit my-4">
+          <TemplateComponent formData={formData} exportDate={exportDate} />
         </div>
       </div>
     </div>
   );
 };
 
-
 export default CoverLetterFullPreview;
-
-
-

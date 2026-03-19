@@ -2,7 +2,12 @@ import { useState } from "react";
 import { Sparkles, RefreshCw, Copy, Check, FileText } from "lucide-react";
 import axiosInstance from "./../../../../api/axios";
 
-const BodyContentForm = ({ formData, onInputChange, onAIGenerate, highlightEmpty }) => {
+const BodyContentForm = ({
+  formData,
+  onInputChange,
+  onAIGenerate,
+  highlightEmpty,
+}) => {
   const [generating, setGenerating] = useState({});
   const [copied, setCopied] = useState({});
 
@@ -49,7 +54,10 @@ const BodyContentForm = ({ formData, onInputChange, onAIGenerate, highlightEmpty
   const renderTextArea = (field, label, placeholder, rows = 4) => (
     <div className="flex flex-col gap-2 mb-5">
       <div className="flex items-center justify-between">
-        <label className="text-sm font-semibold text-slate-700">{label}</label>
+        <label className="text-sm font-semibold text-slate-700">
+          {label.split("*")[0]}
+          {label.includes("*") && <span className="text-red-500">*</span>}
+        </label>
         <div className="flex gap-2">
           <button
             className="flex gap-1.5 items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors disabled:opacity-50 whitespace-nowrap shrink-0"
@@ -71,7 +79,11 @@ const BodyContentForm = ({ formData, onInputChange, onAIGenerate, highlightEmpty
             onClick={() => handleCopy(field)}
             disabled={!formData[field]}
           >
-            {copied[field] ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
+            {copied[field] ? (
+              <Check size={14} className="text-green-500" />
+            ) : (
+              <Copy size={14} />
+            )}
           </button>
         </div>
       </div>
@@ -80,7 +92,7 @@ const BodyContentForm = ({ formData, onInputChange, onAIGenerate, highlightEmpty
         value={formData[field]}
         onChange={(e) => onInputChange(field, e.target.value)}
         rows={rows}
-        className={`w-full px-4 py-3 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white resize-y min-h-[100px] leading-relaxed ${highlightEmpty && label.includes('*') && !formData[field]?.trim() ? 'border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-500/10' : 'border-slate-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10'}`}
+        className={`w-full px-4 py-3 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white resize-y min-h-[100px] leading-relaxed ${highlightEmpty && label.includes("*") && !formData[field]?.trim() ? "border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-500/10" : "border-slate-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"}`}
       />
     </div>
   );
@@ -93,7 +105,8 @@ const BodyContentForm = ({ formData, onInputChange, onAIGenerate, highlightEmpty
       </div>
 
       <p className="text-sm text-slate-500 mb-4">
-        Write your cover letter content below or use AI to generate compelling paragraphs.
+        Write your cover letter content below or use AI to generate compelling
+        paragraphs.
       </p>
 
       <div className="flex items-start gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg mb-6 text-sm">
