@@ -13,7 +13,6 @@ import {
 import workerSrc from "pdfjs-dist/build/pdf.worker.min?url";
 
 pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
-  
 
 const ZOOM_STEP = 0.1;
 const ZOOM_MIN = 0.6;
@@ -29,25 +28,12 @@ const ATSPdfPreview = ({ pdfUrl, onLoadSuccess }) => {
   const [pageNumber, setPageNumber] = useState(1);
   const [zoom, setZoom] = useState(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [fitScale, setFitScale] = useState(1);
-
-  /* ===== AUTO FIT WIDTH ===== */
-  useEffect(() => {
-    const updateFit = () => {
-      if (!containerRef.current) return;
-      const width = containerRef.current.clientWidth - 48;
-      setFitScale(width / 794);
-    };
-
-    updateFit();
-    window.addEventListener("resize", updateFit);
-    return () => window.removeEventListener("resize", updateFit);
-  }, []);
-
-  const scale = clamp(fitScale * zoom, ZOOM_MIN, ZOOM_MAX);
+  /* Set exact 1.0 (100%) scale, overriding auto-fit behavior */
+  const scale = clamp(zoom, ZOOM_MIN, ZOOM_MAX);
 
   const zoomIn = () => setZoom((z) => clamp(z + ZOOM_STEP, ZOOM_MIN, ZOOM_MAX));
-  const zoomOut = () => setZoom((z) => clamp(z - ZOOM_STEP, ZOOM_MIN, ZOOM_MAX));
+  const zoomOut = () =>
+    setZoom((z) => clamp(z - ZOOM_STEP, ZOOM_MIN, ZOOM_MAX));
   const resetZoom = () => setZoom(1);
 
   const onDocumentLoadSuccess = ({ numPages }) => {
@@ -99,11 +85,7 @@ const ATSPdfPreview = ({ pdfUrl, onLoadSuccess }) => {
           </button>
 
           <button onClick={() => setIsFullscreen((v) => !v)}>
-            {isFullscreen ? (
-              <Minimize2 size={16} />
-            ) : (
-              <Maximize2 size={16} />
-            )}
+            {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
           </button>
         </div>
       </div>
@@ -121,7 +103,6 @@ const ATSPdfPreview = ({ pdfUrl, onLoadSuccess }) => {
               if (onLoadSuccess) onLoadSuccess(pdf);
             }}
           >
-
             <Page
               pageNumber={pageNumber}
               scale={scale}
@@ -138,13 +119,10 @@ const ATSPdfPreview = ({ pdfUrl, onLoadSuccess }) => {
 
   if (isFullscreen) {
     return (
-      <div className="fixed inset-0 z-50 bg-white flex flex-col">
-        {content}
-      </div>
+      <div className="fixed inset-0 z-50 bg-white flex flex-col">{content}</div>
     );
   }
 
-  
   return (
     <div className="flex flex-col h-full bg-white rounded-xl overflow-hidden">
       {content}
