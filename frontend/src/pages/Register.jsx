@@ -18,13 +18,30 @@ export default function Register() {
   const navigate = useNavigate();
 
   const validate = () => {
-    if (!usernametext.trim()) return toast.error("Please enter a username");
-    if (!emailtext.trim()) return toast.error("Please enter an email");
-    if (!passwordtext) return toast.error("Please enter a password");
-    if (passwordtext.length < 6)
-      return toast.error("Password must be at least 6 characters");
-    if (passwordtext !== confirmpassword)
-      return toast.error("Passwords do not match");
+    if (!usernametext.trim()) {
+      toast.error("Please enter a username");
+      return false;
+    }
+    if (!emailtext.trim()) {
+      toast.error("Please enter an email");
+      return false;
+    }
+    if (!emailtext.trim().endsWith("@gmail.com")) {
+      toast.error("Only @gmail.com email addresses are allowed");
+      return false;
+    }
+    if (!passwordtext) {
+      toast.error("Please enter a password");
+      return false;
+    }
+    if (passwordtext.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return false;
+    }
+    if (passwordtext !== confirmpassword) {
+      toast.error("Passwords do not match");
+      return false;
+    }
     return true;
   };
 
