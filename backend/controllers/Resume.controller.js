@@ -11,8 +11,7 @@ import {
   generateResumeAI,
   generateCoverLetterAI,
   refineExperienceDescription,
-  refineProjectDescription,
-  generateJobRecommendationsAI
+  refineProjectDescription
 } from "../ai/aiService.js";
 
 // Resume Parsing Services
@@ -276,40 +275,6 @@ export const generateCoverLetter = async (req, res) => {
     res.status(500).json({
       success: false,
       error: "AI generation failed: " + error.message,
-    });
-  }
-};
-
-/* =====================================================
-   GET JOB RECOMMENDATIONS
-   Uses AI to recommend jobs based on parsed resume data
-===================================================== */
-export const getJobRecommendations = async (req, res) => {
-  try {
-    const { parsedData } = req.body;
-
-    if (!parsedData) {
-      return res.status(400).json({
-        success: false,
-        error: "parsedData is a required field",
-      });
-    }
-
-    console.log("📥 Job Recommendations request received");
-
-    // Generate AI Job Recommendations
-    const aiRecommendations = await generateJobRecommendationsAI(parsedData);
-    
-    // Send response
-    res.json({
-      success: true,
-      data: aiRecommendations,
-    });
-  } catch (error) {
-    console.error("❌ JS RECOMMENDATIONS ERROR:", error);
-    res.status(500).json({
-      success: false,
-      error: "Job recommendations generation failed: " + error.message,
     });
   }
 };

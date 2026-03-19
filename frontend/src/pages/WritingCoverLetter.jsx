@@ -144,14 +144,12 @@ Warm regards,
   };
 
   const navigate = useNavigate();
-  const isLoggedIn =
-    typeof window !== "undefined" && !!localStorage.getItem("token");
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-blue-100 pb-20 overflow-x-hidden">
+    <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-blue-100 pb-20">
       <NavBar />
 
-      {/* Hero Section */}
+      {/* Hero Section (NO heavy effect on image) */}
       <section className="w-full bg-white mt-20">
         <div className="max-w-6xl mx-auto px-6 pt-6 pb-20">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -173,12 +171,9 @@ Warm regards,
 
               <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-3">
                 <button
-                  onClick={() => {
-                    if (!isLoggedIn) navigate("/login");
-                    else navigate("/user/cover-letter");
-                  }}
+                  onClick={() => navigate("/login")}
                   className="px-6 py-3 rounded-xl text-white bg-gradient-to-r from-blue-500 to-blue-700 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
-                >Create Your Cover letter
+                  >Create Your Cover letter
                 </button>
 
                 <button
@@ -191,20 +186,20 @@ Warm regards,
               </motion.div>
             </motion.div>
 
-            {/* RIGHT: Image (Hidden on medium/tablet screens where text becomes full width or misaligned) */}
+            {/* RIGHT: Image (Keep clean + no over effect) */}
             <motion.div
               variants={fadeUp}
               initial="hidden"
               whileInView="show"
               viewport={{ once: true, amount: 0.25 }}
-              className="relative hidden lg:flex justify-center lg:justify-end"
+              className="relative flex justify-center lg:justify-end sm:flex"
             >
               <div className="absolute -inset-6 bg-blue-100/60 blur-3xl rounded-full" />
 
               <img
                 src={WriteCover}
                 alt="Cover letter illustration"
-                className="relative w-full h-full object-cover rounded-3xl max-w-lg"
+                className="relative w-full h-full object-cover rounded-3xl"
               />
             </motion.div>
           </div>
@@ -257,7 +252,7 @@ Warm regards,
             <p className="text-slate-400 mb-8 leading-relaxed">
               Even when optional, a letter sets you apart from candidates who only submit a resume. Recruiters use it to judge:
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               {[
                 { label: "Communication", desc: "Clarity of thought" },
                 { label: "Motivation", desc: "Seriousness & interest" },
@@ -278,39 +273,39 @@ Warm regards,
       </section>
 
       {/* Step-by-Step Structure */}
-      <section className="relative bg-slate-50 py-12 overflow-hidden">
-        {/* Left Side Character - Hidden on tablet/mobile to avoid overlapping text */}
-        <motion.img
-          src={StepsLady}
-          alt="Guide illustration"
-          variants={fadeUp}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.2 }}
-          className="hidden xl:block absolute left-1 top-10 h-[680px] w-[450px] pointer-events-none select-none"
-        />
+<section className="relative bg-slate-50 py-12 overflow-hidden">
+{/* Left Side Character */}
+<motion.img
+  src={StepsLady}
+  alt="Guide illustration"
+  variants={fadeUp}
+  initial="hidden"
+  whileInView="show"
+  viewport={{ once: true, amount: 0.2 }}
+  className="hidden md:block absolute left-1 top-10 h-[420px] sm:h-[480px] md:h-[560px] lg:h-[620px] xl:h-[680px] w-[450px] pointer-events-none select-none"
+/>
 
-        {/* Bottom Right Background Character - Hidden on tablet/mobile */}
-        <motion.img
-          src={RightGuy}
-          alt=""
-          variants={fadeUp}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.2 }}
-          className="hidden xl:block absolute -right-24 bottom-0 h-[560px] w-[440px] pointer-events-none select-none"
-        />
+{/* Bottom Right Background Character */}
+<motion.img
+  src={RightGuy}
+  alt=""
+  variants={fadeUp}
+  initial="hidden"
+  whileInView="show"
+  viewport={{ once: true, amount: 0.2 }}
+  className="hidden md:block absolute -right-24 bottom-0 h-[320px] sm:h-[380px] md:h-[440px] lg:h-[500px] xl:h-[560px] w-[440px] pointer-events-none select-none"
+/>
 
 
 
-        <div className="relative max-w-4xl mx-auto px-6 z-10">
+<div className="relative max-w-4xl mx-auto px-6 z-10">
 
           <motion.h2
             variants={fadeUp}
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, amount: 0.2 }}
-            className="text-3xl md:text-4xl font-black mb-12 text-center tracking-tight"
+            className="text-4xl font-black mb-12 text-center tracking-tight"
           >
             The 7-Step Perfect Structure
           </motion.h2>
@@ -366,9 +361,9 @@ Warm regards,
               <motion.div
                 key={idx}
                 variants={fadeUp}
-                className="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 group hover:border-blue-400 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-slate-200/70"
+                className="bg-white p-8 rounded-3xl border border-slate-200 group hover:border-blue-400 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-slate-200/70"
               >
-                <div className="flex flex-col sm:flex-row items-start gap-4 md:gap-6">
+                <div className="flex items-start gap-6">
                   <div className="text-3xl font-black text-slate-200 group-hover:text-blue-200 transition-colors">
                     {item.step}
                   </div>
@@ -377,7 +372,7 @@ Warm regards,
                     <p className="text-slate-500 mb-4 leading-relaxed">{item.desc}</p>
 
                     {item.code && (
-                      <div className="bg-slate-50 p-3 rounded-xl font-mono text-xs border border-slate-100 group-hover:border-blue-200 transition break-all">
+                      <div className="bg-slate-50 p-3 rounded-xl font-mono text-xs border border-slate-100 group-hover:border-blue-200 transition">
                         {item.code}
                       </div>
                     )}
@@ -393,19 +388,19 @@ Warm regards,
       </section>
 
 
-      {/* Real-World Examples */}
+      {/* Real-World Examples (Full Width) */}
       <section className="max-w-5xl mx-auto px-6 py-12">
         <h2 className="text-3xl font-black mb-8 text-center lg:text-left">
           Real-World Examples
         </h2>
 
         {/* Tabs */}
-        <div className="flex flex-wrap gap-2 p-1.5 bg-slate-100 rounded-2xl mb-6 w-full sm:w-fit">
+        <div className="flex gap-2 p-1.5 bg-slate-100 rounded-2xl mb-6 w-full sm:w-fit">
           {Object.keys(examples).map((key) => (
             <button
               key={key}
               onClick={() => setActiveExample(key)}
-              className={`flex-1 sm:flex-none py-3 px-5 rounded-xl text-sm font-bold transition-all duration-300 ${activeExample === key
+              className={`py-3 px-5 rounded-xl text-sm font-bold transition-all duration-300 ${activeExample === key
                 ? "bg-white shadow-sm text-blue-600"
                 : "text-slate-500 hover:text-slate-800 hover:bg-white/50"
                 }`}
@@ -416,11 +411,11 @@ Warm regards,
         </div>
 
         {/* Example Card */}
-        <div className="bg-white border border-slate-200 p-6 md:p-10 rounded-[32px] shadow-sm relative group hover:shadow-xl hover:shadow-slate-200/60 transition-all min-h-[520px]">
+        <div className="bg-white border border-slate-200 p-8 md:p-10 rounded-[32px] shadow-sm relative group hover:shadow-xl hover:shadow-slate-200/60 transition-all min-h-[520px]">
 
           <button
             onClick={() => handleCopyExample(examples[activeExample].content)}
-            className={`absolute top-4 right-4 md:top-6 md:right-6 p-2 rounded-lg border transition-colors ${exampleCopied
+            className={`absolute top-6 right-6 p-2 rounded-lg border transition-colors ${exampleCopied
               ? "bg-green-50 border-green-200 text-green-600"
               : "bg-slate-50 border-slate-100 text-slate-400 hover:text-blue-600 hover:bg-blue-50"
               }`}
@@ -429,14 +424,14 @@ Warm regards,
             {exampleCopied ? <IconCheck /> : <IconCopy />}
           </button>
 
-          <div className="whitespace-pre-wrap text-slate-700 leading-relaxed font-serif italic text-base md:text-lg">
+          <div className="whitespace-pre-wrap text-slate-700 leading-relaxed font-serif italic text-lg">
             {examples[activeExample].content}
           </div>
         </div>
       </section>
 
 
-      {/* Mistakes */}
+      {/* Mistakes (Premium + Neutral) */}
       <section className="max-w-6xl mx-auto px-6 mb-28">
         <motion.div
           variants={stagger}
@@ -475,7 +470,7 @@ Warm regards,
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, amount: 0.2 }}
-          className="grid grid-cols-1 md:grid-cols-2 gap-6"
+          className="grid md:grid-cols-2 gap-6"
         >
           {[
             {
@@ -510,14 +505,14 @@ Warm regards,
             <motion.div
               key={i}
               variants={fadeUp}
-              className="group bg-white border border-slate-200 rounded-3xl p-6 md:p-7 transition-all duration-300 ease-out hover:-translate-y-2 hover:border-blue-200 hover:shadow-xl hover:shadow-slate-200/60"
+              className="group bg-white border border-slate-200 rounded-3xl p-7 transition-all duration-300 ease-out hover:-translate-y-2 hover:border-blue-200 hover:shadow-xl hover:shadow-slate-200/60"
             >
               <div className="flex items-start justify-between gap-4 mb-4">
                 <h3 className="text-lg font-black text-slate-900 leading-snug">
                   {item.title}
                 </h3>
 
-                <div className="w-10 h-10 rounded-2xl bg-slate-100 text-slate-700 flex items-center justify-center transition-all duration-300 ease-out group-hover:bg-blue-50 group-hover:text-blue-600 group-hover:scale-110 shrink-0">
+                <div className="w-10 h-10 rounded-2xl bg-slate-100 text-slate-700 flex items-center justify-center transition-all duration-300 ease-out group-hover:bg-blue-50 group-hover:text-blue-600 group-hover:scale-110">
                   <IconAlert />
                 </div>
               </div>
@@ -548,7 +543,7 @@ Warm regards,
 
         {/* AI phrases improvement section */}
         <section className="mt-20">
-          <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-16 items-center">
+          <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-16 items-center">
 
             {/* LEFT: Content */}
             <motion.div
@@ -556,7 +551,7 @@ Warm regards,
               initial="hidden"
               whileInView="show"
               viewport={{ once: true, amount: 0.2 }}
-              className="group bg-slate-50 border border-slate-200 rounded-[32px] p-8 md:p-12 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-200/70 hover:border-slate-300"
+              className="group bg-slate-50 border border-slate-200 rounded-[32px] p-10 md:p-12 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-200/70 hover:border-slate-300"
             >
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-bold mb-5">
                 ⚠ Writing Tip
@@ -571,7 +566,7 @@ Warm regards,
                 projects you built, results you achieved, and why you fit this company.
               </p>
 
-              <div className="flex flex-wrap gap-2 md:gap-3">
+              <div className="flex flex-wrap gap-3">
                 {[
                   "I am thrilled...",
                   "I am passionate...",
@@ -581,7 +576,7 @@ Warm regards,
                 ].map((word, i) => (
                   <span
                     key={i}
-                    className="bg-white border border-slate-200 text-slate-400 px-3 py-1 md:px-4 md:py-1.5 rounded-full text-xs md:text-sm font-semibold line-through"
+                    className="bg-white border border-slate-200 text-slate-400 px-4 py-1.5 rounded-full text-sm font-semibold line-through"
                   >
                     {word}
                   </span>
@@ -589,13 +584,13 @@ Warm regards,
               </div>
             </motion.div>
 
-            {/* RIGHT: Illustration (Hidden on mobile/tablet to prioritize text clarity) */}
+            {/* RIGHT: Illustration */}
             <motion.div
               variants={fadeUp}
               initial="hidden"
               whileInView="show"
               viewport={{ once: true, amount: 0.2 }}
-              className="hidden lg:flex justify-center md:justify-end"
+              className="flex justify-center md:justify-end"
             >
               <img
                 src={DoNot}
@@ -608,26 +603,23 @@ Warm regards,
       </section>
 
       {/*CTA Section */}
-      <section className="relative py-16 md:py-20 bg-blue-600 text-white overflow-hidden">
+      <section className="relative py-12 bg-blue-600 text-white overflow-hidden">
 
         <div className="absolute -top-24 -left-24 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
         <div className="absolute -bottom-24 -right-24 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
 
         <div className="relative max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black mb-6 leading-tight">
+          <h2 className="text-3xl md:text-4xl font-black mb-6 leading-tight">
             Ready to write a cover letter that actually gets interviews?
           </h2>
 
-          <p className="text-white/80 max-w-2xl mx-auto mb-10 text-base md:text-lg leading-relaxed">
+          <p className="text-white/80 max-w-2xl mx-auto mb-8 text-lg leading-relaxed">
             Stop guessing what recruiters want. Build a professional, tailored cover letter in minutes and apply with confidence.
           </p>
 
           <button
-            onClick={() => {
-              if (!isLoggedIn) navigate("/login");
-              else navigate("/user/cover-letter");
-            }}
-            className="group inline-flex items-center gap-3 px-8 py-4 rounded-xl bg-white text-blue-600 font-bold shadow-lg hover:shadow-2xl hover:-translate-y-1 hover:scale-105 transition-all duration-300 w-full sm:w-auto justify-center"
+            onClick={() => navigate("/login")}
+            className="group inline-flex items-center gap-3 px-8 py-4 rounded-xl bg-white text-blue-600 font-bold shadow-lg hover:shadow-2xl hover:-translate-y-1 hover:scale-105 transition-all duration-300"
           >
             <span>Create Now</span>
             <HiArrowRight className="text-2xl transition-transform duration-300 group-hover:translate-x-1" />

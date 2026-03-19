@@ -57,10 +57,20 @@ useEffect(() => {
 
     const isAdmin = response.data.isAdmin || false;
 
-    // Always store in localStorage — the backend already controls session
-    // duration via JWT expiry (2h without Remember Me, 30d with it)
-    localStorage.setItem("token", response.data.token);
-    localStorage.setItem("isAdmin", JSON.stringify(isAdmin));
+    // Storage logic based on Remember Me
+    if (rememberMe) {
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("isAdmin", JSON.stringify(isAdmin));
+
+      sessionStorage.removeItem("token");
+      sessionStorage.removeItem("isAdmin");
+    } else {
+      sessionStorage.setItem("token", response.data.token);
+      sessionStorage.setItem("isAdmin", JSON.stringify(isAdmin));
+
+      localStorage.removeItem("token");
+      localStorage.removeItem("isAdmin");
+    }
 
     setTimeout(() => {
       if (isAdmin) {

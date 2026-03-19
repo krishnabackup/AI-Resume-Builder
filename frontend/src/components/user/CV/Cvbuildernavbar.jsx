@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Upload, Download, PenTool, Zap } from "lucide-react";
+import { Upload, Download, PenTool, Zap, ChevronDown } from "lucide-react";
 
 const CVBuilderTopBar = ({
   activeTab,
@@ -25,14 +25,26 @@ const CVBuilderTopBar = ({
   showDownloadWord = true,
   extraButtons = null,
 }) => {
-  // const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [localTitle, setLocalTitle] = useState(title ?? "");
   const uploadInputRef = useRef(null);
-  // const downloadDropdownMobileRef = useRef(null);
-  // const downloadDropdownDesktopRef = useRef(null);
+  const downloadDropdownMobileRef = useRef(null);
+  const downloadDropdownDesktopRef = useRef(null);
 
   useEffect(() => {
-    // Removed dropdown outside click handler
+    const handleClickOutside = (e) => {
+      const inMobile =
+        downloadDropdownMobileRef.current &&
+        downloadDropdownMobileRef.current.contains(e.target);
+      const inDesktop =
+        downloadDropdownDesktopRef.current &&
+        downloadDropdownDesktopRef.current.contains(e.target);
+      if (!inMobile && !inDesktop) {
+        setShowDownloadMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   useEffect(() => {
@@ -41,25 +53,25 @@ const CVBuilderTopBar = ({
     }
   }, [title]);
 
-  const handleUploadClick = () => {
-    if (uploadInputRef.current) {
-      uploadInputRef.current.click();
-    }
-  };
+ const handleUploadClick = () => {
+  if (uploadInputRef.current) {
+    uploadInputRef.current.click();
+  }
+};
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
+ const handleFileChange = (e) => {
+  const file = e.target.files[0];
 
-    console.log("Selected file:", file);
+  console.log("Selected file:", file);
 
-    if (!file) return;
+  if (!file) return;
 
-    if (onUpload) {
-      onUpload(file);
-    }
+  if (onUpload) {
+    onUpload(file);
+  }
 
-    e.target.value = "";
-  };
+  e.target.value = "";
+};
 
   const currentTitle = title !== undefined ? title : localTitle;
   const displayForWidth = currentTitle || titlePlaceholder;
@@ -69,12 +81,12 @@ const CVBuilderTopBar = ({
     <div className="w-full px-3 sm:px-4 py-3 flex flex-col md:flex-row gap-3 justify-between items-start md:items-center">
       {/* Hidden file input kept globally so both mobile & desktop upload buttons work */}
       <input
-        ref={uploadInputRef}
-        type="file"
-        accept=".pdf,.doc,.docx"
-        style={{ display: "none" }}
-        onChange={handleFileChange}
-      />
+  ref={uploadInputRef}
+  type="file"
+  accept=".pdf,.doc,.docx"
+  style={{ display: "none" }}
+  onChange={handleFileChange}
+/>
       {/* ── Left section ── */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-2 md:gap-3 w-full md:w-auto">
         {/* Title Section - Editable */}
@@ -136,6 +148,8 @@ const CVBuilderTopBar = ({
             </button>
           </div>
         )}
+
+       
       </div>
 
       {/* ── Right section (desktop / tablet) ── */}
@@ -162,9 +176,15 @@ const CVBuilderTopBar = ({
           </button>
         )}
 
-        <div className="relative">
+        <div className="relative" ref={downloadDropdownDesktopRef}>
           <button
-            onClick={() => onDownload?.()}
+            onClick={() => {
+              if (showDownloadWord) {
+                setShowDownloadMenu((v) => !v);
+              } else {
+                onDownload?.();
+              }
+            }}
             disabled={isDownloading || downloadDisabled}
             className="flex items-center gap-2 text-white bg-indigo-600 rounded-lg text-sm transition-all duration-200 hover:bg-indigo-700 py-2 px-3 sm:px-5 disabled:bg-indigo-400 disabled:cursor-not-allowed whitespace-nowrap"
           >
@@ -176,7 +196,39 @@ const CVBuilderTopBar = ({
             <span className="hidden sm:inline">
               {isDownloading ? "Downloading…" : "Download"}
             </span>
+            {showDownloadWord && (
+              <ChevronDown
+                size={14}
+                className={`transition-transform duration-200 ${showDownloadMenu ? "rotate-180" : ""}`}
+              />
+            )}
           </button>
+
+          {showDownloadMenu && showDownloadWord && (
+            <div className="absolute right-0 mt-1 w-44 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden">
+              <button
+                onClick={() => {
+                  setShowDownloadMenu(false);
+                  onDownload?.();
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <Download size={15} className="text-red-500" />
+                Download PDF
+              </button>
+              <div className="border-t border-gray-100" />
+              <button
+                onClick={() => {
+                  setShowDownloadMenu(false);
+                  onDownloadWord?.();
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <Download size={15} className="text-blue-500" />
+                Download Word
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

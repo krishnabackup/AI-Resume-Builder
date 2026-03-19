@@ -1082,18 +1082,14 @@ function HelpCenter() {
         )
         : [];
 
-    const isLoggedIn =
-        typeof window !== "undefined" && !!localStorage.getItem("token");
-
-
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
             {/* Navigation */}
             <NavBar />
             {/* Hero Section */}
             <div className=" text-black relative overflow-hidden" onMouseMove={handleMouseMove}>
-
-
+               
+               
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-12 text-center relative z-10">
                     <h1 className="text-3xl md:text-4xl font-bold mb-4">
                         What can we help you?
@@ -1368,10 +1364,7 @@ function HelpCenter() {
                                     Contact Support
                                 </button>
                                 <button
-                                    onClick={() => {
-                                        if (!isLoggedIn) navigate("/login");
-                                        else navigate("/user/dashboard");
-                                    }}
+                                    onClick={() => navigate('/register')}
                                     className="bg-transparent border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 hover:scale-105 transition-all transform"
                                 >
                                     Start Building Resume

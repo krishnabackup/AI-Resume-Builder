@@ -19,10 +19,6 @@ export const register = async (req, res) => {
         .json({ message: "Password must be at least 6 characters long" });
     }
 
-    if (!email.endsWith("@gmail.com")) {
-      return res.status(400).json({ message: "Only @gmail.com email addresses are allowed" });
-    }
-
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
@@ -64,10 +60,6 @@ export const login = async (req, res) => {
       return res
         .status(400)
         .json({ message: "Email and password are required" });
-    }
-
-    if (!email.endsWith("@gmail.com")) {
-      return res.status(400).json({ message: "Only @gmail.com email addresses are allowed" });
     }
 
     /* ---------- LOGIN ---------- */

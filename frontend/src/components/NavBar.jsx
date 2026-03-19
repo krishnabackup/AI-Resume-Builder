@@ -48,11 +48,8 @@ export default function NavBar() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("isAdmin");
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("isAdmin");
     navigate("/login");
+    localStorage.removeItem("token");
     closeMobileMenu();
   };
 
@@ -371,9 +368,6 @@ export default function NavBar() {
                   hover:bg-red-700 hover:text-white transition-colors"
               onClick={() => {
                 localStorage.removeItem("token");
-                localStorage.removeItem("isAdmin");
-                sessionStorage.removeItem("token");
-                sessionStorage.removeItem("isAdmin");
                 navigate("/login");
               }}
             >

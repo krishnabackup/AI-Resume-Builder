@@ -122,10 +122,14 @@ mark {
   margin-bottom: 10px;
 }
 
-/* Allow the canvas to naturally zoom inside the overflow container */
-.react-pdf__Page canvas {
-  max-width: none !important;
-  max-height: none !important;
+/* Fix for PDF canvas to fill container */
+canvas {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto !important;
+  height: auto !important;
+  display: block;
+  object-fit: contain;
 }
 
 /* Ensure DOCX content doesn't overflow */

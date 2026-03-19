@@ -22,13 +22,12 @@ const useInView = (threshold = 0.15) => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    const node = ref.current;
-    if (!node) return;
+    if (!ref.current) return;
     const observer = new IntersectionObserver(
       ([entry]) => entry.isIntersecting && setIsVisible(true),
       { threshold },
     );
-    observer.observe(node);
+    observer.observe(ref.current);
     return () => observer.disconnect();
   }, [threshold]);
 
@@ -104,6 +103,7 @@ function ATSDonutCard({ score = 78 }) {
             </PieChart>
           </ResponsiveContainer>
 
+          {/* center label */}
           <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
             <div className="text-3xl sm:text-4xl font-black text-[#1a2e52] tabular-nums">
               {score}%
@@ -114,6 +114,7 @@ function ATSDonutCard({ score = 78 }) {
           </div>
         </div>
 
+        {/* legend */}
         <div className="mt-1 space-y-2">
           {atsBreakdown.map((item, i) => (
             <div
@@ -133,6 +134,7 @@ function ATSDonutCard({ score = 78 }) {
         </div>
       </div>
 
+      {/* footer chips */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 px-4 sm:px-6 md:px-7 pb-5 sm:pb-7">
         <div className="rounded-xl bg-slate-50 border border-gray-100 p-3 text-center">
           <p className="text-[10px] font-black tracking-widest uppercase text-gray-400">
@@ -159,7 +161,12 @@ function ATSDonutCard({ score = 78 }) {
 
 const ATSCheckerFeature = () => {
   const navigate = useNavigate();
-  const isLoggedIn = !!localStorage.getItem("token");
+  const isLoggedIn =
+    localStorage.getItem("token") || sessionStorage.getItem("token");
+  /** ✅ Updated: Changed to navigate to login page */
+  const handleCTA = () => {
+    navigate("/login");
+  };
 
   const [heroRef, heroVisible] = useInView(0.2);
   const [procRef, procVisible] = useInView(0.15);
@@ -167,11 +174,6 @@ const ATSCheckerFeature = () => {
   const [fixesRef, fixesVisible] = useInView(0.15);
   const [faqRef, faqVisible] = useInView(0.15);
   const [openFaq, setOpenFaq] = useState(-1);
-
-  const handleCTA = () => {
-    if (!isLoggedIn) navigate("/login");
-    else navigate("/user/ats-checker");
-  };
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] font-['Outfit'] select-none overflow-x-hidden">
@@ -288,6 +290,7 @@ const ATSCheckerFeature = () => {
       >
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-12 gap-8 sm:gap-10 lg:gap-12 items-start">
+            {/* LEFT: Upload Box */}
             <div
               className={`lg:col-span-5 transition-all duration-700 ${uploadVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-8"}`}
             >
@@ -305,12 +308,14 @@ const ATSCheckerFeature = () => {
                   Drag and drop your file here, or click to browse. <br />
                   Supports PDF and Word.
                 </p>
+                {/* ✅ Updated: Button text to "Upload your resume" */}
                 <button className="px-6 py-3 bg-[#0077cc] text-white font-bold rounded-lg shadow-lg shadow-blue-200 group-hover:shadow-blue-300 transition-all">
                   Upload your resume
                 </button>
               </div>
             </div>
 
+            {/* RIGHT: Checklist */}
             <div
               className={`lg:col-span-7 transition-all duration-700 delay-100 ${uploadVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8"}`}
             >

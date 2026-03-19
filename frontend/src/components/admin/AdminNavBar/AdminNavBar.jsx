@@ -66,14 +66,7 @@ export default function AdminNavbar({ isCollapsed, setIsCollapsed, isMobileOpen,
   }, []);
 
   // Use shared notification context
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
-
-  // Mark all as read when opening notification panel
-  useEffect(() => {
-    if (showNotifications && unreadCount > 0) {
-      markAllAsRead();
-    }
-  }, [showNotifications, unreadCount, markAllAsRead]);
+  const { notifications, unreadCount, markAsRead } = useNotifications();
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
