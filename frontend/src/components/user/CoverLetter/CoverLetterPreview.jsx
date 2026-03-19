@@ -211,7 +211,6 @@ const CoverLetterPreview = ({
     bodyParagraph1 = "",
     bodyParagraph2 = "",
     closingParagraph = "",
-    customSalutation = "",
     salutation = "Sincerely",
   } = formData;
 
