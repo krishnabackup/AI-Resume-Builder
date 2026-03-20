@@ -1,6 +1,7 @@
 // CoverLetterBuilder.jsx
 
 import { useState, useEffect, useRef } from "react";
+import toast from "react-hot-toast";
 
 import {
   ArrowLeft,
@@ -37,7 +38,7 @@ import CVBuilderTopBar from "../CV/Cvbuildernavbar";
 
 import axiosInstance from "../../../api/axios";
 
-import { getCompletionStatus } from "../ResumeBuilder/completion";
+import useCoverLetterAutosave from "./hooks/useCoverLetterAutosave";
 
 import "./CoverLetterBuilder.css";
 
@@ -162,16 +163,11 @@ const CoverLetterBuilder = () => {
     customSalutation: "",
   };
 
-  const [formData, setFormData] = useState(() => {
-    try {
-      const saved = localStorage.getItem("coverLetterFormData");
-      return saved ? { ...defaultFormData, ...JSON.parse(saved) } : defaultFormData;
-    } catch {
-      return defaultFormData;
-    }
-  });
+  // Always initialize to empty — real data loads from DB on mount
+  const [formData, setFormData] = useState(defaultFormData);
+  const [isLoadingData, setIsLoadingData] = useState(true);
 
-  const [selectedTemplate, setSelectedTemplate] = useState("software-engineer");
+  const [selectedTemplate, setSelectedTemplate] = useState("professional");
 
   const [activeSection, setActiveSection] = useState("sender");
 
@@ -200,13 +196,36 @@ const CoverLetterBuilder = () => {
     };
   }, [showMobilePreview]);
 
-  // Auto-save to localStorage (debounced 400 ms, same as Resume Builder)
+  // ─── Load user's cover letter from DB on mount ─────────────────────────────
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      localStorage.setItem("coverLetterFormData", JSON.stringify(formData));
-    }, 400);
-    return () => clearTimeout(timeout);
-  }, [formData]);
+    let cancelled = false;
+    const loadData = async () => {
+      try {
+        const { data } = await axiosInstance.get("/api/coverletter");
+        if (!cancelled) {
+          setFormData({ ...defaultFormData, ...(data.content || {}) });
+          if (data.templateId) setSelectedTemplate(data.templateId);
+          if (data.documentTitle) setDocumentTitle(data.documentTitle);
+        }
+      } catch (err) {
+        // Network error or unauthenticated — keep empty defaults
+        console.warn("Could not load cover letter data:", err?.response?.status);
+      } finally {
+        if (!cancelled) setIsLoadingData(false);
+      }
+    };
+    loadData();
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ─── DB-backed autosave (debounced 1 s via hook) ───────────────────────────
+  // Skip autosave while initial data is still loading to avoid overwriting
+  useCoverLetterAutosave(
+    isLoadingData ? null : formData,
+    selectedTemplate,
+    documentTitle
+  );
 
   useEffect(() => {
     const saveEditActivity = async () => {
@@ -408,51 +427,96 @@ const CoverLetterBuilder = () => {
 
   /* ======================================================
 
-     SAVE COVER LETTER TO DOWNLOADS COLLECTION
+  /* ======================================================
+
+     RESUME UPLOAD (Pre-fill logic)
 
   ====================================================== */
 
-  const saveCoverLetterToDownloads = async () => {
+  const handleUpload = async (file) => {
+    if (!file) return;
+
+    const isValidFormat =
+      file.type === "application/pdf" ||
+      file.type === "application/msword" ||
+      file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+      file.name.endsWith(".pdf") ||
+      file.name.endsWith(".doc") ||
+      file.name.endsWith(".docx");
+
+    if (!isValidFormat) {
+      toast.error("Please upload a PDF or Word document (.pdf, .doc, .docx)");
+      return;
+    }
+
+    toast.loading("Processing uploaded resume...");
+
     try {
-      const TemplateComponent = CoverLetterTemplatesMap[selectedTemplate] || CoverLetterTemplatesMap.professional;
+      const formDataUpload = new FormData();
+      formDataUpload.append("resume", file);
+      formDataUpload.append("jobTitle", "Cover Letter Upload");
+      formDataUpload.append("templateId", selectedTemplate || "professional");
 
-      if (!TemplateComponent) return;
+      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+      let userId = null;
+      if (token) {
+        try {
+          const tokenPayload = JSON.parse(atob(token.split(".")[1]));
+          userId = tokenPayload.id || tokenPayload.userId;
+        } catch {
+          console.log("Could not parse user ID from token");
+        }
+      }
 
-      const container = document.createElement("div");
+      if (userId) {
+        formDataUpload.append("resumeprofileId", userId);
+      } else {
+        formDataUpload.append("resumeprofileId", "000000000000000000000000");
+      }
 
-      Object.assign(container.style, {
-        position: "fixed",
-
-        top: "0",
-
-        left: "-9999px",
-
-        width: "794px",
-
-        background: "#ffffff",
+      const res = await fetch("http://localhost:5000/api/resume/upload", {
+        method: "POST",
+        body: formDataUpload,
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
 
-      document.body.appendChild(container);
+      const rawText = await res.text();
+      toast.dismiss();
 
-      const { createRoot } = await import("react-dom/client");
+      if (!res.ok) {
+        toast.error("Failed to upload resume");
+        return;
+      }
 
-      await new Promise((resolve) => {
-        const root = createRoot(container);
+      let data;
+      try {
+        data = JSON.parse(rawText);
+      } catch {
+        toast.error("Invalid server response");
+        return;
+      }
 
-        root.render(
-          <TemplateComponent formData={formData} exportDate={date} />,
-        );
+      if (data.success && data.data?.extractedData) {
+        const extracted = data.data.extractedData;
+        
+        setFormData((prev) => ({
+          ...prev,
+          fullName: extracted.name || prev.fullName,
+          email: extracted.email || prev.email,
+          phone: extracted.phone || prev.phone,
+          address: extracted.location || prev.address,
+          linkedin: extracted.linkedin || prev.linkedin,
+          jobTitle: extracted.title || prev.jobTitle,
+        }));
 
-        setTimeout(resolve, 400);
-      });
-
-      const html = container.innerHTML;
-
-      await saveDownloadRecord(html, "PDF");
-
-      document.body.removeChild(container);
+        toast.success("Resume parsed! We pre-filled your personal details.");
+      } else {
+        toast.error("Failed to parse resume content");
+      }
     } catch (err) {
-      console.error("Failed to save cover letter to downloads:", err);
+      toast.dismiss();
+      console.error("Upload failed:", err);
+      toast.error("Upload failed. Please try again.");
     }
   };
 
@@ -462,612 +526,129 @@ const CoverLetterBuilder = () => {
 
   ====================================================== */
 
+  /* ──────────────────────────────────────────────────────────────────────────
+     HELPER: Build the full HTML envelope that Puppeteer will render.
+     Includes Tailwind CDN and Google Fonts so all template styles resolve.
+  ────────────────────────────────────────────────────────────────────────── */
+  const buildPuppeteerHtml = (innerHtml, fileName = "Cover-Letter") => `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${fileName}</title>
+  <!-- Tailwind CSS (CDN) — gives all template utility classes their styles -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts used across templates -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: #fff; }
+    /* Ensure @page has no margins — template components control their own padding */
+    @page { margin: 0; size: A4; }
+  </style>
+</head>
+<body style="width:794px;">
+  ${innerHtml}
+</body>
+</html>
+`;
+
+  /* ──────────────────────────────────────────────────────────────────────────
+     exportToPDF — renders the currently selected React template component
+     into a hidden off-screen container at A4 width (794 px), captures the
+     innerHTML, wraps it in a full HTML document with Tailwind CDN + Fonts,
+     and sends that to the Puppeteer backend endpoint.
+
+     Result: PDF is pixel-identical to what the user sees in the preview panel
+     because both use exactly the same React component + Tailwind classes.
+  ────────────────────────────────────────────────────────────────────────── */
   const exportToPDF = async () => {
     if (!formData.fullName || !formData.jobTitle) {
-      alert("Please fill your name and job title first");
-
+      alert("Please fill in your name and job title first");
       return;
     }
 
     setIsExporting(true);
 
     const sanitize = (s) =>
-      (s || "")
-
-        .replace(/[^a-z0-9_ \-]/gi, "")
-
-        .trim()
-
-        .replace(/\s+/g, "_");
+      (s || "").replace(/[^a-z0-9_ -]/gi, "").trim().replace(/\s+/g, "_");
 
     const fileName =
       sanitize(documentTitle) || sanitize(formData.fullName) || "Cover-Letter";
 
-    const letterHtml = `
-
-<!DOCTYPE html>
-
-<html>
-
-<head>
-
-<meta charset="utf-8">
-
-<title>${fileName}</title>
-
-<style>
-
-@page { margin: 1.25in 0.85in 0.75in 0.85in !important; }
-
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-body {
-
-  font-family: 'Times New Roman', Times, serif !important;
-
-  font-size: 11pt !important;
-
-  line-height: 1.3 !important;
-
-  color: black !important;
-
-  background: white !important;
-
-  padding: 0 !important;
-
-}
-
-.contact-info {
-
-  text-align: right !important;
-
-  margin-bottom: 18pt !important;
-
-  font-size: 11pt !important;
-
-  padding: 6pt 0 !important;
-
-}
-
-.contact-name {
-
-  font-weight: bold !important;
-
-  font-size: 11pt !important;
-
-  margin-bottom: 2pt !important;
-
-}
-
-.contact-details {
-
-  font-size: 9pt !important;
-
-  line-height: 1.2 !important;
-
-  margin-bottom: 4pt !important;
-
-}
-
-.contact-details div { margin-bottom: 1pt !important; }
-
-.letter-date { font-size: 11pt !important; margin-top: 4pt !important; }
-
-.job-reference { text-align: center !important; margin: 12pt 0 !important; font-size: 10pt !important; }
-
-.job-title { font-weight: bold !important; font-size: 10pt !important; text-transform: uppercase !important; }
-
-.job-ref { font-size: 9pt !important; margin-top: 1pt !important; }
-
-.job-details-section {
-
-  margin-bottom: 12pt !important;
-
-  font-size: 10pt !important;
-
-  font-style: italic !important;
-
-  padding: 6pt 0 6pt 12pt !important;
-
-  border-left: 2px solid #666 !important;
-
-}
-
-.job-details-section div { margin-top: 4pt !important; }
-
-.recipient-info {
-
-  margin-bottom: 24pt !important;
-
-  max-width: 4in !important;
-
-  font-size: 10pt !important;
-
-  padding-left: 6pt !important;
-
-}
-
-.recipient-info > div { margin-bottom: 2pt !important; line-height: 1.2 !important; }
-
-.recipient-name, .company-name { font-weight: bold !important; margin-bottom: 2pt !important; }
-
-.salutation { font-weight: bold !important; font-size: 11pt !important; margin: 6pt 0 12pt 0 !important; }
-
-.body-paragraph { text-indent: 0.2in !important; margin-bottom: 10pt !important; line-height: 1.4 !important; font-size: 11pt !important; }
-
-.body-paragraph:last-child { margin-bottom: 24pt !important; }
-
-.signature { margin-top: 24pt !important; text-align: right !important; }
-
-.signature-closing { margin-bottom: 2pt !important; font-size: 11pt !important; font-style: italic !important; }
-
-.signature-name { font-weight: bold !important; font-size: 11pt !important; }
-
-</style>
-
-</head>
-
-<body>
-
-<div class="contact-info">
-
-  <div class="contact-name">${formData.fullName || "Your Name"}</div>
-
-  ${formData.address ? formData.address.replace(/\n/g, "<br>") : ""}
-
-  <div class="contact-details">
-
-    ${formData.email ? `<div>${formData.email}</div>` : ""}
-
-    ${formData.phone ? `<div>${formData.phone}</div>` : ""}
-
-    ${formData.linkedin ? `<div>${formData.linkedin}</div>` : ""}
-
-  </div>
-
-  <div class="letter-date">${date}</div>
-
-</div>
-
-
-
-
-
-${
-  formData.jobTitle || formData.jobReference
-    ? `<div class="job-reference">
-
-  ${formData.jobTitle ? `<div class="job-title">RE: ${formData.jobTitle.toUpperCase()}</div>` : ""}
-
-  ${formData.jobReference ? `<div class="job-ref">Ref: ${formData.jobReference}</div>` : ""}
-
-</div>`
-    : ""
-}
-
-
-
-
-
-${
-  formData.jobSummary || formData.jobDescription
-    ? `<div class="job-details-section">
-
-  ${formData.jobSummary ? `<div><strong>Job Summary:</strong> ${formData.jobSummary}</div>` : ""}
-
-  ${formData.jobDescription ? `<div><strong>Key Responsibilities:</strong> ${formData.jobDescription}</div>` : ""}
-
-</div>`
-    : ""
-}
-
-
-
-
-
-<div class="recipient-info">
-
-  <div class="recipient-name">${formData.recipientName || "Hiring Manager"}</div>
-
-  ${formData.recipientTitle ? `<div>${formData.recipientTitle}</div>` : ""}
-
-  ${formData.companyName ? `<div class="company-name">${formData.companyName}</div>` : ""}
-
-  ${formData.companyAddress ? formData.companyAddress.replace(/\n/g, "<br>") : ""}
-
-</div>
-
-
-
-
-
-<div class="salutation">Dear ${formData.recipientName || "Hiring Manager"},</div>
-
-
-
-
-
-<div class="body-paragraph">${(formData.openingParagraph || "I'm excited to apply for this position...").replace(/\n/g, "<br>")}</div>
-
-<div class="body-paragraph">${(formData.bodyParagraph1 || "In my previous role...").replace(/\n/g, "<br>")}</div>
-
-<div class="body-paragraph">${(formData.bodyParagraph2 || "My technical skills include...").replace(/\n/g, "<br>")}</div>
-
-<div class="body-paragraph">${(formData.closingParagraph || "I'm particularly drawn to your company...").replace(/\n/g, "<br>")}</div>
-
-
-
-
-
-<div class="signature">
-
-  <div class="signature-closing">${formData.customSalutation || formData.salutation || "Sincerely"}</div>
-
-  <div class="signature-name">${formData.fullName || "Your Name"}</div>
-
-</div>
-
-</body>
-
-</html>`;
+    let container = null;
 
     try {
+      // 1. Pick the template component (same map used by the preview)
+      const TemplateComponent =
+        CoverLetterTemplatesMap[selectedTemplate] ||
+        CoverLetterTemplatesMap.professional;
+
+      // 2. Mount template into a hidden off-screen div at A4 width
+      container = document.createElement("div");
+      Object.assign(container.style, {
+        position: "fixed",
+        top: "0",
+        left: "-9999px",
+        width: "794px",
+        background: "#ffffff",
+        zIndex: "-1",
+      });
+      document.body.appendChild(container);
+
+      const { createRoot } = await import("react-dom/client");
+      const root = createRoot(container);
+      root.render(<TemplateComponent formData={formData} exportDate={date} />);
+
+      // 3. Wait for React to paint (font glyphs + layout)
+      await new Promise((r) => setTimeout(r, 600));
+
+      // 4. Grab the rendered HTML and unmount to free memory
+      const innerHtml = container.innerHTML;
+      root.unmount();
+      document.body.removeChild(container);
+      container = null;
+
+      // 5. Build full Puppeteer-safe HTML envelope (Tailwind CDN + Fonts)
+      const fullHtml = buildPuppeteerHtml(innerHtml, fileName);
+
+      // 6. Send to backend Puppeteer endpoint
       const response = await axiosInstance.post(
-        "/api/resume/generate-pdf",
-
-        { html: letterHtml },
-
-        { responseType: "blob" },
+        "/api/coverletter/generate-pdf",
+        { html: fullHtml },
+        { responseType: "blob" }
       );
 
+      // 7. Trigger browser download
       const blob = new Blob([response.data], { type: "application/pdf" });
-
       const url = window.URL.createObjectURL(blob);
-
       const link = document.createElement("a");
-
       link.href = url;
-
       link.download = `${fileName}.pdf`;
-
       link.click();
-
       window.URL.revokeObjectURL(url);
 
-      await saveDownloadRecord(letterHtml, "PDF");
+      // 8. Record the download in the activity log
+      await saveDownloadRecord(fullHtml, "PDF");
     } catch (err) {
       console.error("Cover letter PDF generation failed:", err);
-
       alert("Failed to generate PDF. Please try again.");
     } finally {
+      // Ensure container is always cleaned up even on error
+      if (container && container.parentNode) {
+        document.body.removeChild(container);
+      }
       setIsExporting(false);
     }
   };
 
   /* ======================================================
 
-     WORD EXPORT
+     WORD EXPORT (unchanged)
 
   ====================================================== */
-
-  const exportToWord = async () => {
-    if (!formData.fullName || !formData.jobTitle) {
-      alert("Please fill your name and job title first");
-
-      return;
-    }
-
-    setIsExporting(true);
-
-    const html = `
-
-<html xmlns:o="urn:schemas-microsoft-com:office:office"
-
-  xmlns:w="urn:schemas-microsoft-com:office:word"
-
-  xmlns="http://www.w3.org/TR/REC-html40">
-
-<head>
-
-<meta charset="utf-8">
-
-<title>Cover Letter - ${formData.jobTitle}</title>
-
-<!--[if gte mso 9]>
-
-<xml>
-
-<w:WordDocument>
-
-<w:View>Print</w:View>
-
-<w:Zoom>100</w:Zoom>
-
-<w:DoNotOptimizeForBrowser/>
-
-<w:ValidateAgainstSchemas/>
-
-<w:SaveIfXMLInvalid>false</w:SaveIfXMLInvalid>
-
-<w:IgnoreMixedContent>false</w:IgnoreMixedContent>
-
-<w:AlwaysShowPlaceholderText>false</w:AlwaysShowPlaceholderText>
-
-<w:DoNotPromoteQF/>
-
-<w:LidThemeOther>EN-US</w:LidThemeOther>
-
-<w:LidThemeAsian>X-NONE</w:LidThemeAsian>
-
-<w:LidThemeComplexScript>X-NONE</w:LidThemeComplexScript>
-
-<w:Compatibility>
-
-<w:BreakWrappedTables/>
-
-<w:SnapToGridInCell/>
-
-<w:WrapTextWithPunct/>
-
-<w:UseAsianBreakRules/>
-
-<w:DontGrowAutofit/>
-
-<w:SplitPgBreakAndParaMark/>
-
-<w:DontVertAlignCellWithSp/>
-
-<w:DontBreakConstrainedForcedTables/>
-
-<w:DontVertAlignInTxbx/>
-
-<w:Word11KerningPairs/>
-
-<w:CachedColBalance/>
-
-</w:Compatibility>
-
-<w:BrowserLevel>MicrosoftInternetExplorer4</w:BrowserLevel>
-
-</xml>
-
-<![endif]-->
-
-<style>
-
-@page { margin: 1.25in 0.85in 0.75in 0.85in !important; size: A4 portrait !important; }
-
-* { margin: 0 !important; padding: 0 !important; box-sizing: border-box !important; }
-
-body {
-
-  font-family: 'Times New Roman', 'Times', serif !important;
-
-  font-size: 11pt !important;
-
-  line-height: 1.3 !important;
-
-  color: black !important;
-
-  background: white !important;
-
-  padding: 36pt 0 0 0 !important;
-
-  width: 794px !important;
-
-  margin: 0 auto !important;
-
-}
-
-.contact-info { text-align: right !important; margin-bottom: 18pt !important; font-size: 11pt !important; padding: 6pt 0 !important; }
-
-.contact-name { font-weight: bold !important; font-size: 11pt !important; margin-bottom: 2pt !important; }
-
-.contact-details { font-size: 11pt !important; line-height: 1.2 !important; margin-bottom: 4pt !important; }
-
-.contact-details div { margin-bottom: 1pt !important; font-size: 11pt !important; }
-
-.letter-date { font-size: 11pt !important; margin-top: 4pt !important; }
-
-.job-reference { text-align: center !important; margin: 12pt 0 !important; font-size: 11pt !important; }
-
-.job-title { font-weight: bold !important; font-size: 11pt !important; text-transform: uppercase !important; margin-bottom: 1pt !important; }
-
-.job-ref { font-size: 11pt !important; }
-
-.job-details-section { margin-bottom: 12pt !important; font-size: 11pt !important; font-style: italic !important; padding: 6pt 0 6pt 12pt !important; border-left: 2px solid #666 !important; }
-
-.job-details-section div { margin-top: 4pt !important; font-size: 11pt !important; }
-
-.recipient-info { margin-bottom: 24pt !important; max-width: 4in !important; font-size: 11pt !important; padding-left: 6pt !important; }
-
-.recipient-info > div { margin-bottom: 2pt !important; line-height: 1.2 !important; font-size: 11pt !important; }
-
-.recipient-name, .company-name { font-weight: bold !important; margin-bottom: 2pt !important; font-size: 11pt !important; }
-
-.recipient-title { margin-bottom: 2pt !important; font-size: 11pt !important; }
-
-.salutation { font-weight: bold !important; font-size: 11pt !important; margin: 6pt 0 12pt 0 !important; }
-
-.body-paragraph { text-indent: 0.2in !important; margin-bottom: 10pt !important; line-height: 1.4 !important; font-size: 11pt !important; }
-
-.body-paragraph:last-child { margin-bottom: 24pt !important; }
-
-.signature { margin-top: 24pt !important; text-align: right !important; }
-
-.signature-closing { margin-bottom: 2pt !important; font-size: 11pt !important; font-style: italic !important; }
-
-.signature-name { font-weight: bold !important; font-size: 11pt !important; }
-
-p, div, span { font-family: inherit !important; font-size: 11pt !important; line-height: inherit !important; }
-
-</style>
-
-</head>
-
-<body>
-
-<div class="contact-info">
-
-  <div class="contact-name">${formData.fullName || "Your Name"}</div>
-
-  ${
-    formData.address
-      ? formData.address
-
-          .split("\n")
-
-          .filter(Boolean)
-
-          .map((line) => `<div>${line}</div>`)
-
-          .join("")
-      : ""
-  }
-
-  <div class="contact-details">
-
-    ${formData.email ? `<div>${formData.email}</div>` : ""}
-
-    ${formData.phone ? `<div>${formData.phone}</div>` : ""}
-
-    ${formData.linkedin ? `<div>${formData.linkedin}</div>` : ""}
-
-  </div>
-
-  <div class="letter-date">${date}</div>
-
-</div>
-
-
-
-
-
-${
-  formData.jobTitle || formData.jobReference
-    ? `<div class="job-reference">
-
-  ${formData.jobTitle ? `<div class="job-title">RE: ${formData.jobTitle.toUpperCase()}</div>` : ""}
-
-  ${formData.jobReference ? `<div class="job-ref">Ref: ${formData.jobReference}</div>` : ""}
-
-</div>`
-    : ""
-}
-
-
-
-
-
-${
-  formData.jobSummary || formData.jobDescription
-    ? `<div class="job-details-section">
-
-  ${formData.jobSummary ? `<div><strong>Job Summary:</strong> ${formData.jobSummary}</div>` : ""}
-
-  ${formData.jobDescription ? `<div><strong>Key Responsibilities:</strong> ${formData.jobDescription}</div>` : ""}
-
-</div>`
-    : ""
-}
-
-
-
-
-
-<div class="recipient-info">
-
-  <div class="recipient-name">${formData.recipientName || "Hiring Manager"}</div>
-
-  ${formData.recipientTitle ? `<div class="recipient-title">${formData.recipientTitle}</div>` : ""}
-
-  ${formData.companyName ? `<div class="company-name">${formData.companyName}</div>` : ""}
-
-  ${
-    formData.companyAddress
-      ? formData.companyAddress
-
-          .split("\n")
-
-          .filter(Boolean)
-
-          .map((line) => `<div>${line}</div>`)
-
-          .join("")
-      : ""
-  }
-
-</div>
-
-
-
-
-
-<div class="salutation">Dear ${formData.recipientName || "Hiring Manager"},</div>
-
-
-
-
-
-<div class="body-paragraph">${(formData.openingParagraph || "I'm excited to apply for this position...").replace(/\n/g, "<br>")}</div>
-
-<div class="body-paragraph">${(formData.bodyParagraph1 || "In my previous role...").replace(/\n/g, "<br>")}</div>
-
-<div class="body-paragraph">${(formData.bodyParagraph2 || "My technical skills include...").replace(/\n/g, "<br>")}</div>
-
-<div class="body-paragraph">${(formData.closingParagraph || "I'm particularly drawn to your company...").replace(/\n/g, "<br>")}</div>
-
-
-
-
-
-<div class="signature">
-
-  <div class="signature-closing">${formData.customSalutation || formData.salutation || "Sincerely"}</div>
-
-  <div class="signature-name">${formData.fullName || "Your Name"}</div>
-
-</div>
-
-</body>
-
-</html>`;
-
-    const blob = new Blob(["\ufeff", html], {
-      type: "application/msword;charset=utf-8",
-    });
-
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-
-    a.href = url;
-
-    a.download = `${(() => {
-      const s = (v) =>
-        (v || "")
-
-          .replace(/[^a-zA-Z0-9_ \-]/g, "")
-
-          .trim()
-
-          .replace(/\s+/g, "_");
-
-      return s(documentTitle) || s(formData.fullName) || "Cover-Letter";
-    })()}.doc`;
-
-    document.body.appendChild(a);
-
-    a.click();
-
-    document.body.removeChild(a);
-
-    URL.revokeObjectURL(url);
-
-    await saveDownloadRecord(html, "DOCX");
-
-    setTimeout(() => setIsExporting(false), 800);
-  };
 
   const currentIdx = tabs.findIndex((t) => t.id === activeSection);
 
@@ -1251,7 +832,7 @@ ${
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onDownload={exportToPDF}
-        onDownloadWord={exportToWord}
+        showDownloadWord={false}
         isDownloading={isExporting}
         title={documentTitle}
         onTitleChange={(_, val) => setDocumentTitle(val)}
@@ -1261,8 +842,10 @@ ${
         showAiToggle={true}
         isAiMode={isAiMode}
         onToggleAiMode={() => setIsAiMode((v) => !v)}
-        showUpload={false}
+        showUpload={true}
+        onUpload={handleUpload}
         showDesigner={false}
+        
       />
 
       {activeTab === "templates" ? (

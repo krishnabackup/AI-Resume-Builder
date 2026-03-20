@@ -534,11 +534,6 @@ const CoverLetterPreview = ({
               <RotateCcw size={12} />
             </IconBtn>
             <Divider />
-
-            <IconBtn onClick={downloadPDF} title="Download PDF">
-              <Download size={14} />
-            </IconBtn>
-            <Divider />
           </>
         )}
 

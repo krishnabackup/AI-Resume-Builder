@@ -173,8 +173,23 @@ const PreviewModalComponent = ({ template, zoomLevel, displayData, onZoomChange,
   );
 };
 
+/* ─────────────────────────────────────────────────────────
+   HELPERS: decode the JWT to get the current user's ID
+   (matches CoverLetterBuilder)
+───────────────────────────────────────────────────────── */
+const getLoggedInUserId = () => {
+  try {
+    const token =
+      localStorage.getItem("token") || sessionStorage.getItem("token");
+    if (!token) return null;
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.id || payload.userId || payload._id || null;
+  } catch {
+    return null;
+  }
+};
 
-const CoverLetterTemplates = ({ selectedTemplate, onSelectTemplate }) => {
+const CoverLetterTemplates = ({ selectedTemplate, onSelectTemplate, formData: propFormData }) => {
   const [previewTemplate, setPreviewTemplate] = useState(null);
   const [zoomLevel, setZoomLevel] = useState(100);
   const [searchQuery, setSearchQuery] = useState("");
@@ -184,16 +199,24 @@ const CoverLetterTemplates = ({ selectedTemplate, onSelectTemplate }) => {
 
   useEffect(() => {
     setMounted(true);
-    // Fetch data for previews
-    const saved = localStorage.getItem("coverLetterFormData");
-    if (saved) {
-      try {
-        setDisplayData(JSON.parse(saved));
-      } catch (e) {
-        console.error("Error parsing cover letter data", e);
+    // Use prop formData if it has keys, otherwise fallback to localStorage
+    if (propFormData && Object.values(propFormData).some(val => val !== "" && val != null)) {
+      setDisplayData(propFormData);
+    } else {
+      // Fetch data for previews based on current logged in user
+      const userId = getLoggedInUserId();
+      if (userId) {
+        const saved = localStorage.getItem(`coverLetterFormData_${userId}`);
+        if (saved) {
+          try {
+            setDisplayData(JSON.parse(saved));
+          } catch (e) {
+            console.error("Error parsing cover letter data", e);
+          }
+        }
       }
     }
-  }, []);
+  }, [propFormData]);
 
   useEffect(() => {
     document.body.style.overflow = previewTemplate ? 'hidden' : 'unset';
@@ -231,37 +254,7 @@ const CoverLetterTemplates = ({ selectedTemplate, onSelectTemplate }) => {
 
   return (
     <div className="w-full bg-[#f8fafc] font-jakarta pb-20">
-      {/* Exact CV Header Style */}
-      <div className="bg-white/70 backdrop-blur-sm pt-12 pb-8 px-6 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto text-center space-y-4 relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-widest mb-2">
-             <Sparkles size={12} /> New Design Architecture
-          </div>
-          <h1 className="text-[40px] font-black text-slate-900 tracking-tight leading-none">
-            Choose Your <span className="text-blue-600">Cover Letter Design</span>
-          </h1>
-          <p className="text-slate-500 max-w-2xl mx-auto text-base font-medium opacity-80 mt-2">
-            Preview how your data looks with our new CV-aligned architecture. Ten premium designs for every career stage.
-          </p>
-
-          {/* Search Bar */}
-          <div className="max-w-2xl mx-auto mt-6 relative group">
-            <div className="absolute inset-0 bg-blue-400 rounded-3xl blur-2xl opacity-10 group-hover:opacity-20 transition-opacity" />
-            <div className="relative bg-white rounded-2xl shadow-xl border border-slate-100 flex items-center p-1.5 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
-                <Search className="ml-5 text-slate-300" size={18} />
-                <input 
-                    type="text" 
-                    placeholder="Search premium templates..." 
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="flex-1 bg-transparent px-4 py-2 outline-none text-slate-800 font-bold placeholder:text-slate-300"
-                />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-6 mt-8 pb-12">
+      <div className="max-w-7xl mx-auto px-6 mt-12 pb-12">
         {/* Category Pills */}
         <div className="flex flex-wrap items-center justify-center gap-3 mb-8 px-4">
             {categories.map(cat => (
