@@ -158,7 +158,7 @@ const CareersPage = () => {
         initial="hidden"
         whileInView="show"
         viewport={{ once: true }}
-        className="relative px-8 pt-24 pb-14 overflow-hidden bg-white md:pt-10"
+        className="relative px-4 sm:px-6 md:px-8 pt-24 sm:pt-28 md:pt-32 pb-14 overflow-hidden bg-white"
       >
         {/* Soft Background Decorative Blurs */}
         <div className="absolute top-0 right-0 w-1/3 h-1/2 bg-orange-50 rounded-full blur-[120px] -z-10 opacity-50" />

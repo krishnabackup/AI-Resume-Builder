@@ -302,13 +302,13 @@ function LandingPage() {
           }`}
       ></div>
 
-     {/* HERO SECTION - padding added and mobile padding reudced */}
+     {/* HERO SECTION */}
       <motion.section
         variants={staggerContainer}
         initial="hidden"
         whileInView="show"
         viewport={{ once: true, amount: 0.25 }}
-        className="relative px-4 md:px-8 bg-white flex items-center pt-16 md:pt-20 lg:pt-23 "
+        className="relative px-4 sm:px-6 lg:px-8 bg-white flex items-center pt-16 sm:pt-20 lg:pt-24 pb-16 sm:pb-20 lg:pb-24"
       >
         <div className="absolute top-0 right-0 w-1/3 h-1/4 bg-orange-50 rounded-full blur-[120px] -z-10 opacity-50"></div>
         <div className="absolute bottom-0 left-0 w-1/3 h-1/4 bg-blue-50 rounded-full blur-[120px] -z-10 opacity-50"></div>
@@ -388,13 +388,13 @@ function LandingPage() {
         </div>
       </motion.section>
 
-      {/* HOW IT WORKS - Reduced mobile padding and spacing */}
+      {/* HOW IT WORKS */}
       <motion.section
         variants={staggerContainer}
         initial="hidden"
         whileInView="show"
         viewport={{ once: true, amount: 0.2 }}
-        className="px-4 md:px-8 py-12 md:py-16 lg:py-20 bg-gray-50"
+        className="px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 bg-gray-50"
       >
         <div className="max-w-[1200px] mx-auto">
           <div className="mb-10 md:mb-20 text-center">
@@ -447,14 +447,14 @@ function LandingPage() {
       </motion.section>
 
 
-      {/* TEMPLATE SHOWCASE - Reduced mobile padding */}
+      {/* TEMPLATE SHOWCASE */}
       <motion.section
         id="free-templates"
         variants={staggerContainer}
         initial="hidden"
         whileInView="show"
         viewport={{ once: true, amount: 0.2 }}
-        className="px-4 md:px-8 py-12 md:py-24 overflow-hidden bg-white select-none"
+        className="px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 overflow-hidden bg-white select-none"
       >
         <div className="max-w-[1400px] mx-auto">
           {/* Header Section */}
@@ -536,7 +536,7 @@ function LandingPage() {
         initial="hidden"
         whileInView="show"
         viewport={{ once: true, amount: 0.2 }}
-        className="relative px-4 md:px-8 py-12 md:py-24 overflow-hidden bg-white select-none"
+        className="relative px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 overflow-hidden bg-white select-none"
       >
         <div className="absolute top-0 left-1/4 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-blue-100/50 rounded-full blur-[80px] md:blur-[120px] pointer-events-none" />
         <div className="absolute bottom-0 right-1/4 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-orange-50/50 rounded-full blur-[80px] md:blur-[120px] pointer-events-none" />

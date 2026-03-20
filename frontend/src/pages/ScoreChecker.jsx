@@ -167,8 +167,8 @@ const ScoreChecker = () => {
     <div className="min-h-screen bg-[#F8F9FC] font-['Outfit'] text-[#1a2e52] selection:bg-orange-100 overflow-x-hidden">
       <NavBar />
 
-      {/* 1) HERO SECTION (Centered, distinct from ATS) */}
-      <section className="relative px-6 pt-20 pb-16 bg-white">
+      {/* 1) HERO SECTION */}
+      <section className="relative px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 lg:pt-20 xl:pt-24 pb-8 sm:pb-12 lg:pb-16 bg-white">
         <div className="mx-auto max-w-7xl">
           <motion.div
             variants={staggerContainer}
@@ -189,14 +189,14 @@ const ScoreChecker = () => {
                 </span>
               </div>
 
-              <h1 className="mb-6 text-6xl font-black leading-tight tracking-tight sm:text-7xl md:text-8xl xl:text-[96px] text-[#1a2e52]">
+            <h1 className="mb-4 sm:mb-6 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-tight tracking-tight text-[#1a2e52]">
                 Write Better. <br />
                 <span className="text-[#0077cc]">
                   Rank Higher.
                 </span>
               </h1>
 
-              <p className="max-w-xl mx-auto mb-10 text-xl font-light leading-relaxed text-gray-500 lg:mx-0">
+              <p className="max-w-xl mx-auto mb-6 sm:mb-8 text-sm sm:text-base md:text-lg font-light leading-relaxed text-gray-500 lg:mx-0">
                 See your resume score update in real-time as you type. Our AI
                 highlights vague wording and suggests impactful improvements
                 instantly.
@@ -214,36 +214,36 @@ const ScoreChecker = () => {
               <img
                 src={write}
                 alt="Resume scoring illustration"
-                className="hidden md:block w-full max-w-md lg:max-w-lg xl:max-w-xl object-contain"
+                className="hidden lg:block w-full max-w-sm xl:max-w-md object-contain"
               />
             </motion.div>
           </motion.div>
         </div>
       </section>
 
-      {/* 2) MAIN LIVE DEMO (Split Layout) */}
-      <section className="px-6 py-10">
+      {/* 2) MAIN LIVE DEMO */}
+      <section className="px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
         <motion.div
           variants={staggerContainer}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true }}
-          className="max-w-7xl mx-auto grid lg:grid-cols-12 gap-8 items-start"
+          className="max-w-7xl mx-auto grid lg:grid-cols-12 gap-6 lg:gap-8 items-start"
         >
           {/* LEFT: Live Editor Mock */}
           <motion.div
             variants={fadeLeft}
             whileHover={{ y: -6 }}
             transition={{ type: "spring", stiffness: 120 }}
-            className="lg:col-span-7 bg-white rounded-[2rem] shadow-xl border border-gray-100 overflow-hidden flex flex-col h-[600px] ring-1 ring-slate-900/5"
+            className="lg:col-span-7 bg-white rounded-[1.5rem] sm:rounded-[2rem] shadow-xl border border-gray-100 overflow-hidden flex flex-col h-[500px] sm:h-[600px] ring-1 ring-slate-900/5"
           >
-            <div className="px-8 py-5 border-b border-gray-100 bg-white flex items-center justify-between z-10 relative">
+            <div className="px-4 sm:px-6 lg:px-8 py-4 lg:py-5 border-b border-gray-100 bg-white flex items-center justify-between z-10 relative">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-blue-50 text-[#0077cc] flex items-center justify-center">
-                  <PenTool size={20} />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-50 text-[#0077cc] flex items-center justify-center">
+                  <PenTool size={16} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-[#1a2e52]">
+                  <h3 className="font-bold text-sm sm:text-base text-[#1a2e52]">
                     Experience Editor
                   </h3>
                   <p className="text-xs text-gray-400">Untitled Resume.pdf</p>
@@ -257,7 +257,7 @@ const ScoreChecker = () => {
             </div>
 
             {/* Editor Toolbar (Visual Mock) */}
-            <div className="px-6 py-3 bg-slate-50 border-b border-gray-100 flex items-center gap-4 text-gray-500 overflow-x-auto">
+            <div className="px-4 sm:px-6 py-2 sm:py-3 bg-slate-50 border-b border-gray-100 flex items-center gap-2 sm:gap-4 text-gray-500 overflow-x-auto">
               <div className="flex items-center gap-1 pr-4 border-r border-gray-200">
                 <button className="p-1.5 hover:bg-gray-200 rounded text-gray-700 font-serif font-bold">
                   B
@@ -313,7 +313,7 @@ const ScoreChecker = () => {
                 </div>
               </div>
               <div className="ml-auto">
-                <button className="text-[10px] font-bold text-[#0077cc] bg-blue-50 px-3 py-1.5 rounded-full flex items-center gap-1.5 hover:bg-blue-100 transition-colors">
+                <button className="text-[10px] sm:text-xs font-bold text-[#0077cc] bg-blue-50 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full flex items-center gap-1 sm:gap-1.5 hover:bg-blue-100 transition-colors">
                   <Sparkles size={10} /> AI Rewrite
                 </button>
               </div>
@@ -323,11 +323,11 @@ const ScoreChecker = () => {
               <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                className="w-full h-full p-8 text-base leading-[1.8] text-slate-700 outline-none resize-none font-medium placeholder-gray-300 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent"
+                className="w-full h-full p-4 sm:p-6 lg:p-8 text-sm sm:text-base leading-[1.6] sm:leading-[1.8] text-slate-700 outline-none resize-none font-medium placeholder-gray-300 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent"
                 spellCheck="false"
                 placeholder="Describe your role..."
               />
-              <div className="absolute bottom-5 right-6 px-3 py-1 bg-slate-50 border border-slate-100 rounded-lg text-[10px] font-bold text-slate-400 pointer-events-none tabular-nums shadow-sm">
+              <div className="absolute bottom-4 sm:bottom-5 right-4 sm:right-6 px-2 sm:px-3 py-1 bg-slate-50 border border-slate-100 rounded-lg text-[9px] sm:text-[10px] font-bold text-slate-400 pointer-events-none tabular-nums shadow-sm">
                 {text.length} chars
               </div>
             </div>
@@ -340,19 +340,19 @@ const ScoreChecker = () => {
               variants={fadeRight}
               whileHover={{ y: -6 }}
               transition={{ type: "spring", stiffness: 120 }}
-              className="bg-[#1a2e52] rounded-[2rem] p-8 text-white shadow-2xl relative overflow-hidden"
+              className="bg-[#1a2e52] rounded-[1.5rem] sm:rounded-[2rem] p-4 sm:p-6 lg:p-8 text-white shadow-2xl relative overflow-hidden"
             >
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-3xl" />
-              <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center justify-between mb-4 sm:mb-6 lg:mb-8">
                 <div>
-                  <p className="text-sm font-medium text-blue-200">
+                  <p className="text-xs sm:text-sm font-medium text-blue-200">
                     Overall Quality
                   </p>
-                  <h3 className="text-5xl font-black tracking-tight">
+                  <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight">
                     {scoreValue}
                   </h3>
                 </div>
-                <div className="relative w-24 h-24 flex items-center justify-center">
+                <div className="relative w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 flex items-center justify-center">
                   <svg className="w-full h-full transform -rotate-90">
                     <circle
                       cx="48"
@@ -385,27 +385,26 @@ const ScoreChecker = () => {
                       className="transition-all duration-1000 ease-out"
                     />
                   </svg>
-                  <span className="absolute text-2xl font-black text-white">
+                  <span className="absolute text-lg sm:text-xl lg:text-2xl font-black text-white">
                     {scoreValue}
                   </span>
                 </div>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {feedback.slice(0, 3).map((item, i) => (
                   <div
                     key={i}
-                    className={`flex items-start gap-3 p-3 rounded-xl backdrop-blur-sm ${item.type === "success" ? "bg-[#00ff9d]/10 border border-[#00ff9d]/20" : "bg-white/5 border border-white/10"}`}
+                    className={`flex items-start gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl backdrop-blur-sm ${item.type === "success" ? "bg-[#00ff9d]/10 border border-[#00ff9d]/20" : "bg-white/5 border border-white/10"}`}
                   >
                     {item.type === "success" ? (
                       <CheckCircle2
-                        size={16}
-                        className="text-[#00ff9d] mt-0.5"
+                        size={14} className="text-[#00ff9d] mt-0.5"
                       />
                     ) : (
-                      <Zap size={16} className="text-[#ffb700] mt-0.5" />
+                      <Zap size={14} className="text-[#ffb700] mt-0.5" />
                     )}
-                    <p className="text-xs font-medium leading-relaxed opacity-90">
+                    <p className="text-[10px] sm:text-xs font-medium leading-relaxed opacity-90">
                       {item.text}
                     </p>
                   </div>
@@ -414,18 +413,18 @@ const ScoreChecker = () => {
             </motion.div>
 
             {/* Trend Chart (Mini) */}
-            <div className="bg-white rounded-[2rem] p-6 shadow-lg border border-gray-100">
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="font-bold text-[#1a2e52] flex items-center gap-2">
-                  <TrendingUp size={16} className="text-[#0077cc]" />
+            <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] p-4 sm:p-6 shadow-lg border border-gray-100">
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
+                <h4 className="font-bold text-sm sm:text-base text-[#1a2e52] flex items-center gap-2">
+                  <TrendingUp size={14} className="text-[#0077cc]" />
                   Score Trend
                 </h4>
-                <span className="text-[10px] font-bold bg-green-50 text-green-600 px-2 py-1 rounded-full">
+                <span className="text-[9px] sm:text-[10px] font-bold bg-green-50 text-green-600 px-2 py-1 rounded-full">
                   +12% vs last edit
                 </span>
               </div>
 
-              <div className="h-[140px] w-full">
+              <div className="h-[120px] sm:h-[140px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={trendData}>
                     <defs>
@@ -475,11 +474,11 @@ const ScoreChecker = () => {
       {/* 3) SECTION SCORE TILES */}
       <section
         ref={breakRef}
-        className={`px-6 py-12 bg-white transition-all duration-700 ${breakVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+        className={`px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 bg-white transition-all duration-700 ${breakVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
           }`}
       >
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-2xl font-black text-[#1a2e52] mb-8 text-center md:text-left">
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-[#1a2e52] mb-6 sm:mb-8 text-center md:text-left">
             Detailed Breakdown
           </h2>
           <motion.div
@@ -487,7 +486,7 @@ const ScoreChecker = () => {
             initial="hidden"
             whileInView="show"
             viewport={{ once: true }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6"
+            className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6"
           >
             {[
               {
@@ -524,21 +523,21 @@ const ScoreChecker = () => {
                 variants={fadeUp}
                 whileHover={{ y: -8 }}
                 transition={{ type: "spring", stiffness: 200 }}
-                className="p-6 rounded-3xl border border-gray-100 bg-white hover:shadow-lg transition-all group"
+                className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-gray-100 bg-white hover:shadow-lg transition-all group"
               >
                 <div
-                  className={`w-12 h-12 rounded-2xl ${item.bg} ${item.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}
+                  className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl ${item.bg} ${item.color} flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform`}
                 >
-                  <item.icon size={24} />
+                  <item.icon size={20} />
                 </div>
-                <h3 className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-1">
+                <h3 className="text-gray-400 text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-1">
                   {item.label}
                 </h3>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-black text-[#1a2e52]">
+                  <span className="text-2xl sm:text-3xl font-black text-[#1a2e52]">
                     {item.score}
                   </span>
-                  <span className="text-sm text-gray-400">/100</span>
+                  <span className="text-xs sm:text-sm text-gray-400">/100</span>
                 </div>
               </motion.div>
             ))}
@@ -546,18 +545,18 @@ const ScoreChecker = () => {
         </div>
       </section>
 
-      {/* 4) HOW WE CALCULATE (New Section) */}
+      {/* 4) HOW WE CALCULATE */}
       <section
         ref={calcRef}
-        className={`px-6 py-20 bg-gray-50/50 transition-all duration-700 ${calcVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+        className={`px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 bg-gray-50/50 transition-all duration-700 ${calcVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
           }`}
       >
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-black text-[#1a2e52]">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#1a2e52]">
               How We Calculate Your Score
             </h2>
-            <p className="mt-4 text-gray-500 max-w-2xl mx-auto">
+            <p className="mt-3 sm:mt-4 text-sm sm:text-base text-gray-500 max-w-2xl mx-auto">
               Our engine analyzes 25+ data points across three core pillars to
               determine your interview readiness.
             </p>
@@ -568,7 +567,7 @@ const ScoreChecker = () => {
             initial="hidden"
             whileInView="show"
             viewport={{ once: true }}
-            className="grid md:grid-cols-3 gap-8"
+            className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8"
           >
             {[
               {
@@ -613,30 +612,29 @@ const ScoreChecker = () => {
                 variants={fadeUp}
                 whileHover={{ y: -10 }}
                 transition={{ type: "spring", stiffness: 200 }}
-                className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 hover:-translate-y-2 hover:shadow-xl transition-all duration-300 group"
+                className="bg-white p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] shadow-sm border border-gray-100 hover:-translate-y-2 hover:shadow-xl transition-all duration-300 group"
               >
                 <div
-                  className={`w-14 h-14 rounded-2xl ${col.bg} ${col.color} flex items-center justify-center mb-6 font-bold text-xl group-hover:scale-110 transition-transform`}
+                  className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl ${col.bg} ${col.color} flex items-center justify-center mb-4 sm:mb-6 font-bold text-xl group-hover:scale-110 transition-transform`}
                 >
-                  <col.icon size={28} />
+                  <col.icon size={24} />
                 </div>
-                <h3 className="text-xl font-bold text-[#1a2e52] mb-3">
+                <h3 className="text-lg sm:text-xl font-bold text-[#1a2e52] mb-2 sm:mb-3">
                   {col.title}
                 </h3>
-                <p className="text-sm text-gray-500 mb-6 leading-relaxed">
+                <p className="text-sm sm:text-base text-gray-500 mb-4 sm:mb-6 leading-relaxed">
                   {col.desc}
                 </p>
-                <ul className="space-y-3">
+                <ul className="space-y-2 sm:space-y-3">
                   {col.items.map((item, j) => (
                     <li
                       key={j}
                       className="flex items-center gap-2 text-sm font-semibold text-slate-600"
                     >
                       <CheckCircle2
-                        size={16}
-                        className="text-green-500 shrink-0"
+                        size={14} className="text-green-500 shrink-0"
                       />
-                      {item}
+                      <span className="text-xs sm:text-sm">{item}</span>
                     </li>
                   ))}
                 </ul>
@@ -646,44 +644,44 @@ const ScoreChecker = () => {
         </div>
       </section>
 
-      {/* 5) WHY IT MATTERS (New Section) */}
-      <section className="px-6 py-20 bg-white">
+      {/* 5) WHY IT MATTERS */}
+      <section className="px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 bg-white">
         <motion.div
           variants={staggerContainer}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true }}
-          className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center"
+          className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center"
         >
           <motion.div variants={fadeLeft}>
-            <h2 className="text-3xl md:text-5xl font-black text-[#1a2e52] leading-tight mb-8">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl lg:text-5xl font-black text-[#1a2e52] leading-tight mb-6 sm:mb-8">
               Why aim for a <br />
               <span className="text-[#e65100]">90+ Score?</span>
             </h2>
-            <div className="space-y-6">
-              <div className="flex gap-4">
-                <div className="w-12 h-12 rounded-full bg-orange-50 text-[#e65100] flex items-center justify-center shrink-0">
-                  <TrendingUp size={24} />
+            <div className="space-y-4 sm:space-y-6">
+              <div className="flex gap-3 sm:gap-4">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-orange-50 text-[#e65100] flex items-center justify-center shrink-0">
+                  <TrendingUp size={20} />
                 </div>
                 <div>
-                  <h4 className="text-xl font-bold text-[#1a2e52]">
+                  <h4 className="text-lg sm:text-xl font-bold text-[#1a2e52]">
                     3x More Interviews
                   </h4>
-                  <p className="text-gray-500 leading-relaxed mt-2">
+                  <p className="text-sm sm:text-base text-gray-500 leading-relaxed mt-1 sm:mt-2">
                     Candidates with optimized scores get significantly more
                     callbacks than those with generic resumes.
                   </p>
                 </div>
               </div>
-              <div className="flex gap-4">
-                <div className="w-12 h-12 rounded-full bg-blue-50 text-[#0077cc] flex items-center justify-center shrink-0">
-                  <User size={24} />
+              <div className="flex gap-3 sm:gap-4">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-50 text-[#0077cc] flex items-center justify-center shrink-0">
+                  <User size={20} />
                 </div>
                 <div>
-                  <h4 className="text-xl font-bold text-[#1a2e52]">
+                  <h4 className="text-lg sm:text-xl font-bold text-[#1a2e52]">
                     Pass the HUMAN Test
                   </h4>
-                  <p className="text-gray-500 leading-relaxed mt-2">
+                  <p className="text-sm sm:text-base text-gray-500 leading-relaxed mt-1 sm:mt-2">
                     High scores mean better readability. Recruiters spend only 6
                     seconds scanning; make them count.
                   </p>
@@ -699,31 +697,31 @@ const ScoreChecker = () => {
             className="relative"
           >
             <div className="absolute inset-0 bg-gradient-to-tr from-orange-100 to-blue-50 rounded-[3rem] transform rotate-3" />
-            <div className="relative bg-[#1a2e52] p-10 rounded-[3rem] text-white shadow-2xl">
-              <div className="flex items-center justify-between mb-8 border-b border-white/10 pb-8">
+            <div className="relative bg-[#1a2e52] p-6 sm:p-8 lg:p-10 rounded-[2rem] sm:rounded-[2.5rem] text-white shadow-2xl">
+              <div className="flex items-center justify-between mb-6 sm:mb-8 border-b border-white/10 pb-6 sm:pb-8">
                 <div>
-                  <p className="text-blue-200 text-sm font-bold uppercase tracking-widest">
+                  <p className="text-blue-200 text-xs sm:text-sm font-bold uppercase tracking-widest">
                     Average Callback Rate
                   </p>
-                  <p className="text-4xl font-black mt-2">2.5%</p>
-                  <p className="text-sm text-gray-400 mt-1">Generic Resume</p>
+                  <p className="text-2xl sm:text-3xl lg:text-4xl font-black mt-1 sm:mt-2">2.5%</p>
+                  <p className="text-xs sm:text-sm text-gray-400 mt-1">Generic Resume</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[#e65100] text-sm font-bold uppercase tracking-widest">
+                  <p className="text-[#e65100] text-xs sm:text-sm font-bold uppercase tracking-widest">
                     Optimized Rate
                   </p>
-                  <p className="text-4xl font-black mt-2 text-[#ffb700]">18%</p>
-                  <p className="text-sm text-gray-400 mt-1">Score 90+</p>
+                  <p className="text-2xl sm:text-3xl lg:text-4xl font-black mt-1 sm:mt-2 text-[#ffb700]">18%</p>
+                  <p className="text-xs sm:text-sm text-gray-400 mt-1">Score 90+</p>
                 </div>
               </div>
-              <p className="text-lg font-medium leading-relaxed opacity-90">
+              <p className="text-sm sm:text-base lg:text-lg font-medium leading-relaxed opacity-90">
                 "I used the live scoring to tweak my bullet points. I went from
                 0 interviews in a month to 5 calls in one week."
               </p>
-              <div className="mt-6 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-white/20" />
+              <div className="mt-4 sm:mt-6 flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/20" />
                 <div>
-                  <p className="font-bold">Alex Chen</p>
+                  <p className="font-bold text-sm sm:text-base">Alex Chen</p>
                   <p className="text-xs text-blue-200">
                     Software Engineer at TechCorp
                   </p>
@@ -734,14 +732,14 @@ const ScoreChecker = () => {
         </motion.div>
       </section>
 
-      {/* 6) FAQ (New Section) */}
+      {/* 6) FAQ */}
       <section
         ref={faqRef}
-        className={`px-6 py-20 bg-[#F8F9FC] transition-all duration-700 ${faqVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+        className={`px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 bg-[#F8F9FC] transition-all duration-700 ${faqVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
           }`}
       >
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-3xl font-black text-center text-[#1a2e52] mb-12">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-center text-[#1a2e52] mb-8 sm:mb-12">
             Frequently Asked Questions
           </h2>
           <motion.div
@@ -771,9 +769,9 @@ const ScoreChecker = () => {
                 className="bg-white rounded-2xl border border-gray-100 overflow-hidden cursor-pointer"
                 onClick={() => setOpenFaq(openFaq === i ? -1 : i)}
               >
-                <div className="p-6 flex items-center justify-between">
+                <div className="p-4 sm:p-6 flex items-center justify-between">
                   <h3
-                    className={`font-bold text-lg ${openFaq === i ? "text-[#0077cc]" : "text-[#1a2e52]"}`}
+                    className={`font-bold text-base sm:text-lg ${openFaq === i ? "text-[#0077cc]" : "text-[#1a2e52]"}`}
                   >
                     {item.q}
                   </h3>
@@ -782,7 +780,7 @@ const ScoreChecker = () => {
                   />
                 </div>
                 <div
-                  className={`px-6 text-gray-500 leading-relaxed overflow-hidden transition-all duration-300 ${openFaq === i ? "max-h-40 pb-6 opacity-100" : "max-h-0 opacity-0"}`}
+                  className={`px-4 sm:px-6 text-sm sm:text-base text-gray-500 leading-relaxed overflow-hidden transition-all duration-300 ${openFaq === i ? "max-h-40 pb-4 sm:pb-6 opacity-100" : "max-h-0 opacity-0"}`}
                 >
                   {item.a}
                 </div>
@@ -792,30 +790,30 @@ const ScoreChecker = () => {
         </div>
       </section>
 
-      {/* CTA (keeps your style) */}
+      {/* CTA */}
       <section
         ref={ctaRef}
-        className={`relative px-8 py-20 overflow-hidden bg-white text-center transition-all duration-700 ${ctaVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+        className={`relative px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 overflow-hidden bg-white text-center transition-all duration-700 ${ctaVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
           }`}
       >
         <div className="absolute top-0 right-0 w-1/3 h-full bg-orange-50 rounded-full blur-[120px] -z-10 opacity-60" />
         <div className="absolute bottom-0 left-0 w-1/3 h-full bg-blue-50 rounded-full blur-[120px] -z-10 opacity-60" />
 
         <div className="relative z-10 max-w-3xl mx-auto">
-          <h2 className="mb-6 text-4xl font-black text-[#1a2e52] tracking-tight">
+          <h2 className="mb-4 sm:mb-6 text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-[#1a2e52] tracking-tight">
             Ready to <span className="text-[#0077cc]">optimize</span> your
             entire resume?
           </h2>
-          <p className="mb-10 text-lg text-gray-500">
+          <p className="mb-6 sm:mb-8 lg:mb-10 text-sm sm:text-base lg:text-lg text-gray-500">
             Join thousands of job seekers using our real-time scoring to land
             interviews 3x faster.
           </p>
 
           <button
             onClick={() => handleFeatureClick("/user/ats-checker")}
-            className="inline-flex items-center gap-3 px-10 py-5 bg-[#1a2e52] text-white rounded-xl font-bold text-lg transition-all shadow-xl hover:bg-[#0077cc] hover:-translate-y-1"
+            className="inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 bg-[#1a2e52] text-white rounded-xl font-bold text-sm sm:text-base lg:text-lg transition-all shadow-xl hover:bg-[#0077cc] hover:-translate-y-1"
           >
-            Start Editing Now <ArrowRight size={20} />
+            Start Editing Now <ArrowRight size={16} />
           </button>
         </div>
       </section>

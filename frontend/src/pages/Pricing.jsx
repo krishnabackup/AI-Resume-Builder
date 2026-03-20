@@ -108,7 +108,7 @@ const Pricing = () => {
   return (
     <>
       <NavBar />
-      <section className="page-enter-fade bg-white px-6 md:px-16 pt-20 pb-12">
+      <section className="page-enter-fade bg-white px-6 md:px-16 pt-24 md:pt-32 lg:pt-40 xl:pt-48 2xl:pt-56 3xl:pt-64 pb-12">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <motion.div

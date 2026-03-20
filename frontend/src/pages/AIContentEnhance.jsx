@@ -69,23 +69,23 @@ const AIEnhancementPage = () => {
             variants={staggerContainer}
             initial="hidden"
             animate="show"
-            className="grid items-center min-h-[80vh] gap-8 pb-16 lg:grid-cols-[1fr_1.2fr] xl:grid-cols-[1fr_1.4fr]"
+            className="grid items-center min-h-[35vh] sm:min-h-[45vh] lg:min-h-[55vh] gap-4 sm:gap-6 lg:gap-8 lg:grid-cols-[1fr_1.2fr] xl:grid-cols-[1fr_1.4fr]"
           >
             {/* LEFT CONTENT */}
-            <motion.div variants={fadeUp} className="text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-4 py-2 mb-6 rounded-full bg-blue-50">
-                <Cpu size={16} className="text-[#0077cc]" />
-                <span className="text-xs font-bold tracking-widest text-[#0077cc] uppercase">
+            <motion.div variants={fadeUp} className="text-center lg:text-left space-y-3 sm:space-y-4 lg:space-y-6">
+              <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1 sm:py-1.5 mb-2 sm:mb-3 rounded-full bg-blue-50">
+                <Cpu size={12} className="text-[#0077cc]" />
+                <span className="text-[8px] sm:text-[9px] font-black tracking-widest text-[#0077cc] uppercase">
                   Smart Content Optimization
                 </span>
               </div>
 
-              <h1 className="mb-5 text-4xl font-black tracking-tight md:text-6xl lg:text-7xl leading-[1.1] font-jakarta">
+              <h1 className="mb-3 sm:mb-4 text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black tracking-tight leading-[1.1] font-jakarta">
                 Turn Weak Points into <br />
                 <span className="text-[#0077cc]">Power Phrases.</span>
               </h1>
 
-              <p className="max-w-xl mx-auto mb-8 text-lg md:text-xl text-gray-500 lg:mx-0">
+              <p className="max-w-md mx-auto mb-4 sm:mb-6 text-xs sm:text-sm md:text-base lg:text-lg font-medium text-gray-500 lg:mx-0">
                 Our AI re-writes your boring job duties into metric-driven achievements that land more interviews instantly.
               </p>
 
@@ -94,10 +94,10 @@ const AIEnhancementPage = () => {
                     if (!isLoggedIn) navigate("/login");
                     else navigate("/user/resume-builder");
                   }}
-                className="group inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#e65100] to-[#f4511e] text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl hover:-translate-y-1 active:scale-95 transition-all"
+                className="group relative inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-6 lg:px-8 py-2 sm:py-2.5 lg:py-3 bg-gradient-to-r from-[#e65100] to-[#f4511e] text-white rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm lg:text-base shadow-lg hover:shadow-xl hover:-translate-y-1 active:scale-95 transition-all"
               >
-                Enhance My Content
-                <ArrowRight size={20} className="transition-transform group-hover:translate-x-1" />
+                <span>Enhance My Content</span>
+                <ArrowRight size={16} className="transition-transform group-hover:translate-x-2" />
               </button>
             </motion.div>
 
@@ -114,18 +114,18 @@ const AIEnhancementPage = () => {
       </section>
 
       {/* --- 2. WHAT IS AI ENHANCEMENT --- */}
-      <section ref={whatRef} className="px-8 py-20 bg-white font-['Outfit']">
+      <section ref={whatRef} className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12 bg-white font-['Outfit']">
         <motion.div
           variants={staggerContainer}
           initial="hidden"
           animate={isWhatInView ? "show" : "hidden"}
           className="max-w-4xl mx-auto"
         >
-          <motion.h2 variants={fadeUp} className="text-4xl font-bold text-center text-[#1a2e52] mb-12">
+          <motion.h2 variants={fadeUp} className="text-lg sm:text-xl lg:text-2xl font-bold text-center text-[#1a2e52] mb-6 sm:mb-8 lg:mb-10">
             What is AI Enhancement?
           </motion.h2>
           
-          <motion.div variants={fadeUp} className="mb-12 space-y-6 text-lg text-center text-gray-600 md:text-left">
+          <motion.div variants={fadeUp} className="mb-8 sm:mb-10 lg:mb-12 space-y-4 sm:space-y-6 lg:space-y-8 text-sm sm:text-base md:text-lg text-center text-gray-600 md:text-left">
             <p>
               AI Enhancement is the process of using Natural Language Processing (NLP) to analyze your existing resume bullets and upgrade them for maximum impact. It focuses on using <strong>action verbs</strong> and <strong>quantifiable results</strong> to prove your value.
             </p>
@@ -137,10 +137,10 @@ const AIEnhancementPage = () => {
           <motion.div
             variants={fadeUp}
             whileHover={{ y: -6 }}
-            className="bg-[#f0f7ff] border-l-4 border-[#0077cc] rounded-2xl p-8 shadow-sm"
+            className="bg-[#f0f7ff] border-l-4 border-[#0077cc] rounded-lg sm:rounded-xl lg:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-sm"
           >
-            <h3 className="text-xl font-bold text-[#1a2e52] mb-6">Our AI Optimizer Scans for:</h3>
-            <ul className="space-y-4">
+            <h3 className="text-base sm:text-lg lg:text-xl font-bold text-[#1a2e52] mb-4 sm:mb-6">Our AI Optimizer Scans for:</h3>
+            <ul className="space-y-3 sm:space-y-4 lg:space-y-6">
               {[
                 { title: "Strong Action Verbs", desc: "Replaces passive language with leadership-focused verbs." },
                 { title: "Metric Identification", desc: "Identifies opportunities to add percentages, dollars, or timeframes." },
@@ -152,8 +152,8 @@ const AIEnhancementPage = () => {
                   variants={fadeUp}
                   className="flex items-start gap-3"
                 >
-                  <CheckCircle2 size={20} className="text-[#0077cc] mt-1 shrink-0" />
-                  <p className="text-gray-700"><span className="font-bold">{item.title}:</span> {item.desc}</p>
+                  <CheckCircle2 size={16} className="text-[#0077cc] mt-1 shrink-0" />
+                  <p className="text-sm sm:text-base text-gray-700"><span className="font-bold">{item.title}:</span> {item.desc}</p>
                 </motion.li>
               ))}
             </ul>
@@ -162,24 +162,24 @@ const AIEnhancementPage = () => {
       </section>
 
       {/* --- 3. DYNAMIC FEATURE GRID ---  */}
-      <section ref={featureRef} className="relative px-8 overflow-hidden py-8 bg-gray-50/50">
+      <section ref={featureRef} className="relative px-4 sm:px-6 lg:px-8 overflow-hidden py-6 sm:py-8 lg:py-12 bg-gray-50/50">
         <div className="mx-auto max-w-7xl">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={isFeatureInView ? { opacity: 1, y: 0 } : {}}
-            className="mb-16 text-center"
+            className="mb-8 sm:mb-10 lg:mb-12 text-center"
           >
-            <h2 className="text-4xl font-black text-[#1a2e52] mb-4 tracking-tight font-jakarta">
+            <h2 className="text-lg sm:text-xl lg:text-2xl font-black text-[#1a2e52] mb-4 sm:mb-6 tracking-tight font-jakarta">
               AI Powered <span className="text-[#e65100]">Refinement</span>
             </h2>
-            <p className="max-w-xl mx-auto font-medium text-gray-500">How our engine fine-tunes your professional story.</p>
+            <p className="max-w-lg mx-auto text-sm sm:text-base font-medium text-gray-500">How our engine fine-tunes your professional story.</p>
           </motion.div>
           
           <motion.div
             variants={staggerContainer}
             initial="hidden"
             animate={isFeatureInView ? "show" : "hidden"}
-            className="grid grid-cols-2 gap-6 md:grid-cols-3"
+            className="grid gap-4 sm:gap-6 lg:gap-8 grid-cols-2 md:grid-cols-2 lg:grid-cols-3"
           >
             {[
               { icon: Wand2, t: "Auto-Rewrite", d: "Instantly transform one-line duties into multi-dimensional achievements." },
@@ -193,17 +193,19 @@ const AIEnhancementPage = () => {
                 key={i}
                 variants={fadeUp}
                 whileHover={{ y: -10, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)" }}
-                className="p-4 sm:p-6 md:p-10 rounded-2xl sm:rounded-[2.5rem] border border-gray-100 bg-white transition-all duration-300 group"
+                className="p-6 sm:p-8 lg:p-10 h-full min-h-[280px] sm:min-h-[300px] lg:min-h-[320px] rounded-lg sm:rounded-xl lg:rounded-2xl border border-gray-100 bg-white transition-all duration-300 group flex flex-col items-center justify-center text-center"
               >
-                <div className="flex items-center justify-center w-10 h-10 sm:w-14 sm:h-14 mb-6 sm:mb-8 bg-blue-50 rounded-lg sm:rounded-2xl group-hover:bg-[#0077cc] transition-colors duration-300">
-                  <feature.icon size={20} className="text-[#0077cc] group-hover:text-white transition-colors" />
+                <div className="flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 mb-4 sm:mb-6 bg-blue-50 rounded-lg sm:rounded-xl lg:rounded-2xl group-hover:bg-[#0077cc] transition-colors duration-300">
+                  {React.createElement(feature.icon, { size: 24, className: "text-[#0077cc] group-hover:text-white transition-colors" })}
                 </div>
-                <h4 className="mb-2 sm:mb-3 text-sm sm:text-xl font-bold text-[#1a2e52] group-hover:text-[#0077cc] transition-colors">
-                  {feature.t}
-                </h4>
-                <p className="text-xs sm:text-sm font-medium leading-relaxed text-gray-400 transition-colors group-hover:text-gray-600">
-                  {feature.d}
-                </p>
+                <div className="flex flex-col items-center justify-center text-center flex-1">
+                  <h4 className="mb-3 sm:mb-4 text-sm sm:text-base lg:text-lg font-bold text-[#1a2e52] group-hover:text-[#0077cc] transition-colors">
+                    {feature.t}
+                  </h4>
+                  <p className="text-xs sm:text-sm font-medium leading-relaxed text-gray-400 transition-colors group-hover:text-gray-600">
+                    {feature.d}
+                  </p>
+                </div>
               </motion.div>
             ))}
           </motion.div>
@@ -211,7 +213,7 @@ const AIEnhancementPage = () => {
       </section>
 
       {/* --- 4. CTA SECTION --- */}
-      <section ref={ctaRef} className="relative px-8 pt-12 pb-24 overflow-hidden bg-white">
+      <section ref={ctaRef} className="relative px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 lg:pt-16 pb-12 sm:pb-16 lg:pb-20 overflow-hidden bg-white">
         <div className="absolute top-0 right-0 w-1/3 h-full bg-orange-50 rounded-full blur-[120px] -z-10 opacity-60" />
         <div className="absolute bottom-0 left-0 w-1/3 h-full bg-blue-50 rounded-full blur-[120px] -z-10 opacity-60" />
         
@@ -221,11 +223,11 @@ const AIEnhancementPage = () => {
           animate={isCtaInView ? "show" : "hidden"}
           className="relative z-10 max-w-4xl mx-auto text-center"
         >
-          <motion.h2 variants={fadeUp} className="mb-6 text-4xl font-black md:text-6xl text-[#1a2e52] tracking-tighter font-jakarta leading-tight">
+          <motion.h2 variants={fadeUp} className="mb-6 sm:mb-8 lg:mb-10 text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-black text-[#1a2e52] tracking-tighter font-jakarta leading-tight">
             Ready to Upgrade Your <span className="text-[#0077cc]">Content?</span>
           </motion.h2>
           
-          <motion.p variants={fadeUp} className="max-w-2xl mx-auto mb-10 text-xl font-medium text-gray-500">
+          <motion.p variants={fadeUp} className="max-w-lg mx-auto mb-8 sm:mb-10 lg:mb-12 text-sm sm:text-base lg:text-lg xl:text-xl font-medium text-gray-500">
             Let AI do the hard work of writing. Start landing more interviews with perfectly architected bullet points.
           </motion.p>
 
@@ -234,9 +236,9 @@ const AIEnhancementPage = () => {
             whileHover={{ y: -6 }}
             whileTap={{ scale: 0.96 }}
             onClick={() => navigate("/user/resume-builder")}
-            className="group relative inline-flex items-center gap-2 sm:gap-3 px-6 py-3 sm:px-10 sm:py-5 bg-gradient-to-r from-[#e65100] to-[#f4511e] text-white rounded-lg sm:rounded-xl font-bold text-sm sm:text-lg transition-all duration-300 shadow-[0_8px_18px_rgba(230,81,0,0.22)] hover:shadow-[0_12px_28px_rgba(230,81,0,0.3)]"
+            className="group relative inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 bg-gradient-to-r from-[#e65100] to-[#f4511e] text-white rounded-lg sm:rounded-xl font-bold text-sm sm:text-base lg:text-lg transition-all duration-300 shadow-[0_8px_18px_rgba(230,81,0,0.22)] hover:shadow-[0_12px_28px_rgba(230,81,0,0.3)]"
           >
-            <Sparkles size={16} className="fill-white" />
+            <Sparkles size={18} className="fill-white" />
             <span className="relative z-10">Start Enhancing Now</span>
             <ArrowRight size={18} className="relative z-10 transition-transform duration-300 group-hover:translate-x-2" />
           </motion.button>

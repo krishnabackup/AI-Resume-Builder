@@ -157,7 +157,7 @@ const ResumeGuide = () => {
       <NavBar />
 
       {/* --- 1. HERO SECTION --- */}
-      <section className="relative px-6 md:px-8 pt-20 pb-6 overflow-hidden bg-white">
+      <section className="relative px-4 sm:px-6 md:px-8 pt-16 sm:pt-20 md:pt-24 pb-6 sm:pb-8 overflow-hidden bg-white">
         <div className="relative z-10 mx-auto max-w-7xl">
           <motion.div
             variants={staggerContainer}
@@ -166,19 +166,19 @@ const ResumeGuide = () => {
             className="flex flex-col items-center gap-12 lg:flex-row lg:text-left"
           >
             <motion.div variants={fadeUp} className="flex-1 text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-4 py-2 mb-8 rounded-full bg-blue-50">
-                <PencilLine size={16} className="text-[#0077cc]" />
-                <span className="text-xs font-black tracking-widest text-[#0077cc] uppercase">
+              <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 mb-4 sm:mb-6 lg:mb-8 rounded-full bg-blue-50">
+                <PencilLine size={14} className="text-[#0077cc]" />
+                <span className="text-[9px] sm:text-[10px] font-black tracking-widest text-[#0077cc] uppercase">
                   Masterclass 2026
                 </span>
               </div>
 
-              <h1 className="mb-6 text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter lg:leading-[1.1] font-jakarta text-[#1a2e52]">
+              <h1 className="mb-4 sm:mb-6 text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tighter lg:leading-[1.1] font-jakarta text-[#1a2e52]">
                 High-Impact <br />
                 <span className="text-[#0077cc]">Resume Writing.</span>
               </h1>
 
-              <p className="max-w-xl mx-auto mb-10 text-lg md:text-xl font-medium leading-relaxed text-gray-500 lg:mx-0">
+              <p className="max-w-xl mx-auto mb-6 sm:mb-8 lg:mb-10 text-sm sm:text-base md:text-lg lg:text-xl font-medium leading-relaxed text-gray-500 lg:mx-0">
                 A winning resume is a professional blueprint. We show you how to
                 structure your career narrative to land interviews in{" "}
                 <span className="font-bold text-[#1a2e52]">record time</span>.
@@ -189,15 +189,15 @@ const ResumeGuide = () => {
                   if (!isLoggedIn) navigate("/login");
                   else navigate("/user/dashboard");
                 }}
-                className="group relative inline-flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-[#e65100] to-[#f4511e] text-white rounded-xl font-bold text-lg transition-all duration-300 shadow-[0_10px_25px_rgba(230,81,0,0.3)] hover:shadow-[0_15px_35px_rgba(230,81,0,0.45)] hover:-translate-y-1 active:scale-95 mx-auto lg:mx-0"
+                className="group relative inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3 lg:py-4 bg-gradient-to-r from-[#e65100] to-[#f4511e] text-white rounded-xl font-bold text-sm sm:text-base lg:text-lg transition-all duration-300 shadow-[0_10px_25px_rgba(230,81,0,0.3)] hover:shadow-[0_15px_35px_rgba(230,81,0,0.45)] hover:-translate-y-1 active:scale-95 mx-auto lg:mx-0"
               >
                 <span>Start Building Now</span>
-                <ArrowRight size={22} className="transition-transform duration-300 group-hover:translate-x-2" />
+                <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-2" />
               </button>
             </motion.div>
 
             {/* Optimized Visibility: Image hides if screen is smaller than Large (Desktop) */}
-            <motion.div variants={fadeUp} className="relative flex-1 w-full max-w-[550px] hidden lg:block">
+            <motion.div variants={fadeUp} className="relative flex-1 w-full max-w-sm md:max-w-md lg:max-w-[550px] hidden lg:block">
               <img src={TemplateFeature} alt="Resume Mastery" className="w-full h-auto" />
             </motion.div>
           </motion.div>

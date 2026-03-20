@@ -160,6 +160,10 @@ function ATSDonutCard({ score = 78 }) {
 const ATSCheckerFeature = () => {
   const navigate = useNavigate();
   const isLoggedIn = !!localStorage.getItem("token");
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const fileInputRef = useRef(null);
 
   const [heroRef, heroVisible] = useInView(0.2);
   const [procRef, procVisible] = useInView(0.15);
@@ -171,6 +175,75 @@ const ATSCheckerFeature = () => {
   const handleCTA = () => {
     if (!isLoggedIn) navigate("/login");
     else navigate("/user/ats-checker");
+  };
+
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Validate file type
+      const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('Please upload a PDF or Word document (.docx)');
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('File size must be less than 5MB');
+        return;
+      }
+
+      setUploadedFile(file);
+      simulateUpload();
+    }
+  };
+
+  const simulateUpload = () => {
+    setIsUploading(true);
+    setUploadProgress(0);
+    
+    const interval = setInterval(() => {
+      setUploadProgress(prev => {
+        if (prev >= 90) {
+          clearInterval(interval);
+          setTimeout(() => {
+            setIsUploading(false);
+            setUploadProgress(100);
+            // Navigate to results or show results
+            setTimeout(() => {
+              alert('Resume uploaded successfully! ATS analysis complete.');
+              setUploadProgress(0);
+            }, 500);
+          }, 500);
+          return prev + 10;
+        }
+        return prev + 10;
+      });
+    }, 200);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      const event = { target: { files: [files[0]] } };
+      handleFileUpload(event);
+    }
+  };
+
+  const removeFile = () => {
+    setUploadedFile(null);
+    setUploadProgress(0);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   return (
@@ -292,22 +365,89 @@ const ATSCheckerFeature = () => {
               className={`lg:col-span-5 transition-all duration-700 ${uploadVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-8"}`}
             >
               <div
-                className="bg-white border-2 border-dashed border-gray-200 rounded-[2rem] p-6 sm:p-8 md:p-10 text-center cursor-pointer hover:border-[#0077cc] hover:bg-blue-50/30 transition-all group"
-                onClick={handleCTA}
+                className="bg-white border-2 border-dashed border-gray-200 rounded-[2rem] p-6 sm:p-8 md:p-10 text-center relative"
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
               >
-                <div className="w-20 h-20 rounded-full bg-blue-50 text-[#0077cc] flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                  <UploadCloud size={32} />
-                </div>
-                <h3 className="text-xl sm:text-2xl font-black text-[#1a2e52] mb-3">
-                  Check your resume
-                </h3>
-                <p className="text-sm sm:text-base text-gray-500 mb-6 sm:mb-8">
-                  Drag and drop your file here, or click to browse. <br />
-                  Supports PDF and Word.
-                </p>
-                <button className="px-6 py-3 bg-[#0077cc] text-white font-bold rounded-lg shadow-lg shadow-blue-200 group-hover:shadow-blue-300 transition-all">
-                  Upload your resume
-                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.docx"
+                  onChange={handleFileUpload}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  disabled={isUploading}
+                />
+                
+                {uploadedFile ? (
+                  <div className="space-y-4">
+                    <div className="w-20 h-20 rounded-full bg-green-50 text-green-600 flex items-center justify-center mx-auto">
+                      <CheckCircle size={32} />
+                    </div>
+                    <h3 className="text-xl sm:text-2xl font-black text-[#1a2e52] mb-3">
+                      {uploadedFile.name}
+                    </h3>
+                    <p className="text-sm text-gray-500 mb-6">
+                      File uploaded successfully! Size: {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                    <div className="flex gap-3 justify-center">
+                      <button 
+                        onClick={handleCTA}
+                        className="px-6 py-3 bg-[#0077cc] text-white font-bold rounded-lg shadow-lg transition-all"
+                      >
+                        Analyze Resume
+                      </button>
+                      <button 
+                        onClick={removeFile}
+                        className="px-6 py-3 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 transition-all"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {isUploading ? (
+                      <div className="space-y-4">
+                        <div className="w-20 h-20 rounded-full bg-blue-50 text-[#0077cc] flex items-center justify-center mx-auto">
+                          <div className="animate-spin">
+                            <UploadCloud size={32} />
+                          </div>
+                        </div>
+                        <h3 className="text-xl sm:text-2xl font-black text-[#1a2e52] mb-3">
+                          Uploading...
+                        </h3>
+                        <p className="text-sm text-gray-500 mb-6">
+                          Processing your resume
+                        </p>
+                        <div className="w-full max-w-xs mx-auto">
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="bg-[#0077cc] h-2 rounded-full transition-all duration-300"
+                              style={{ width: `${uploadProgress}%` }}
+                            />
+                          </div>
+                          <p className="text-xs text-gray-500 mt-2 text-center">{uploadProgress}%</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="w-20 h-20 rounded-full bg-blue-50 text-[#0077cc] flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                          <UploadCloud size={32} />
+                        </div>
+                        <h3 className="text-xl sm:text-2xl font-black text-[#1a2e52] mb-3">
+                          Upload your resume
+                        </h3>
+                        <p className="text-sm sm:text-base text-gray-500 mb-6 sm:mb-8">
+                          Drag and drop your file here, or click to browse. <br />
+                          Supports PDF and Word (.docx) files up to 5MB
+                        </p>
+                        <button className="px-6 py-3 bg-[#0077cc] text-white font-bold rounded-lg shadow-lg shadow-blue-200 hover:shadow-blue-300 transition-all">
+                          Choose File
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -412,9 +552,9 @@ const ATSCheckerFeature = () => {
                 <h3 className="text-lg sm:text-xl font-bold text-[#1a2e52] mb-3">
                   {card.title}
                 </h3>
-                <p className="text-sm text-gray-500 leading-relaxed">
+                <div className="text-sm text-gray-500 leading-relaxed">
                   {card.desc}
-                </p>
+                </div>
               </div>
             ))}
           </div>
