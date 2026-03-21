@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from "react";
-import { 
-  Check, Eye, ChevronLeft, ChevronRight, X, 
+import {
+  Check, Eye, ChevronLeft, ChevronRight, X,
   Maximize2, Minimize2, ZoomIn, ZoomOut, Search, Sparkles
 } from "lucide-react";
 import { createPortal } from "react-dom";
@@ -14,7 +14,7 @@ const TemplateCard = ({ template, isSelected, displayData, onPreview, onUse }) =
     <div className="min-w-[280px] w-[280px] bg-white border border-slate-200 rounded-xl p-2 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col flex-shrink-0 select-none overflow-hidden group">
       <div className="relative w-full aspect-[210/297] rounded-lg overflow-hidden bg-white">
         {/* Live Template Preview */}
-        <div 
+        <div
           className="absolute inset-0 pointer-events-none origin-top-left"
           style={{ transform: "scale(0.35)", width: "794px", height: "1123px" }}
         >
@@ -23,14 +23,14 @@ const TemplateCard = ({ template, isSelected, displayData, onPreview, onUse }) =
 
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity z-10"></div>
-        
+
         <div className="absolute bottom-0 left-0 right-0 pt-12 pb-3 px-3 flex flex-col justify-end pointer-events-none z-20">
           <h3 className="text-base font-semibold text-white truncate drop-shadow-md">{template.title}</h3>
           <p className="text-xs text-slate-200 truncate drop-shadow-sm">{template.category}</p>
         </div>
 
         {/* Preview Button (Top Right) */}
-        <div className="absolute top-2 right-2 z-30">
+        <div className="absolute top-2 right-2 z-10">
           <button
             onClick={(e) => { e.stopPropagation(); onPreview(template); }}
             className="bg-black/50 hover:bg-black/80 backdrop-blur-md text-white text-xs px-3 py-1.5 rounded-full font-medium flex items-center gap-1.5 transition-all shadow-sm cursor-pointer border border-white/10"
@@ -40,7 +40,7 @@ const TemplateCard = ({ template, isSelected, displayData, onPreview, onUse }) =
         </div>
 
         {/* Use Template Button (Bottom) */}
-        <div className="absolute bottom-16 left-2 z-30">
+        <div className="absolute bottom-16 left-2 z-10">
           <button
             onClick={(e) => { e.stopPropagation(); onUse(template.id); }}
             className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-4 py-2 rounded-full font-medium flex items-center gap-1.5 transition-all shadow-lg cursor-pointer"
@@ -51,7 +51,7 @@ const TemplateCard = ({ template, isSelected, displayData, onPreview, onUse }) =
 
         {/* Active Badge */}
         {isSelected && (
-          <div className="absolute top-2 left-2 z-30 bg-green-600 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg">
+          <div className="absolute top-2 left-2 z-10 bg-green-600 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg">
             <Check size={12} /> Active
           </div>
         )}
@@ -73,7 +73,7 @@ const PreviewModalComponent = ({ template, zoomLevel, displayData, onZoomChange,
     const newValue = value !== undefined ? value : Number(e.target.value);
     onZoomChange(Math.max(50, Math.min(200, newValue)));
   };
-  
+
   const handleBackdropClick = (e) => {
     if (modalContentRef.current && !modalContentRef.current.contains(e.target)) onClose();
   };
@@ -87,7 +87,7 @@ const PreviewModalComponent = ({ template, zoomLevel, displayData, onZoomChange,
   }, [onClose]);
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-[99999] bg-slate-900/40 backdrop-blur-sm flex flex-col"
       onClick={handleBackdropClick}
       style={{ isolation: 'isolate' }}
@@ -223,20 +223,20 @@ const CoverLetterTemplates = ({ selectedTemplate, onSelectTemplate, formData: pr
     return () => { document.body.style.overflow = 'unset'; };
   }, [previewTemplate]);
 
-   const categories = ['All Examples', 'Professional', 'Modern', 'Creative', 'Minimal', 'Elegant'];
- 
-   const templates = [
-     { id: 'professional', title: 'Professional Template', category: 'Professional', level: 'Any Level' },
-     { id: 'corporate', title: 'Corporate Template', category: 'Professional', level: 'Executive' },
-     { id: 'modern', title: 'Modern Template', category: 'Modern', level: 'Mid Level' },
-     { id: 'tech', title: 'Tech Template', category: 'Modern', level: 'Tech Level' },
-     { id: 'creative', title: 'Creative Template', category: 'Creative', level: 'Creative Level' },
-     { id: 'vibrant', title: 'Vibrant Template', category: 'Creative', level: 'Artist Level' },
-     { id: 'minimal', title: 'Minimal Template', category: 'Minimal', level: 'Entry Level' },
-     { id: 'clean', title: 'Clean Template', category: 'Minimal', level: 'Clean Level' },
-     { id: 'elegant', title: 'Elegant Template', category: 'Elegant', level: 'Executive' },
-     { id: 'classic', title: 'Classic Template', category: 'Elegant', level: 'Formal' }
-   ];
+  const categories = ['All Examples', 'Professional', 'Modern', 'Creative', 'Minimal', 'Elegant'];
+
+  const templates = [
+    { id: 'professional', title: 'Professional Template', category: 'Professional', level: 'Any Level' },
+    { id: 'corporate', title: 'Corporate Template', category: 'Professional', level: 'Executive' },
+    { id: 'modern', title: 'Modern Template', category: 'Modern', level: 'Mid Level' },
+    { id: 'tech', title: 'Tech Template', category: 'Modern', level: 'Tech Level' },
+    { id: 'creative', title: 'Creative Template', category: 'Creative', level: 'Creative Level' },
+    { id: 'vibrant', title: 'Vibrant Template', category: 'Creative', level: 'Artist Level' },
+    { id: 'minimal', title: 'Minimal Template', category: 'Minimal', level: 'Entry Level' },
+    { id: 'clean', title: 'Clean Template', category: 'Minimal', level: 'Clean Level' },
+    { id: 'elegant', title: 'Elegant Template', category: 'Elegant', level: 'Executive' },
+    { id: 'classic', title: 'Classic Template', category: 'Elegant', level: 'Formal' }
+  ];
 
   const filteredTemplates = useMemo(() => {
     return templates.filter(tpl => {
@@ -257,72 +257,71 @@ const CoverLetterTemplates = ({ selectedTemplate, onSelectTemplate, formData: pr
       <div className="max-w-7xl mx-auto px-6 mt-12 pb-12">
         {/* Category Pills */}
         <div className="flex flex-wrap items-center justify-center gap-3 mb-8 px-4">
-            {categories.map(cat => (
-                <button
-                    key={cat}
-                    onClick={() => setActiveCategory(cat)}
-                    className={`px-6 py-2.5 rounded-2xl text-[10px] font-black transition-all border shadow-sm tracking-widest uppercase ${
-                        activeCategory === cat 
-                        ? 'bg-slate-900 text-white border-slate-900 scale-105 shadow-xl shadow-slate-200' 
-                        : 'bg-white text-slate-400 border-slate-100 hover:border-blue-200 hover:text-blue-600'
-                    }`}
-                >
-                    {cat}
-                </button>
-            ))}
+          {categories.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={`px-6 py-2.5 rounded-2xl text-[10px] font-black transition-all border shadow-sm tracking-widest uppercase ${activeCategory === cat
+                  ? 'bg-slate-900 text-white border-slate-900 scale-105 shadow-xl shadow-slate-200'
+                  : 'bg-white text-slate-400 border-slate-100 hover:border-blue-200 hover:text-blue-600'
+                }`}
+            >
+              {cat}
+            </button>
+          ))}
         </div>
 
         {/* Grid */}
         <div className="space-y-12">
-            <div className="flex items-center justify-between px-4 border-l-8 border-blue-600 pl-8">
-                <div>
-                   <h2 className="text-3xl font-black text-slate-900 leading-none">
-                       {activeCategory === 'All Examples' ? 'All Templates' : activeCategory}
-                   </h2>
-                   <p className="text-slate-400 text-sm mt-2 font-bold italic">Showing {filteredTemplates.length} premium designs</p>
-                </div>
-                <div className="hidden sm:flex items-center gap-3 bg-white px-5 py-2 rounded-2xl shadow-sm border border-slate-50">
-                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Live Rendering Enabled</span>
-                </div>
+          <div className="flex items-center justify-between px-4 border-l-8 border-blue-600 pl-8">
+            <div>
+              <h2 className="text-3xl font-black text-slate-900 leading-none">
+                {activeCategory === 'All Examples' ? 'All Templates' : activeCategory}
+              </h2>
+              <p className="text-slate-400 text-sm mt-2 font-bold italic">Showing {filteredTemplates.length} premium designs</p>
             </div>
+            <div className="hidden sm:flex items-center gap-3 bg-white px-5 py-2 rounded-2xl shadow-sm border border-slate-50">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Live Rendering Enabled</span>
+            </div>
+          </div>
 
-            {filteredTemplates.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 px-4 pb-12">
-                    {filteredTemplates.map(tpl => (
-                        <TemplateCard 
-                            key={tpl.id}
-                            template={tpl}
-                            displayData={displayData}
-                            isSelected={selectedTemplate === tpl.id}
-                            onPreview={setPreviewTemplate}
-                            onUse={handleUseTemplate}
-                        />
-                    ))}
-                </div>
-            ) : (
-                <div className="text-center py-24 bg-white rounded-[4rem] border border-dashed border-slate-200 shadow-sm mx-4">
-                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-slate-50 text-slate-300 mb-8 border border-slate-100">
-                       <Search size={32} />
-                    </div>
-                    <h3 className="text-2xl font-black text-slate-900 mb-2">No matching templates</h3>
-                    <p className="text-slate-400 font-medium">Try another category or clear your search query.</p>
-                </div>
-            )}
+          {filteredTemplates.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 px-4 pb-12">
+              {filteredTemplates.map(tpl => (
+                <TemplateCard
+                  key={tpl.id}
+                  template={tpl}
+                  displayData={displayData}
+                  isSelected={selectedTemplate === tpl.id}
+                  onPreview={setPreviewTemplate}
+                  onUse={handleUseTemplate}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-24 bg-white rounded-[4rem] border border-dashed border-slate-200 shadow-sm mx-4">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-slate-50 text-slate-300 mb-8 border border-slate-100">
+                <Search size={32} />
+              </div>
+              <h3 className="text-2xl font-black text-slate-900 mb-2">No matching templates</h3>
+              <p className="text-slate-400 font-medium">Try another category or clear your search query.</p>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Preview Modal */}
       {mounted && previewTemplate && createPortal(
-          <PreviewModalComponent 
-            template={previewTemplate} 
-            displayData={displayData}
-            zoomLevel={zoomLevel}
-            onZoomChange={setZoomLevel}
-            onClose={() => setPreviewTemplate(null)}
-            onUse={handleUseTemplate}
-          />,
-          document.body
+        <PreviewModalComponent
+          template={previewTemplate}
+          displayData={displayData}
+          zoomLevel={zoomLevel}
+          onZoomChange={setZoomLevel}
+          onClose={() => setPreviewTemplate(null)}
+          onUse={handleUseTemplate}
+        />,
+        document.body
       )}
     </div>
   );
