@@ -31,15 +31,7 @@ const isAuth = async (req, res, next) => {
       return res.status(401).json({ message: "Invalid Token" });
     }
 
-    let tokenId = verifyToken.id;
-
-    if (!mongoose.Types.ObjectId.isValid(tokenId)) {
-      const User = await getUserModel();
-      const admin = await User.findOne({ isAdmin: true });
-      if (admin) tokenId = admin._id;
-    }
-
-    req.userId = tokenId;
+    req.userId = verifyToken.id;
     next();
   } catch (error) {
     console.log("isAuth error:", error);

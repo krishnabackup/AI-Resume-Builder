@@ -7,6 +7,7 @@ import Resume from "../Models/resume.js";
 import Subscription from "../Models/subscription.js";
 import ApiMetric from "../Models/ApiMetric.js";
 import Download from "../Models/Download.js";
+import { pool } from "../config/postgresdb.js";
 
 /* ================== USER DASHBOARD ================== */
 export const getDashboardData = async (req, res) => {
@@ -112,12 +113,28 @@ export const getAllUsers = async (req, res) => {
 };
 
 /* ================== USER PROFILE (SELF) ================== */
+
 export const getProfile = async (req, res) => {
   try {
     const userId = req.userId;
-    const user = await User.findById(userId).select("-password");
-    if (!user) return res.status(404).json({ message: "User not found" });
-    res.status(200).json({ user });
+
+    const result = await pool.query(
+      `
+      SELECT id, username, email, is_admin, is_active, created_at
+      FROM users
+      WHERE id = $1
+      `,
+      [userId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      user: result.rows[0],
+    });
+
   } catch (error) {
     console.error("Get profile error:", error);
     res.status(500).json({ message: "Failed to fetch profile" });
@@ -127,27 +144,77 @@ export const getProfile = async (req, res) => {
 export const updateProfile = async (req, res) => {
   try {
     const userId = req.userId;
-    const { fullName, username, email, phone, location, bio, github, linkedin } = req.body;
+    console.log("USER ID:", req.userId);
+    const {
+      fullName,
+      username,
+      email,
+      phone,
+      location,
+      bio,
+      github,
+      linkedin,
+    } = req.body;
 
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    // 1️⃣ Check if user exists
+    const userResult = await pool.query(
+      `SELECT * FROM users WHERE id = $1`,
+      [userId]
+    );
 
-    if (email && email !== user.email) {
-      const exists = await User.findOne({ email });
-      if (exists) return res.status(400).json({ message: "Email already exists" });
+    if (userResult.rowCount === 0) {
+      return res.status(404).json({ message: "User not found" });
     }
 
-    if (fullName !== undefined) user.fullName = fullName;
-    if (username !== undefined) user.username = username;
-    if (email !== undefined) user.email = email;
-    if (phone !== undefined) user.phone = phone;
-    if (location !== undefined) user.location = location;
-    if (bio !== undefined) user.bio = bio;
-    if (github !== undefined) user.github = github;
-    if (linkedin !== undefined) user.linkedin = linkedin;
+    const user = userResult.rows[0];
 
-    await user.save();
-    res.status(200).json({ message: "Profile updated", user: await User.findById(userId).select("-password") });
+    // 2️⃣ Email uniqueness check (if changing email)
+    if (email && email !== user.email) {
+      const emailCheck = await pool.query(
+        `SELECT id FROM users WHERE email = $1`,
+        [email]
+      );
+
+      if (emailCheck.rowCount > 0) {
+        return res.status(400).json({ message: "Email already exists" });
+      }
+    }
+
+    // 3️⃣ Update user
+    const updatedResult = await pool.query(
+      `
+      UPDATE users
+      SET
+        full_name = COALESCE($1, full_name),
+        username = COALESCE($2, username),
+        email = COALESCE($3, email),
+        phone = COALESCE($4, phone),
+        location = COALESCE($5, location),
+        bio = COALESCE($6, bio),
+        github = COALESCE($7, github),
+        linkedin = COALESCE($8, linkedin),
+        updated_at = NOW()
+      WHERE id = $9
+      RETURNING id, full_name, username, email, phone, location, bio, github, linkedin
+      `,
+      [
+        fullName,
+        username,
+        email,
+        phone,
+        location,
+        bio,
+        github,
+        linkedin,
+        userId,
+      ]
+    );
+
+    res.status(200).json({
+      message: "Profile updated",
+      user: updatedResult.rows[0],
+    });
+
   } catch (error) {
     console.error("Update profile error:", error);
     res.status(500).json({ message: "Failed to update profile" });

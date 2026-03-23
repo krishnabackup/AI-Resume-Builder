@@ -1,29 +1,39 @@
 import Notification from "../Models/notification.js";
-
+import { pool } from "../config/postgresdb.js";
 /* ================= USER NOTIFICATIONS ================= */
 
 // GET user notifications (sirf system → user)
 export const getUserNotifications = async (req, res) => {
   try {
-    const userId = req.userId; // auth middleware se aa raha h
+    const userId = req.userId;
 
-    const notifications = await Notification.find({
-      userId,
-      actor: "system", // ✅ system generated
-    })
-      .sort({ createdAt: -1 });
+    // ✅ Get notifications
+    const notificationsResult = await pool.query(
+      `
+      SELECT *
+      FROM notifications
+      WHERE user_id = $1 AND actor = $2
+      ORDER BY created_at DESC
+      `,
+      [userId, "system"]
+    );
 
-    const unreadCount = await Notification.countDocuments({
-      userId,
-      actor: "system",
-      isRead: false,
-    });
+    // ✅ Get unread count
+    const unreadResult = await pool.query(
+      `
+      SELECT COUNT(*) 
+      FROM notifications
+      WHERE user_id = $1 AND actor = $2 AND is_read = false
+      `,
+      [userId, "system"]
+    );
 
     res.status(200).json({
       success: true,
-      unreadCount,
-      data: notifications,
+      unreadCount: parseInt(unreadResult.rows[0].count, 10),
+      data: notificationsResult.rows,
     });
+
   } catch (error) {
     console.error("User notification error:", error);
     res.status(500).json({ success: false, message: error.message });
@@ -35,15 +45,28 @@ export const markUserNotificationsRead = async (req, res) => {
   try {
     const userId = req.userId;
 
-    await Notification.updateMany(
-      { userId, actor: "system", isRead: false },
-      { $set: { isRead: true } }
+    await pool.query(
+      `
+      UPDATE notifications
+      SET is_read = true, updated_at = NOW()
+      WHERE user_id = $1
+        AND actor = $2
+        AND is_read = false
+      `,
+      [userId, "system"]
     );
 
-    res.status(200).json({ success: true });
+    res.status(200).json({
+      success: true,
+      message: "Notifications marked as read",
+    });
+
   } catch (error) {
     console.error("Mark user notifications error:", error);
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
