@@ -164,7 +164,7 @@ export default function Aichat() {
       {/* CHAT CONTAINER */}
       <div
         ref={chatbotContainerRef}
-        className="fixed right-8 md:bottom-8 bottom-16 md:w-[380px] w-[350px] h-[560px] flex flex-col bg-white rounded-2xl border border-slate-200 shadow-[0_20px_60px_rgba(0,0,0,0.08)] transition-all duration-500 ease-in-out z-[9999]"
+        className="fixed sm:right-8 right-2 md:bottom-8 sm:bottom-16 bottom-4 md:w-[380px] w-[350px] h-[560px] flex flex-col bg-white rounded-2xl border border-slate-200 shadow-[0_20px_60px_rgba(0,0,0,0.08)] transition-all duration-500 ease-in-out z-[9999]"
         style={{
           transform: open ? "translateX(0)" : "translateX(120%)",
           opacity: open ? 1 : 0,

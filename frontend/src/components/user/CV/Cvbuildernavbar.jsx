@@ -90,7 +90,7 @@ const CVBuilderTopBar = ({
       {/* ── Left section ── */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-2 md:gap-3 w-full md:w-auto">
         {/* Title Section - Editable */}
-        <div className="relative flex items-center">
+        <div className="relative flex sm:flex-row flex-col items-center sm:pb-0 pb-4">
           {activeTab === "builder" ? (
             <>
               <div className="flex items-center gap-2 group">
