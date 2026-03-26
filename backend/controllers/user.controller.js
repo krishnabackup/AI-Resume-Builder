@@ -14,47 +14,64 @@ export const getDashboardData = async (req, res) => {
   try {
     const userId = req.userId;
 
-    const user = await User.findById(userId).select("username email profileViews isAdmin adminRequestStatus");
+    const userResult = await pool.query(
+      "SELECT username, email, profile_views, is_admin, admin_request_status FROM users WHERE id = $1",
+      [userId]
+    );
+    const userObj = userResult.rows[0] || {};
 
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
     // Document Breakdown counts (per logged-in user)
-    const [totalResumes, totalCvs, totalCoverLetters] = await Promise.all([
-      Download.countDocuments({ user: userId, type: "resume", action: "download" }),
-      Download.countDocuments({ user: userId, type: "cv", action: "download" }),
-      Download.countDocuments({ user: userId, type: "cover-letter", action: "download" }),
-    ]);
-
-    // Total and Weekly Resumes
-    const resumesThisWeek = await Resume.countDocuments({
-      user: userId,
-      createdAt: { $gte: oneWeekAgo },
+    const dlsResult = await pool.query(
+      "SELECT type, COUNT(*) as count FROM downloads WHERE user_id = $1 AND action = 'download' GROUP BY type",
+      [userId]
+    );
+    
+    let totalResumes = 0, totalCvs = 0, totalCoverLetters = 0;
+    dlsResult.rows.forEach(row => {
+        if (row.type === 'resume') totalResumes = parseInt(row.count, 10);
+        else if (row.type === 'cv') totalCvs = parseInt(row.count, 10);
+        else if (row.type === 'cover-letter') totalCoverLetters = parseInt(row.count, 10);
     });
 
+    // Total and Weekly Resumes
+    const resumesThisWeekResult = await pool.query(
+      "SELECT COUNT(*) as count FROM resumes WHERE user_id = $1 AND created_at >= $2",
+      [userId, oneWeekAgo]
+    );
+    const resumesThisWeek = parseInt(resumesThisWeekResult.rows[0].count, 10);
+
     // ATS Scores logic
-    const allAtsScans = await AtsScans.find({ userId }).sort({ createdAt: -1 });
+    const atsResult = await pool.query(
+        "SELECT score FROM ats_results WHERE user_id = $1 ORDER BY created_at DESC",
+        [userId]
+    );
+    const allAtsScans = atsResult.rows;
 
     let avgAtsScore = 0;
     if (allAtsScans.length > 0) {
-      const sum = allAtsScans.reduce((s, scan) => s + scan.overallScore, 0);
+      const sum = allAtsScans.reduce((s, scan) => s + (scan.score || 0), 0);
       avgAtsScore = Math.round(sum / allAtsScans.length);
     }
 
-    const latestAts = allAtsScans[0]?.overallScore || 0;
-    const previousAts = allAtsScans[1]?.overallScore || latestAts;
+    const latestAts = allAtsScans[0]?.score || 0;
+    const previousAts = allAtsScans[1]?.score || latestAts;
     const atsDelta = latestAts - previousAts;
 
-    const recentResumes = await Resume.find({ user: userId })
-      .sort({ createdAt: -1 })
-      .limit(5);
+    const recentResumesResult = await pool.query(
+      "SELECT id, title, created_at FROM resumes WHERE user_id = $1 ORDER BY created_at DESC LIMIT 5",
+      [userId]
+    );
+    const recentResumes = recentResumesResult.rows;
 
     res.status(200).json({
       user: {
-        name: user?.username || "User",
-        email: user?.email,
-        isAdmin: user?.isAdmin || false,
-        adminRequestStatus: user?.adminRequestStatus || "none"
+        name: userObj.username || "User",
+        email: userObj.email,
+        isAdmin: userObj.is_admin || false,
+        adminRequestStatus: userObj.admin_request_status || "none"
       },
       stats: {
         resumesCreated: totalResumes,
@@ -64,12 +81,12 @@ export const getDashboardData = async (req, res) => {
         avgAtsScore: avgAtsScore,
         latestAts: latestAts,
         atsDelta: atsDelta,
-        profileViews: user?.profileViews || 0,
+        profileViews: userObj.profile_views || 0,
       },
       recentResumes: recentResumes.map((r) => ({
-        id: r._id,
+        id: r.id,
         name: r.title,
-        date: r.createdAt,
+        date: r.created_at,
         // Include ATS score for each resume if available
       })),
     });

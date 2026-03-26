@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Resume from "../Models/resume.js";
 import AtsScans from "../Models/atsScan.js";
 import Download from "../Models/Download.js";
+import { pool } from "../config/postgresdb.js";
 
 // Helper for relative time if we need it, but frontend does it. We will just supply the raw Date objects.
 
@@ -10,27 +11,38 @@ export const getDashboardSummary = async (req, res) => {
         const userId = req.userId;
 
         // 1. Calculate Average ATS Score
-        const allAtsScans = await AtsScans.find({ userId }).select("overallScore createdAt resumeprofileId").sort({ createdAt: -1 });
+        const atsResult = await pool.query(
+            "SELECT score AS \"overallScore\" FROM ats_results WHERE user_id = $1 ORDER BY created_at DESC",
+            [userId]
+        );
+        const allAtsScans = atsResult.rows;
         let avgAtsScore = 0;
         if (allAtsScans.length > 0) {
-            const sum = allAtsScans.reduce((s, scan) => s + scan.overallScore, 0);
+            const sum = allAtsScans.reduce((s, scan) => s + (scan.overallScore || 0), 0);
             avgAtsScore = Math.round(sum / allAtsScans.length);
         }
 
         // 2. Calculate Total Downloads
-        const totalDownloads = await Download.countDocuments({ user: userId, action: "download" });
+        const dlCountResult = await pool.query(
+            "SELECT COUNT(*) FROM downloads WHERE user_id = $1 AND action = 'download'",
+            [userId]
+        );
+        const totalDownloads = parseInt(dlCountResult.rows[0].count, 10);
 
         // 3. Find Last Edited Document
-        // Assuming Resume is the main document type we track for "edits"
-        const lastEditedDocRecord = await Resume.findOne({ user: userId }).sort({ updatedAt: -1 }).select("title updatedAt _id");
-
+        const lastEditedResult = await pool.query(
+            "SELECT id, title, updated_at FROM resumes WHERE user_id = $1 ORDER BY updated_at DESC LIMIT 1",
+            [userId]
+        );
+        
         let lastEditedDoc = null;
-        if (lastEditedDocRecord) {
+        if (lastEditedResult.rowCount > 0) {
+            const record = lastEditedResult.rows[0];
             lastEditedDoc = {
-                id: lastEditedDocRecord._id,
-                title: lastEditedDocRecord.title || "Untitled Resume",
+                id: record.id,
+                title: record.title || "Untitled Resume",
                 type: "Resume",
-                updatedAt: lastEditedDocRecord.updatedAt,
+                updatedAt: record.updated_at,
             };
         }
 
@@ -38,58 +50,75 @@ export const getDashboardSummary = async (req, res) => {
         const activities = [];
 
         // - Add recent resumes (created/edited)
-        const recentResumes = await Resume.find({ user: userId }).sort({ updatedAt: -1 }).limit(10).select("title createdAt updatedAt _id");
-        recentResumes.forEach((r) => {
-            // Add 'created' event
+        const recentResumesResult = await pool.query(
+            "SELECT id, title, created_at, updated_at FROM resumes WHERE user_id = $1 ORDER BY updated_at DESC LIMIT 10",
+            [userId]
+        );
+        
+        recentResumesResult.rows.forEach((r) => {
+            const rCreatedAt = new Date(r.created_at);
+            const rUpdatedAt = new Date(r.updated_at);
+            
             activities.push({
-                id: `created-${r._id}`,
+                id: `created-${r.id}`,
                 type: "created",
                 label: "Created a new resume",
-                timestamp: r.createdAt,
+                timestamp: rCreatedAt,
                 docTitle: r.title || "Untitled Resume",
-                docId: r._id,
+                docId: r.id,
             });
 
-            // Add 'edited' event if it was modified after creation (give or take a few seconds)
-            if (r.updatedAt.getTime() - r.createdAt.getTime() > 5000) {
+            if (rUpdatedAt.getTime() - rCreatedAt.getTime() > 5000) {
                 activities.push({
-                    id: `edited-${r._id}-${r.updatedAt.getTime()}`,
+                    id: `edited-${r.id}-${rUpdatedAt.getTime()}`,
                     type: "edited",
                     label: "Edited document",
-                    timestamp: r.updatedAt,
+                    timestamp: rUpdatedAt,
                     docTitle: r.title || "Untitled Resume",
-                    docId: r._id,
+                    docId: r.id,
                 });
             }
         });
 
         // - Add recent downloads
-        const recentDownloads = await Download.find({ user: userId, action: "download" }).sort({ createdAt: -1 }).limit(10).select("name type format createdAt downloadDate _id");
-        recentDownloads.forEach((d) => {
+        const recentDownloadsResult = await pool.query(
+            "SELECT id, name, type, format, created_at, download_date FROM downloads WHERE user_id = $1 AND action = 'download' ORDER BY created_at DESC LIMIT 10",
+            [userId]
+        );
+        
+        recentDownloadsResult.rows.forEach((d) => {
             let docTitle = d.name || "Document";
             if (d.type) {
                 docTitle += ` (${d.type})`;
             }
             activities.push({
-                id: `download-${d._id}`,
+                id: `download-${d.id}`,
                 type: "download",
                 label: `Downloaded ${d.format || "PDF"}`,
-                timestamp: d.createdAt || d.downloadDate,
+                timestamp: d.download_date || d.created_at || new Date(),
                 docTitle: docTitle,
                 docId: null,
             });
         });
 
         // - Add recent ATS scans
-        const recentScans = await AtsScans.find({ userId }).sort({ createdAt: -1 }).limit(10).populate("resumeprofileId", "title").select("createdAt overallScore resumeprofileId _id");
-        recentScans.forEach((s) => {
+        const recentScansResult = await pool.query(
+            `SELECT a.id, a.created_at, a.score, coalesce(r.title, 'Resume Profile') as "resumeTitle", r.id as resume_id 
+             FROM ats_results a 
+             LEFT JOIN resumes r ON a.resume_id = r.id 
+             WHERE a.user_id = $1 
+             ORDER BY a.created_at DESC LIMIT 10`,
+            [userId]
+        );
+        
+        recentScansResult.rows.forEach((s) => {
             activities.push({
-                id: `scan-${s._id}`,
+                id: `scan-${s.id}`,
                 type: "scan",
-                label: `ATS Scan completed (${s.overallScore}%)`,
-                timestamp: s.createdAt,
-                docTitle: s.resumeprofileId?.title ? s.resumeprofileId.title : "Resume Profile",
-                docId: s.resumeprofileId?._id || null,
+                label: `ATS Scan completed (${s.score || 0}%)`,
+                timestamp: new Date(s.created_at),
+                docTitle: s.resumeTitle,
+                docId: s.resume_id || null,
             });
         });
 
