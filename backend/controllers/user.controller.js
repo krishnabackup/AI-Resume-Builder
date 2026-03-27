@@ -102,8 +102,8 @@ export const getUserName = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const user = await User.findById(id).select("-password");
-
+    const userQuery = await pool.query('select username from users where id = $1',[id])
+    const user = userQuery.rows[0];
     if (!user.username) {
       return res.status(404).json({ message: "User not found" });
     }
