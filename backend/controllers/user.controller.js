@@ -366,57 +366,109 @@ export const changePassword = async (req, res) => {
 export const updateUser = async (req, res) => {
   try {
     const { username, email, isAdmin, isActive, plan } = req.body;
-    const userId = req.params.id;
+    const targetUserId = req.params.id;
 
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    const existingUserResult = await pool.query(
+      `
+      SELECT id, username, email, is_admin, is_active, plan, created_at, admin_request_status
+      FROM users
+      WHERE id = $1
+      `,
+      [targetUserId]
+    );
+    if (existingUserResult.rowCount === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const existingUser = existingUserResult.rows[0];
 
-    if (email && email !== user.email) {
-      const exists = await User.findOne({ email });
-      if (exists)
+    if (email && email !== existingUser.email) {
+      const emailExistsResult = await pool.query(
+        `SELECT id FROM users WHERE email = $1 AND id <> $2 LIMIT 1`,
+        [email, targetUserId]
+      );
+      if (emailExistsResult.rowCount > 0) {
         return res.status(400).json({ message: "Email already exists" });
+      }
     }
 
-    if (username) user.username = username;
-    if (email) user.email = email;
-    if (typeof isAdmin === "boolean") user.isAdmin = isAdmin;
     if (typeof isActive === "boolean") {
       console.log(
-        `Updating user ${user.email} isActive from ${user.isActive} to ${isActive}`,
+        `Updating user ${existingUser.email} isActive from ${existingUser.is_active} to ${isActive}`,
       );
-      user.isActive = isActive;
     }
-    if (plan) user.plan = plan;
-    if (req.body.createdAt) user.createdAt = req.body.createdAt;
 
-    await user.save();
+    const updatedUserResult = await pool.query(
+      `
+      UPDATE users
+      SET
+        username = COALESCE($1, username),
+        email = COALESCE($2, email),
+        is_admin = COALESCE($3, is_admin),
+        is_active = COALESCE($4, is_active),
+        plan = COALESCE($5, plan),
+        created_at = COALESCE($6, created_at),
+        updated_at = NOW()
+      WHERE id = $7
+      RETURNING
+        id,
+        id AS "_id",
+        username,
+        email,
+        is_admin AS "isAdmin",
+        is_active AS "isActive",
+        plan,
+        created_at AS "createdAt",
+        admin_request_status AS "adminRequestStatus"
+      `,
+      [
+        username ?? null,
+        email ?? null,
+        typeof isAdmin === "boolean" ? isAdmin : null,
+        typeof isActive === "boolean" ? isActive : null,
+        plan ?? null,
+        req.body.createdAt ?? null,
+        targetUserId,
+      ]
+    );
+    const updatedUser = updatedUserResult.rows[0];
 
     /* 🔔 ADMIN NOTIFICATION (USER ACTION) */
     if (typeof isActive === "boolean") {
       // 🔔 USER
-      await Notification.create({
-        type: "ACCOUNT_STATUS",
-        message: `Your account was ${isActive ? "activated" : "deactivated"
-          } by admin`,
-        userId: user._id,
-        actor: "system",
-      });
+      await pool.query(
+        `
+        INSERT INTO notifications (id, user_id, type, message, actor, is_read, from_admin, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, false, false, NOW(), NOW())
+        `,
+        [
+          crypto.randomUUID(),
+          updatedUser.id,
+          "ACCOUNT_STATUS",
+          `Your account was ${isActive ? "activated" : "deactivated"} by admin`,
+          "system",
+        ]
+      );
 
       // 🔔 ADMIN
-      await Notification.create({
-        type: "USER_STATUS",
-        message: `${user.username} was ${isActive ? "activated" : "deactivated"
-          }`,
-        userId: req.userId,
-        actor: "user",
-        fromAdmin: true,
-      });
+      await pool.query(
+        `
+        INSERT INTO notifications (id, user_id, type, message, actor, is_read, from_admin, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, false, true, NOW(), NOW())
+        `,
+        [
+          crypto.randomUUID(),
+          req.userId,
+          "USER_STATUS",
+          `${updatedUser.username || updatedUser.email} was ${isActive ? "activated" : "deactivated"}`,
+          "user",
+        ]
+      );
     }
 
     console.log(
-      `User ${user.email} updated - isActive is now: ${user.isActive}`,
+      `User ${updatedUser.email} updated - isActive is now: ${updatedUser.isActive}`,
     );
-    res.status(200).json({ message: "User updated successfully", user });
+    res.status(200).json({ message: "User updated successfully", user: updatedUser });
   } catch (error) {
     res
       .status(500)
@@ -426,19 +478,32 @@ export const updateUser = async (req, res) => {
 
 export const deleteUser = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    const targetUserId = req.params.id;
+    const userResult = await pool.query(
+      `SELECT id, username, email FROM users WHERE id = $1`,
+      [targetUserId]
+    );
+    if (userResult.rowCount === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const user = userResult.rows[0];
 
     // 🔔 ADMIN NOTIFICATION
-    await Notification.create({
-      type: "USER_DELETED",
-      message: `${user.username} account was deleted`,
-      userId: req.userId, // admin id
-      actor: "user",
-      fromAdmin: true
-    });
+    await pool.query(
+      `
+      INSERT INTO notifications (id, user_id, type, message, actor, is_read, from_admin, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, false, true, NOW(), NOW())
+      `,
+      [
+        crypto.randomUUID(),
+        req.userId,
+        "USER_DELETED",
+        `${user.username || user.email} account was deleted`,
+        "user",
+      ]
+    );
 
-    await user.deleteOne();
+    await pool.query(`DELETE FROM users WHERE id = $1`, [targetUserId]);
 
     res.status(200).json({ message: "User deleted successfully" });
   } catch (error) {
@@ -492,13 +557,30 @@ export const requestAdminAccess = async (req, res) => {
       );
     }
 
+    const refreshedUserResult = await pool.query(
+      `
+      SELECT
+        id,
+        id AS "_id",
+        username,
+        email,
+        is_admin AS "isAdmin",
+        is_active AS "isActive",
+        plan,
+        created_at AS "createdAt",
+        admin_request_status AS "adminRequestStatus"
+      FROM users
+      WHERE id = $1
+      `,
+      [userId]
+    );
+
     res.status(200).json({ 
       message: "Admin request submitted successfully", 
-      user: { ...user, adminRequestStatus: 'pending' } 
+      user: refreshedUserResult.rows[0]
     });
   } catch (error) {
     console.error("Request admin error DETAILED:", error.message, error.stack);
-    import('fs').then(fs => fs.writeFileSync('error_log.txt', error.stack));
     res.status(500).json({ message: "Failed to submit admin request", error: error.message });
   }
 };
@@ -506,39 +588,76 @@ export const requestAdminAccess = async (req, res) => {
 export const approveAdminRequest = async (req, res) => {
   try {
     const targetUserId = req.params.id;
-    const user = await User.findById(targetUserId);
+    const userResult = await pool.query(
+      `
+      SELECT id, username, email, admin_request_status
+      FROM users
+      WHERE id = $1
+      `,
+      [targetUserId]
+    );
 
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (userResult.rowCount === 0) return res.status(404).json({ message: "User not found" });
+    const user = userResult.rows[0];
 
-    if (user.adminRequestStatus !== 'pending') {
+    if (user.admin_request_status !== 'pending') {
       return res.status(400).json({ message: "No pending admin request for this user" });
     }
 
-    user.isAdmin = true;
-    user.adminRequestStatus = 'approved';
-    await user.save();
+    const updatedUserResult = await pool.query(
+      `
+      UPDATE users
+      SET is_admin = true, admin_request_status = 'approved', updated_at = NOW()
+      WHERE id = $1
+      RETURNING
+        id,
+        id AS "_id",
+        username,
+        email,
+        is_admin AS "isAdmin",
+        is_active AS "isActive",
+        plan,
+        created_at AS "createdAt",
+        admin_request_status AS "adminRequestStatus"
+      `,
+      [targetUserId]
+    );
+    const updatedUser = updatedUserResult.rows[0];
 
-    const admin = await User.findById(req.userId);
-    const adminName = admin?.username || "Admin";
+    const adminResult = await pool.query(`SELECT username FROM users WHERE id = $1`, [req.userId]);
+    const adminName = adminResult.rows[0]?.username || "Admin";
 
     // 🔔 USER NOTIFICATION
-    await Notification.create({
-      type: "ROLE_UPDATE",
-      message: `Your admin access request has been approved by ${adminName}`,
-      userId: user._id,
-      actor: "system"
-    });
+    await pool.query(
+      `
+      INSERT INTO notifications (id, user_id, type, message, actor, is_read, from_admin, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, false, false, NOW(), NOW())
+      `,
+      [
+        crypto.randomUUID(),
+        updatedUser.id,
+        "ROLE_UPDATE",
+        `Your admin access request has been approved by ${adminName}`,
+        "system",
+      ]
+    );
 
     // 🔔 ADMIN NOTIFICATION (Confirmation)
-    await Notification.create({
-      type: "ROLE_APPROVED_ADMIN",
-      message: `You approved ${user.username || user.email}'s admin access request`,
-      userId: req.userId,
-      actor: "user",
-      fromAdmin: true
-    });
+    await pool.query(
+      `
+      INSERT INTO notifications (id, user_id, type, message, actor, is_read, from_admin, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, false, true, NOW(), NOW())
+      `,
+      [
+        crypto.randomUUID(),
+        req.userId,
+        "ROLE_APPROVED_ADMIN",
+        `You approved ${user.username || user.email}'s admin access request`,
+        "user",
+      ]
+    );
 
-    res.status(200).json({ message: "Admin request approved", user });
+    res.status(200).json({ message: "Admin request approved", user: updatedUser });
   } catch (error) {
     console.error("Approve admin error:", error);
     res.status(500).json({ message: "Failed to approve admin request", error: error.message });
@@ -548,38 +667,76 @@ export const approveAdminRequest = async (req, res) => {
 export const rejectAdminRequest = async (req, res) => {
   try {
     const targetUserId = req.params.id;
-    const user = await User.findById(targetUserId);
+    const userResult = await pool.query(
+      `
+      SELECT id, username, email, admin_request_status
+      FROM users
+      WHERE id = $1
+      `,
+      [targetUserId]
+    );
 
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (userResult.rowCount === 0) return res.status(404).json({ message: "User not found" });
+    const user = userResult.rows[0];
 
-    if (user.adminRequestStatus !== 'pending') {
+    if (user.admin_request_status !== 'pending') {
       return res.status(400).json({ message: "No pending admin request for this user" });
     }
 
-    user.adminRequestStatus = 'rejected';
-    await user.save();
+    const updatedUserResult = await pool.query(
+      `
+      UPDATE users
+      SET admin_request_status = 'rejected', updated_at = NOW()
+      WHERE id = $1
+      RETURNING
+        id,
+        id AS "_id",
+        username,
+        email,
+        is_admin AS "isAdmin",
+        is_active AS "isActive",
+        plan,
+        created_at AS "createdAt",
+        admin_request_status AS "adminRequestStatus"
+      `,
+      [targetUserId]
+    );
+    const updatedUser = updatedUserResult.rows[0];
 
-    const admin = await User.findById(req.userId);
-    const adminName = admin?.username || "Admin";
+    const adminResult = await pool.query(`SELECT username FROM users WHERE id = $1`, [req.userId]);
+    const adminName = adminResult.rows[0]?.username || "Admin";
 
     // 🔔 USER NOTIFICATION
-    await Notification.create({
-      type: "ROLE_UPDATE",
-      message: `Your admin access request was rejected by ${adminName}`,
-      userId: user._id,
-      actor: "system"
-    });
+    await pool.query(
+      `
+      INSERT INTO notifications (id, user_id, type, message, actor, is_read, from_admin, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, false, false, NOW(), NOW())
+      `,
+      [
+        crypto.randomUUID(),
+        updatedUser.id,
+        "ROLE_UPDATE",
+        `Your admin access request was rejected by ${adminName}`,
+        "system",
+      ]
+    );
 
     // 🔔 ADMIN NOTIFICATION (Confirmation)
-    await Notification.create({
-      type: "ROLE_REJECTED_ADMIN",
-      message: `You rejected ${user.username || user.email}'s admin access request`,
-      userId: req.userId,
-      actor: "user",
-      fromAdmin: true
-    });
+    await pool.query(
+      `
+      INSERT INTO notifications (id, user_id, type, message, actor, is_read, from_admin, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, false, true, NOW(), NOW())
+      `,
+      [
+        crypto.randomUUID(),
+        req.userId,
+        "ROLE_REJECTED_ADMIN",
+        `You rejected ${user.username || user.email}'s admin access request`,
+        "user",
+      ]
+    );
 
-    res.status(200).json({ message: "Admin request rejected", user });
+    res.status(200).json({ message: "Admin request rejected", user: updatedUser });
   } catch (error) {
     console.error("Reject admin error:", error);
     res.status(500).json({ message: "Failed to reject admin request", error: error.message });
