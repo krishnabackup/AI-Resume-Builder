@@ -33,7 +33,7 @@ const isAuth = async (req, res, next) => {
       // It's likely a MongoDB Object ID. We mapped this in users.mongodb_id.
       // Lookup the new Postgres UUID.
       try {
-        const userRes = await pool.query("SELECT id FROM users WHERE mongodb_id = $1", [tokenId]);
+        const userRes = await pool.query("SELECT id FROM users WHERE id = $1", [tokenId]);
         if (userRes.rowCount > 0) {
           req.userId = userRes.rows[0].id;
         } else {
