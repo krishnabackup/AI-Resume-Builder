@@ -1,4 +1,4 @@
-import PageView from "../Models/PageView.js";
+import { pool } from "../config/postgresdb.js"; 
 
 export const trackPageView = async (req, res) => {
   try {
@@ -11,17 +11,16 @@ export const trackPageView = async (req, res) => {
       });
     }
 
-    const pageView = await PageView.create({
-      page,
-      route,
-      userId: req.userId || null,
-    });
+    const result = await pool.query(
+      "INSERT INTO page_views (page, route, user_id) VALUES ($1, $2, $3) RETURNING id",
+      [page, route, req.userId || null]
+    );
 
     return res.status(201).json({
       success: true,
       message: "Page view tracked",
       data: {
-        id: pageView._id,
+        id: result.rows[0].id,
       },
     });
   } catch (error) {
@@ -36,40 +35,18 @@ export const trackPageView = async (req, res) => {
 
 export const getTopViewedPages = async (req, res) => {
   try {
-    const topPagesAgg = await PageView.aggregate([
-      {
-        $group: {
-          _id: "$page",
-          views: { $sum: 1 },
-          uniqueUserSet: { $addToSet: "$userId" },
-        },
-      },
-      {
-        $addFields: {
-          uniqueUsers: {
-            $size: {
-              $filter: {
-                input: "$uniqueUserSet",
-                as: "uid",
-                cond: { $ne: ["$$uid", null] },
-              },
-            },
-          },
-        },
-      },
-      { $sort: { views: -1 } },
-      { $limit: 5 },
-      {
-        $project: {
-          _id: 0,
-          page: "$_id",
-          views: 1,
-          uniqueUsers: 1,
-        },
-      },
-    ]);
+    const result = await pool.query(`
+      SELECT 
+        page,
+        COUNT(*)::int AS views,
+        COUNT(DISTINCT user_id)::int AS "uniqueUsers"
+      FROM page_views
+      GROUP BY 1
+      ORDER BY views DESC
+      LIMIT 5
+    `);
 
-    return res.status(200).json(topPagesAgg);
+    return res.status(200).json(result.rows);
   } catch (error) {
     console.error("Get Top Viewed Pages Error:", error);
     return res.status(500).json({
@@ -78,3 +55,4 @@ export const getTopViewedPages = async (req, res) => {
     });
   }
 };
+

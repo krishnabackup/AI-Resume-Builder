@@ -1,29 +1,23 @@
-import mongoose from "mongoose";
+import pg from "pg";
 
-import dns from "dns";
+const { Pool } = pg;
 
-// Set DNS servers to Google's DNS to resolve MongoDB Atlas SRV records
-dns.setServers(['8.8.8.8', '8.8.4.4']);
+export const pool = new Pool({
+  connectionString: process.env.POSTGRESQL_URI,
+});
 
 const connectDB = async () => {
   try {
-    // Support both environment variable names
-    const mongoURL =
-      process.env.MONGO_URI || process.env.MONGO_DB_URL;
-
-    if (!mongoURL) {
-      console.error("❌ MongoDB URL is missing in .env file");
+    if (!process.env.POSTGRESQL_URI) {
+      console.error("❌ PostgreSQL URI is missing in .env file");
       return;
     }
 
-    await mongoose.connect(mongoURL);
-    console.log("✅ MongoDB connected");
+    const client = await pool.connect();
+    console.log("✅ PostgreSQL connected");
+    client.release();
   } catch (error) {
-    console.error("❌ MongoDB connection failed:", error.message);
-
-    // Comment / uncomment based on your need
-    // process.exit(1); // stop server if DB fails (production)
-
+    console.error("❌ PostgreSQL connection failed:", error.message);
     console.log("⚠️ Server will continue without database connection");
   }
 };

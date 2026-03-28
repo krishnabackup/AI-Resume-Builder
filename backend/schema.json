@@ -1,0 +1,950 @@
+{
+  "ats_results": [
+    {
+      "column_name": "id",
+      "data_type": "integer",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "user_id",
+      "data_type": "character varying",
+      "character_maximum_length": 255,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "resume_id",
+      "data_type": "integer",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "score",
+      "data_type": "integer",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "feedback",
+      "data_type": "jsonb",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp without time zone",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    }
+  ],
+  "resumes": [
+    {
+      "column_name": "id",
+      "data_type": "integer",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "user_id",
+      "data_type": "character varying",
+      "character_maximum_length": 255,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "title",
+      "data_type": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "data",
+      "data_type": "jsonb",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp without time zone",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "updated_at",
+      "data_type": "timestamp without time zone",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    }
+  ],
+  "notifications": [
+    {
+      "column_name": "id",
+      "data_type": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "type",
+      "data_type": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "message",
+      "data_type": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "user_id",
+      "data_type": "uuid",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "actor",
+      "data_type": "USER-DEFINED",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "is_read",
+      "data_type": "boolean",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "from_admin",
+      "data_type": "boolean",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp without time zone",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "updated_at",
+      "data_type": "timestamp without time zone",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "mongodb_id",
+      "data_type": "character varying",
+      "character_maximum_length": 255,
+      "is_nullable": "YES"
+    }
+  ],
+  "user_profiles": [
+    {
+      "column_name": "id",
+      "data_type": "uuid",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "user_id",
+      "data_type": "uuid",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "full_name",
+      "data_type": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "phone",
+      "data_type": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "location",
+      "data_type": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "bio",
+      "data_type": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "github",
+      "data_type": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "linkedin",
+      "data_type": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    }
+  ],
+  "plans": [
+    {
+      "column_name": "id",
+      "data_type": "integer",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "plan_id",
+      "data_type": "bigint",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "name",
+      "data_type": "character varying",
+      "character_maximum_length": 100,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "badge",
+      "data_type": "character varying",
+      "character_maximum_length": 100,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "price",
+      "data_type": "numeric",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "active",
+      "data_type": "boolean",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "description",
+      "data_type": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "features",
+      "data_type": "jsonb",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "display_order",
+      "data_type": "integer",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    }
+  ],
+  "app_users": [
+    {
+      "column_name": "id",
+      "data_type": "uuid",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "username",
+      "data_type": "character varying",
+      "character_maximum_length": 255,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "email",
+      "data_type": "character varying",
+      "character_maximum_length": 255,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "password",
+      "data_type": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "is_admin",
+      "data_type": "boolean",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "admin_request_status",
+      "data_type": "character varying",
+      "character_maximum_length": 50,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "is_active",
+      "data_type": "boolean",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "plan",
+      "data_type": "character varying",
+      "character_maximum_length": 50,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "last_login",
+      "data_type": "timestamp without time zone",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "full_name",
+      "data_type": "character varying",
+      "character_maximum_length": 255,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "phone",
+      "data_type": "character varying",
+      "character_maximum_length": 50,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "location",
+      "data_type": "character varying",
+      "character_maximum_length": 255,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "bio",
+      "data_type": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "github",
+      "data_type": "character varying",
+      "character_maximum_length": 255,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "linkedin",
+      "data_type": "character varying",
+      "character_maximum_length": 255,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "profile_views",
+      "data_type": "integer",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp without time zone",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "updated_at",
+      "data_type": "timestamp without time zone",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    }
+  ],
+  "template_visibilities": [
+    {
+      "column_name": "template_id",
+      "data_type": "character varying",
+      "character_maximum_length": 255,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "is_active",
+      "data_type": "boolean",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp without time zone",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "updated_at",
+      "data_type": "timestamp without time zone",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    }
+  ],
+  "users": [
+    {
+      "column_name": "id",
+      "data_type": "uuid",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "username",
+      "data_type": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "email",
+      "data_type": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "password",
+      "data_type": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "is_admin",
+      "data_type": "boolean",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "is_active",
+      "data_type": "boolean",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "plan",
+      "data_type": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "admin_request_status",
+      "data_type": "USER-DEFINED",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "profile_views",
+      "data_type": "integer",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "last_login",
+      "data_type": "timestamp without time zone",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp without time zone",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "updated_at",
+      "data_type": "timestamp without time zone",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "mongodb_id",
+      "data_type": "character varying",
+      "character_maximum_length": 24,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "full_name",
+      "data_type": "character varying",
+      "character_maximum_length": 255,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "phone",
+      "data_type": "character varying",
+      "character_maximum_length": 50,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "location",
+      "data_type": "character varying",
+      "character_maximum_length": 255,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "bio",
+      "data_type": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "github",
+      "data_type": "character varying",
+      "character_maximum_length": 255,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "linkedin",
+      "data_type": "character varying",
+      "character_maximum_length": 255,
+      "is_nullable": "YES"
+    }
+  ],
+  "blogs": [
+    {
+      "column_name": "id",
+      "data_type": "integer",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "mongodb_id",
+      "data_type": "character varying",
+      "character_maximum_length": 24,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "title",
+      "data_type": "character varying",
+      "character_maximum_length": 255,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "excerpt",
+      "data_type": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "detail",
+      "data_type": "text",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "category",
+      "data_type": "character varying",
+      "character_maximum_length": 100,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "date",
+      "data_type": "character varying",
+      "character_maximum_length": 100,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "image",
+      "data_type": "character varying",
+      "character_maximum_length": 255,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "read_time",
+      "data_type": "character varying",
+      "character_maximum_length": 50,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "is_published",
+      "data_type": "boolean",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp without time zone",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "updated_at",
+      "data_type": "timestamp without time zone",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    }
+  ],
+  "subscriptions": [
+    {
+      "column_name": "id",
+      "data_type": "integer",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "mongodb_id",
+      "data_type": "character varying",
+      "character_maximum_length": 24,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "user_id",
+      "data_type": "uuid",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "plan",
+      "data_type": "character varying",
+      "character_maximum_length": 50,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "status",
+      "data_type": "character varying",
+      "character_maximum_length": 50,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "start_date",
+      "data_type": "timestamp without time zone",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "end_date",
+      "data_type": "timestamp without time zone",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp without time zone",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "updated_at",
+      "data_type": "timestamp without time zone",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    }
+  ],
+  "payments": [
+    {
+      "column_name": "id",
+      "data_type": "integer",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "mongodb_id",
+      "data_type": "character varying",
+      "character_maximum_length": 24,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "user_id",
+      "data_type": "uuid",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "subscription_id",
+      "data_type": "integer",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "amount",
+      "data_type": "numeric",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "currency",
+      "data_type": "character varying",
+      "character_maximum_length": 10,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "status",
+      "data_type": "character varying",
+      "character_maximum_length": 50,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "payment_method",
+      "data_type": "character varying",
+      "character_maximum_length": 50,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "transaction_id",
+      "data_type": "character varying",
+      "character_maximum_length": 255,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp without time zone",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "updated_at",
+      "data_type": "timestamp without time zone",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    }
+  ],
+  "page_views": [
+    {
+      "column_name": "id",
+      "data_type": "integer",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "page",
+      "data_type": "character varying",
+      "character_maximum_length": 255,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "route",
+      "data_type": "character varying",
+      "character_maximum_length": 255,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "user_id",
+      "data_type": "uuid",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "timestamp",
+      "data_type": "timestamp without time zone",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "mongodb_id",
+      "data_type": "character varying",
+      "character_maximum_length": 255,
+      "is_nullable": "YES"
+    }
+  ],
+  "templates": [
+    {
+      "column_name": "id",
+      "data_type": "uuid",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "name",
+      "data_type": "character varying",
+      "character_maximum_length": 255,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "description",
+      "data_type": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "previewimage",
+      "data_type": "character varying",
+      "character_maximum_length": 255,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "file_path",
+      "data_type": "character varying",
+      "character_maximum_length": 255,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "status",
+      "data_type": "character varying",
+      "character_maximum_length": 50,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "category",
+      "data_type": "character varying",
+      "character_maximum_length": 100,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp without time zone",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "updated_at",
+      "data_type": "timestamp without time zone",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    }
+  ],
+  "api_metrics": [
+    {
+      "column_name": "id",
+      "data_type": "integer",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "endpoint",
+      "data_type": "character varying",
+      "character_maximum_length": 255,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "method",
+      "data_type": "character varying",
+      "character_maximum_length": 10,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "status_code",
+      "data_type": "integer",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "response_time",
+      "data_type": "integer",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "user_id",
+      "data_type": "uuid",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "ip",
+      "data_type": "character varying",
+      "character_maximum_length": 45,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp without time zone",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "updated_at",
+      "data_type": "timestamp without time zone",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "mongodb_id",
+      "data_type": "character varying",
+      "character_maximum_length": 255,
+      "is_nullable": "YES"
+    }
+  ],
+  "downloads": [
+    {
+      "column_name": "id",
+      "data_type": "integer",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "mongodb_id",
+      "data_type": "character varying",
+      "character_maximum_length": 24,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "user_id",
+      "data_type": "uuid",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "name",
+      "data_type": "character varying",
+      "character_maximum_length": null,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "type",
+      "data_type": "character varying",
+      "character_maximum_length": 50,
+      "is_nullable": "NO"
+    },
+    {
+      "column_name": "action",
+      "data_type": "character varying",
+      "character_maximum_length": 50,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "format",
+      "data_type": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "html",
+      "data_type": "text",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "template",
+      "data_type": "character varying",
+      "character_maximum_length": 455,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "size",
+      "data_type": "character varying",
+      "character_maximum_length": 100,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "views",
+      "data_type": "integer",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "download_date",
+      "data_type": "timestamp without time zone",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "created_at",
+      "data_type": "timestamp without time zone",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    },
+    {
+      "column_name": "updated_at",
+      "data_type": "timestamp without time zone",
+      "character_maximum_length": null,
+      "is_nullable": "YES"
+    }
+  ]
+}

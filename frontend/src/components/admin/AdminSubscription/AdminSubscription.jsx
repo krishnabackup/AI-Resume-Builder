@@ -167,18 +167,38 @@ const AdminSubscription = () => {
   };
 
   const handleRemovePlan = (planId) => {
-    if (window.confirm("Are you sure you want to delete this plan?")) {
-      setLocalPlans(prev => {
-        const planAfterDelete = prev.filter(plan => plan.id !== planId);
-        return planAfterDelete.map((plan, index) => (
-          {
-            ...plan,
-            order: index + 1
-          }
-        ))
-      })
-    };
-  }
+    toast((t) => (
+      <div className="flex flex-col gap-3">
+        <p className="font-semibold text-gray-800 text-sm">Are you sure you want to delete this plan?</p>
+        <div className="flex justify-end gap-2 mt-1">
+          <button
+            className="px-3 py-1.5 text-xs font-medium bg-gray-100 hover:bg-gray-200 rounded-md text-gray-700 transition"
+            onClick={() => toast.dismiss(t.id)}
+          >
+            Cancel
+          </button>
+          <button
+            className="px-3 py-1.5 text-xs font-medium bg-red-500 hover:bg-red-600 text-white rounded-md transition"
+            onClick={() => {
+              setLocalPlans((prev) => {
+                const planAfterDelete = prev.filter((plan) => plan.id !== planId);
+                return planAfterDelete.map((plan, index) => ({
+                  ...plan,
+                  order: index + 1,
+                }));
+              });
+              toast.dismiss(t.id);
+            }}
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    ), { 
+      duration: 5000,
+      position: 'top-center',
+    });
+  };
   const handleFeatureChange = (planId, featureId, newValue) => {
     setLocalPlans((prev) =>
       prev.map((plan) => {

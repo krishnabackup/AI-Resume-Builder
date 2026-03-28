@@ -1,81 +1,15 @@
-import User from "../Models/User.js";
-import Payment from "../Models/payment.js";
-import Subscription from "../Models/subscription.js";
-import Resume from "../Models/resume.js";
-import ApiMetric from "../Models/ApiMetric.js";
-import Plan from "../Models/Plan.js";
-import Notification from "../Models/notification.js"
-import Download from "../Models/Download.js";
+import { pool } from "../config/postgresdb.js";
 /* ================== ADMIN DASHBOARD ================== */
-
 export const getAdminDashboardStats = async (req, res) => {
   try {
     const lastMonthStart = new Date();
     lastMonthStart.setMonth(lastMonthStart.getMonth() - 1);
     lastMonthStart.setDate(1);
 
-    // ---------- CORE STATS ----------
-    // USERS
-    const [
-      totalUsers,
-      lastMonthUsers,
-      totalResumes,
-      lastMonthResumes,
-      totalActiveSubs,
-      lastMonthActiveSubs,
-      totalRevenueAgg,
-      lastMonthRevenueAgg,
-    ] = await Promise.all([
-
-      User.countDocuments(),
-      User.countDocuments({ createdAt: { $lt: lastMonthStart } }),
-
-      Resume.countDocuments(),
-      Resume.countDocuments({ createdAt: { $lt: lastMonthStart } }),
-
-      Subscription.countDocuments({ status: "active" }),
-      Subscription.countDocuments({
-        status: "active",
-        createdAt: { $lt: lastMonthStart }
-      }),
-
-      await Payment.aggregate([
-        { $match: { status: "success" } },
-        { $group: { _id: null, total: { $sum: "$amount" } } },
-      ]),
-      await Payment.aggregate([
-        {
-          $match: {
-            status: "success",
-            createdAt: { $lt: lastMonthStart },
-          },
-        },
-        { $group: { _id: null, total: { $sum: "$amount" } } },
-      ]),
-
-    ]);
-
-    const userChange = lastMonthUsers === 0 ? 0 : ((totalUsers - lastMonthUsers) / lastMonthUsers) * 100;
-
-    // RESUMES
-    const resumeChange = lastMonthResumes === 0 ? 0 : ((totalResumes - lastMonthResumes) / lastMonthResumes) * 100;
-
-    // SUBSCRIPTIONS
-
-    const subsChange = lastMonthActiveSubs === 0 ? 0 : ((totalActiveSubs - lastMonthActiveSubs) / lastMonthActiveSubs) * 100;
-
-    // REVENUE
-    const totalRevenue = totalRevenueAgg[0]?.total || 0;
-
-    const lastMonthRevenue = lastMonthRevenueAgg[0]?.total || 0;
-    const revenueChange = lastMonthRevenue === 0 ? 0 : ((totalRevenue - lastMonthRevenue) / lastMonthRevenue) * 100;
-
-    // ---------- CHARTS & DISTRIBUTIONS ----------
-   
     const lastSixMonths = new Date();
     lastSixMonths.setMonth(lastSixMonths.getMonth() - 6);
     lastSixMonths.setDate(1);
-    lastSixMonths.setHours(0, 0, 0);
+    lastSixMonths.setHours(0, 0, 0, 0);
 
     const last7Days = new Date();
     last7Days.setDate(last7Days.getDate() - 7);
@@ -83,167 +17,215 @@ export const getAdminDashboardStats = async (req, res) => {
     const last30Days = new Date();
     last30Days.setDate(last30Days.getDate() - 30);
 
+    // 🚀 BATCHED QUERIES
     const [
-      resumeGraph,
-      userGrowthAgg,
-      revenueByMonth,
-      dailyActiveUsersAgg,
-      apiStats,
-      subscriptionCounts
+      usersStats,
+      resumesStats,
+      subsStats,
+      revenueStats,
+      chartsStats
     ] = await Promise.all([
-      // resume counts for chart
-      Resume.aggregate([
-        { $match: { createdAt: { $gte: lastSixMonths } } },
-        {
-          $group: {
-            _id: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } },
-            total: { $sum: 1 }
-          }
-        }
-      ]),
 
-      // user growth
-      User.aggregate([
-        { $match: { createdAt: { $gte: lastSixMonths } } },
-        {
-          $group: {
-            _id: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } },
-            total: { $sum: 1 }
-          }
-        }
-      ]),
+      // USERS
+      pool.query(`
+        SELECT
+          (SELECT COUNT(*) FROM users) AS total_users,
+          (SELECT COUNT(*) FROM users WHERE created_at < $1) AS last_month_users,
+          (SELECT COUNT(*) FROM users WHERE plan = 'Free' AND is_active = true AND is_admin = false) AS free_users
+      `, [lastMonthStart]),
 
-      // revenue by month
-      Payment.aggregate([
-        { $match: { status: "success" } },
-        {
-          $group: {
-            _id: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } },
-            revenue: { $sum: "$amount" }
-          }
-        }
-      ]),
+      // RESUMES
+      pool.query(`
+        SELECT
+          (SELECT COUNT(*) FROM resumes) AS total_resumes,
+          (SELECT COUNT(*) FROM resumes WHERE created_at < $1) AS last_month_resumes
+      `, [lastMonthStart]),
 
-      // daily active users
-      User.aggregate([
-        { $match: { lastLogin: { $gte: last7Days } } },
-        {
-          $group: {
-            _id: { date: { $dateToString: { format: "%Y-%m-%d", date: "$lastLogin" } } },
-            users: { $sum: 1 }
-          }
-        }
-      ]),
+      // SUBSCRIPTIONS
+      pool.query(`
+        SELECT
+          (SELECT COUNT(*) FROM subscriptions WHERE status = 'active') AS total_active,
+          (SELECT COUNT(*) FROM subscriptions WHERE status = 'active' AND created_at < $1) AS last_month_active,
+          json_agg(json_build_object('plan', plan, 'count', count)) AS plans
+        FROM (
+          SELECT plan, COUNT(*)::int AS count
+          FROM subscriptions
+          WHERE status = 'active'
+          GROUP BY plan
+        ) t
+      `, [lastMonthStart]),
 
-      // api summary for past month
-      ApiMetric.aggregate([
-        { $match: { createdAt: { $gte: last30Days } } },
-        {
-          $group: {
-            _id: { $cond: [{ $lt: ["$statusCode", 400] }, "success", "failure"] },
-            count: { $sum: 1 }
-          }
-        }
-      ]),
+      // REVENUE
+      pool.query(`
+        SELECT
+          (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE status = 'success') AS total_revenue,
+          (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE status = 'success' AND created_at < $1) AS last_month_revenue
+      `, [lastMonthStart]),
 
-      // subscription distribution
-      Promise.all([
-        User.countDocuments({ plan: "Free", isActive: true, isAdmin: false }),
-        Subscription.aggregate([
-          { $match: { status: "active" } },
-          { $group: { _id: { $ifNull: ["$plan", "Unknown"] }, count: { $sum: 1 } } }
-        ])
-      ])
+      // CHARTS
+      pool.query(`
+        SELECT
+          (
+            SELECT json_agg(row_to_json(r))
+            FROM (
+              SELECT EXTRACT(YEAR FROM created_at)::int AS year,
+                     EXTRACT(MONTH FROM created_at)::int AS month,
+                     COUNT(*)::int AS total
+              FROM resumes
+              WHERE created_at >= $1
+              GROUP BY 1, 2
+            ) r
+          ) AS resume_graph,
+
+          (
+            SELECT json_agg(row_to_json(u))
+            FROM (
+              SELECT EXTRACT(YEAR FROM created_at)::int AS year,
+                     EXTRACT(MONTH FROM created_at)::int AS month,
+                     COUNT(*)::int AS total
+              FROM users
+              WHERE created_at >= $1
+              GROUP BY 1, 2
+            ) u
+          ) AS user_growth,
+
+          (
+            SELECT json_agg(row_to_json(d))
+            FROM (
+              SELECT TO_CHAR(last_login::date, 'YYYY-MM-DD') AS day,
+                     COUNT(*)::int AS users
+              FROM users
+              WHERE last_login >= $2
+              GROUP BY 1
+            ) d
+          ) AS daily_active,
+
+          (
+            SELECT json_agg(row_to_json(a))
+            FROM (
+              SELECT CASE WHEN status_code < 400 THEN 'success' ELSE 'failure' END AS metric,
+                     COUNT(*)::int AS count
+              FROM api_metrics
+              WHERE created_at >= $3
+              GROUP BY 1
+            ) a
+          ) AS api_stats
+      `, [lastSixMonths, last7Days, last30Days])
     ]);
 
-    // resume chart maping  
-    const resumeChartMap = new Map(resumeGraph.map((item) => [item._id.month, item.total]));
-    const resumeChart = Array.from({ length: 6 }, (_, i) => {
-      const date = new Date();
-      date.setMonth(date.getMonth() - (5 - i));
-      const monthNumber = date.getMonth() + 1;
-      return {
-        month: date.toLocaleString("default", { month: "short" }),
-        resumes: resumeChartMap.get(monthNumber) || 0,
-      };
-    });
-    
-    // user growth mapping
+    // 🔹 Extract
+    const u = usersStats.rows[0];
+    const r = resumesStats.rows[0];
+    const s = subsStats.rows[0];
+    const rev = revenueStats.rows[0];
+    const c = chartsStats.rows[0];
 
-    const userGrowthMap = new Map(userGrowthAgg.map((item) => [item._id.month, item.total]));
-    const userGrowth = Array.from({ length: 6 }, (_, i) => {
-      const date = new Date();
-      date.setMonth(date.getMonth() - (5 - i));
-      const monthNumber = date.getMonth() + 1;
-      return {
-        month: date.toLocaleString("default", { month: "short" }),
-        users: userGrowthMap.get(monthNumber) || 0,
-      };
+    // 📊 Basic Stats
+    const totalUsers = Number(u.total_users);
+    const lastMonthUsers = Number(u.last_month_users);
+
+    const totalResumes = Number(r.total_resumes);
+    const lastMonthResumes = Number(r.last_month_resumes);
+
+    const totalActiveSubs = Number(s.total_active);
+    const lastMonthActiveSubs = Number(s.last_month_active);
+
+    const totalRevenue = Number(rev.total_revenue);
+    const lastMonthRevenue = Number(rev.last_month_revenue);
+
+    const userChange = lastMonthUsers === 0 ? 0 : ((totalUsers - lastMonthUsers) / lastMonthUsers) * 100;
+    const resumeChange = lastMonthResumes === 0 ? 0 : ((totalResumes - lastMonthResumes) / lastMonthResumes) * 100;
+    const subsChange = lastMonthActiveSubs === 0 ? 0 : ((totalActiveSubs - lastMonthActiveSubs) / lastMonthActiveSubs) * 100;
+    const revenueChange = lastMonthRevenue === 0 ? 0 : ((totalRevenue - lastMonthRevenue) / lastMonthRevenue) * 100;
+
+    // 📊 API Stats
+    let successCalls = 0, failureCalls = 0;
+    (c.api_stats || []).forEach((item) => {
+      if (item.metric === "success") successCalls = item.count;
+      else failureCalls = item.count;
     });
 
-   // daily active user mapping
-   
-    const dailyMap = new Map(dailyActiveUsersAgg.map((item) => [item._id.date, item.users]));
-    const daysMap = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const dailyActiveUsers = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const key = d.toISOString().slice(0, 10);
-      dailyActiveUsers.push({ day: daysMap[d.getDay()], users: dailyMap.get(key) || 0 });
+    const totalCalls = successCalls + failureCalls;
+    const apiSuccessRate = totalCalls > 0 ? ((successCalls / totalCalls) * 100).toFixed(1) : "100.0";
+
+    // 📊 Resume Chart
+    let resumeChart = [];
+    if (c.resume_graph?.length) {
+      const map = new Map(
+        c.resume_graph.map(i => [`${i.year}-${i.month}`, Number(i.total)])
+      );
+
+      resumeChart = Array.from({ length: 6 }, (_, i) => {
+        const d = new Date();
+        d.setMonth(d.getMonth() - (5 - i));
+        const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
+        return {
+          month: d.toLocaleString("default", { month: "short" }),
+          resumes: map.get(key) || 0
+        };
+      });
     }
 
-    // api response rate
-    let successCalls = 0;
-    let failureCalls = 0;
-    apiStats.forEach((s) => {
-      if (s._id === "success") successCalls = s.count;
-      else failureCalls = s.count;
-    });
-    const totalCalls = successCalls + failureCalls;
-    const apiSuccessRate = totalCalls > 0 ? ((successCalls / totalCalls) * 100).toFixed(1) : 100;
+    // 📊 User Growth
+    let userGrowth = [];
+    if (c.user_growth?.length) {
+      const map = new Map(
+        c.user_growth.map(i => [`${i.year}-${i.month}`, Number(i.total)])
+      );
 
-    // subscription split maping
-    const [freeUserCount, paidUserCount] = subscriptionCounts;
-    const total = freeUserCount + paidUserCount.reduce((sum, item) => sum + item.count, 0);
-    const paidMap = new Map(paidUserCount.map((p) => [p._id, p.count]));
+      userGrowth = Array.from({ length: 6 }, (_, i) => {
+        const d = new Date();
+        d.setMonth(d.getMonth() - (5 - i));
+        const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
+        return {
+          month: d.toLocaleString("default", { month: "short" }),
+          users: map.get(key) || 0
+        };
+      });
+    }
+
+    // 📊 Daily Active
+    const dailyActiveUsers = c.daily_active || [];
+
+    // 📊 Subscription Split
+    const freeUserCount = Number(u.free_users || 0);
+    const plans = s.plans || [];
+
+    const total =
+      freeUserCount +
+      plans.reduce((sum, item) => sum + Number(item.count || 0), 0);
+
     const subscriptionSplit = [
-      { name: "Free", value: total === 0 ? 0 : Number(((freeUserCount / total) * 100).toFixed(2)) },
-      { name: "Pro", value: total === 0 ? 0 : Number(((paidMap.get("Pro") || 0) / total * 100).toFixed(2)) },
-      { name: "Lifetime", value: total === 0 ? 0 : Number(((paidMap.get("Lifetime") || 0) / total * 100).toFixed(2)) },
+      {
+        name: "Free",
+        value: total ? Number(((freeUserCount / total) * 100).toFixed(2)) : 0
+      },
+      ...plans.map(p => ({
+        name: p.plan || "Unknown",
+        value: total ? Number(((p.count / total) * 100).toFixed(2)) : 0
+      }))
     ];
 
-
-    // ---------- FINAL RESPONSE ---------
+    // ✅ RESPONSE
     res.status(200).json({
-      users: {
-        total: totalUsers,
-        change: Number(userChange.toFixed(1)),
-      },
-      resumes: {
-        total: totalResumes,
-        change: Number(resumeChange.toFixed(1)),
-      },
-      subscriptions: {
-        total: totalActiveSubs,
-        change: Number(subsChange.toFixed(1)),
-      },
-      revenue: {
-        total: Math.round(totalRevenue),
-        change: Number(revenueChange.toFixed(1)),
-      },
-      apiMetrics: {
-        totalCalls,
-        successRate: `${apiSuccessRate}%`,
-      },
+      users: { total: totalUsers, change: Number(userChange.toFixed(1)) },
+      resumes: { total: totalResumes, change: Number(resumeChange.toFixed(1)) },
+      subscriptions: { total: totalActiveSubs, change: Number(subsChange.toFixed(1)) },
+      revenue: { total: Math.round(totalRevenue), change: Number(revenueChange.toFixed(1)) },
+      apiMetrics: { totalCalls, successRate: `${apiSuccessRate}%` },
+
       resumeChart,
       userGrowth,
       dailyActiveUsers,
-      subscriptionSplit,
+      subscriptionSplit
     });
+
   } catch (error) {
     console.error("Dashboard stats error:", error);
-    res.status(500).json({ message: "Dashboard stats fetch failed", error: error.message });
+    res.status(500).json({
+      message: "Dashboard stats fetch failed",
+      error: error.message
+    });
   }
 };
 
@@ -253,39 +235,95 @@ export const getAnalyticsStats = async (req, res) => {
     const last30Days = new Date();
     last30Days.setDate(last30Days.getDate() - 30);
 
-    const newUsersLast30Days = await User.countDocuments({
-      createdAt: { $gte: last30Days },
-    });
-
     const last7Days = new Date();
     last7Days.setDate(last7Days.getDate() - 7);
-    const activeUsersLast7Days = await User.countDocuments({
-      lastLogin: { $gte: last7Days },
-      isAdmin: false,
-    });
 
-    // ---------- DELETED USERS ----------
-    const deletedUsersCount = await Notification.countDocuments({
-      type: "USER_DELETED",
-    });
+    const lastSixMonths = new Date();
+    lastSixMonths.setMonth(lastSixMonths.getMonth() - 5);
+    lastSixMonths.setDate(1);
+    lastSixMonths.setHours(0, 0, 0, 0);
+
+    const [
+      newUsersResult,
+      activeUsersResult,
+      deletedUsersResult,
+      availablePlansResult,
+      subscriptionDistributionResult,
+      apiStatsResult,
+      userGrowthResult,
+      revenueResult,
+      resumeTemplatesResult,
+      resumeDownloadsResult,
+      cvDownloadsResult
+    ] = await Promise.all([
+      pool.query("SELECT COUNT(*)::int AS count FROM users WHERE created_at >= $1", [last30Days]),
+      pool.query("SELECT COUNT(*)::int AS count FROM users WHERE last_login >= $1 AND is_admin = false", [last7Days]),
+      pool.query("SELECT COUNT(*)::int AS count FROM notifications WHERE type = 'USER_DELETED'"),
+      pool.query("SELECT name FROM plans"),
+      pool.query("SELECT plan AS id, COUNT(*)::int AS count FROM users WHERE is_admin = false GROUP BY 1"),
+      pool.query(`
+        SELECT 
+          CASE WHEN status_code < 400 THEN 'success' ELSE 'failure' END AS metric,
+          COUNT(*)::int AS count,
+          AVG(response_time)::float AS avg_response
+        FROM api_metrics
+        WHERE created_at >= $1
+        GROUP BY 1
+      `, [last30Days]),
+      pool.query(`
+        SELECT 
+          EXTRACT(YEAR FROM created_at)::int AS year,
+          EXTRACT(MONTH FROM created_at)::int AS month,
+          COUNT(*)::int AS count
+        FROM users
+        WHERE created_at >= $1
+        GROUP BY 1, 2
+      `, [lastSixMonths]),
+      pool.query(`
+        SELECT 
+          EXTRACT(YEAR FROM created_at)::int AS year,
+          EXTRACT(MONTH FROM created_at)::int AS month,
+          SUM(amount)::float AS revenue
+        FROM payments
+        WHERE status = 'success' AND created_at >= $1
+        GROUP BY 1, 2
+      `, [lastSixMonths]),
+      pool.query(`
+        SELECT 
+          data->>'templateId' AS id,
+          COUNT(*)::int AS count
+        FROM resumes
+        WHERE data->>'templateId' IS NOT NULL
+        GROUP BY 1
+        ORDER BY count DESC
+      `),
+      pool.query(`
+        SELECT 
+          template AS id,
+          COUNT(*)::int AS count
+        FROM downloads
+        WHERE type = 'resume' AND action = 'download' AND template IS NOT NULL AND template != ''
+        GROUP BY 1
+        ORDER BY count DESC
+      `),
+      pool.query(`
+        SELECT 
+          template AS id,
+          COUNT(*)::int AS count
+        FROM downloads
+        WHERE type = 'cv' AND action = 'download' AND template IS NOT NULL AND template != ''
+        GROUP BY 1
+        ORDER BY count DESC
+      `)
+    ]);
+
+    const newUsersLast30Days = newUsersResult.rows[0]?.count || 0;
+    const activeUsersLast7Days = activeUsersResult.rows[0]?.count || 0;
+    const deletedUsersCount = deletedUsersResult.rows[0]?.count || 0;
 
     // ---------- SUBSCRIPTION BREAKDOWN ----------
-    const [availablePlans, subscriptionDistribution] = await Promise.all([
-      Plan.find({}, { name: 1, _id: 0 }).lean(),
-      User.aggregate([
-        {
-          $match: {
-            isAdmin: false,
-          },
-        },
-        {
-          $group: {
-            _id: "$plan",
-            count: { $sum: 1 },
-          },
-        },
-      ]),
-    ]);
+    const availablePlans = availablePlansResult.rows;
+    const subscriptionDistribution = subscriptionDistributionResult.rows;
 
     const toTitleCase = (value = "") =>
       String(value)
@@ -314,7 +352,6 @@ export const getAnalyticsStats = async (req, res) => {
         return canonicalPlanByKey.get(key);
       }
 
-      // Keep legacy spellings aligned to one canonical tier.
       if (["lifetime", "life time"].includes(key)) {
         return canonicalPlanByKey.get("ultra pro") || "Ultra Pro";
       }
@@ -324,7 +361,7 @@ export const getAnalyticsStats = async (req, res) => {
 
     const groupedPlanCounts = new Map();
     subscriptionDistribution.forEach((item) => {
-      const planName = normalizePlanName(item._id);
+      const planName = normalizePlanName(item.id);
       groupedPlanCounts.set(planName, (groupedPlanCounts.get(planName) || 0) + item.count);
     });
 
@@ -354,28 +391,17 @@ export const getAnalyticsStats = async (req, res) => {
     );
 
     // ---------- API PERFORMANCE ----------
-    const apiStats = await ApiMetric.aggregate([
-      { $match: { createdAt: { $gte: last30Days } } },
-      {
-        $group: {
-          _id: { $cond: [{ $lt: ["$statusCode", 400] }, "success", "failure"] },
-          count: { $sum: 1 },
-          avgResponse: { $avg: "$responseTime" },
-        },
-      },
-    ]);
-
     let apiSuccessCount = 0;
     let apiFailureCount = 0;
     let totalRespTime = 0;
     let callsForAvg = 0;
 
-    apiStats.forEach(stat => {
-      if (stat._id === "success") apiSuccessCount = stat.count;
+    apiStatsResult.rows.forEach(stat => {
+      if (stat.metric === "success") apiSuccessCount = stat.count;
       else apiFailureCount = stat.count;
 
-      if (stat.avgResponse) {
-        totalRespTime += (stat.avgResponse * stat.count);
+      if (stat.avg_response) {
+        totalRespTime += (stat.avg_response * stat.count);
         callsForAvg += stat.count;
       }
     });
@@ -391,122 +417,27 @@ export const getAnalyticsStats = async (req, res) => {
       const d = new Date();
       d.setMonth(d.getMonth() - i);
       const year = d.getFullYear();
-      const month = d.getMonth() + 1; // 1-indexed
+      const month = d.getMonth() + 1;
       const monthName = d.toLocaleString("default", { month: "short" });
 
       trendData.push({
         year,
-        month: month,
+        month,
         monthName,
         users: 0,
         revenue: 0
       });
     }
 
-    // Fill User Growth
-    const userGrowthAgg = await User.aggregate([
-      {
-        $group: {
-          _id: {
-            year: { $year: "$createdAt" },
-            month: { $month: "$createdAt" },
-          },
-          count: { $sum: 1 },
-        },
-      },
-    ]);
-
-    // Fill Revenue
-    const revenueByMonth = await Payment.aggregate([
-      { $match: { status: "success" } },
-      {
-        $group: {
-          _id: {
-            year: { $year: "$createdAt" },
-            month: { $month: "$createdAt" },
-          },
-          revenue: { $sum: "$amount" },
-        },
-      },
-    ]);
-
     trendData.forEach(tick => {
-      const growthMatch = userGrowthAgg.find(g => g._id.year === tick.year && g._id.month === tick.month);
-      const revenueMatch = revenueByMonth.find(r => r._id.year === tick.year && r._id.month === tick.month);
+      const growthMatch = userGrowthResult.rows.find(g => Number(g.year) === tick.year && Number(g.month) === tick.month);
+      const revenueMatch = revenueResult.rows.find(r => Number(r.year) === tick.year && Number(r.month) === tick.month);
 
-      if (growthMatch) tick.users = growthMatch.count;
-      if (revenueMatch) tick.revenue = revenueMatch.revenue;
+      if (growthMatch) tick.users = Number(growthMatch.count || 0);
+      if (revenueMatch) tick.revenue = Number(revenueMatch.revenue || 0);
     });
 
-    // ---------- MOST USED TEMPLATES (Resume + CV templates) ----------
-    const mostUsedResumeTemplatesAgg = await Resume.aggregate([
-      {
-        $match: { templateId: { $exists: true, $ne: null } }
-      },
-      {
-        $group: {
-          _id: "$templateId",
-          count: { $sum: 1 },
-        },
-      },
-      {
-        $addFields: {
-          tId: {
-            $convert: {
-              input: "$_id",
-              to: "objectId",
-              onError: "$_id",
-              onNull: "$_id"
-            }
-          }
-        }
-      },
-      {
-        $lookup: {
-          from: "templates",
-          localField: "tId",
-          foreignField: "_id",
-          as: "templateDetails",
-        },
-      },
-      { $unwind: { path: "$templateDetails", preserveNullAndEmptyArrays: true } },
-      { $sort: { count: -1 } },
-    ]);
-
-    const mostUsedResumeDownloadTemplatesAgg = await Download.aggregate([
-      {
-        $match: {
-          type: "resume",
-          action: "download",
-          template: { $exists: true, $ne: null, $ne: "" },
-        },
-      },
-      {
-        $group: {
-          _id: "$template",
-          count: { $sum: 1 },
-        },
-      },
-      { $sort: { count: -1 } },
-    ]);
-
-    const mostUsedCvTemplatesAgg = await Download.aggregate([
-      {
-        $match: {
-          type: "cv",
-          action: "download",
-          template: { $exists: true, $ne: null, $ne: "" },
-        },
-      },
-      {
-        $group: {
-          _id: "$template",
-          count: { $sum: 1 },
-        },
-      },
-      { $sort: { count: -1 } },
-    ]);
-
+    // ---------- MOST USED TEMPLATES ----------
     const toReadableTemplateName = (value) => {
       if (!value) return "Standard";
       const str = String(value);
@@ -542,7 +473,6 @@ export const getAnalyticsStats = async (req, res) => {
 
       if (canonicalNames[str]) return canonicalNames[str];
       if (str.length > 40) return `ID: ${str.substring(0, 8)}...`;
-      // Convert template ids like "jessica-claire" into "Jessica Claire".
       return str
         .replace(/[_-]+/g, " ")
         .replace(/\s+/g, " ")
@@ -553,8 +483,8 @@ export const getAnalyticsStats = async (req, res) => {
     const resumeTemplateCountMap = new Map();
     const cvTemplateCountMap = new Map();
 
-    mostUsedResumeTemplatesAgg.forEach((item) => {
-      let name = item.templateDetails?.name;
+    resumeTemplatesResult.rows.forEach((item) => {
+      let name = item.name;
       if (!name) {
         const hardcodedNames = {
           professional: "Professional",
@@ -573,30 +503,25 @@ export const getAnalyticsStats = async (req, res) => {
           eclipse1: "Eclipse Alt",
           harbor: "Harbor"
         };
-        const rawId = typeof item._id === "string" ? item._id : String(item._id);
+        const rawId = String(item.id);
         name = hardcodedNames[rawId] || toReadableTemplateName(rawId);
       }
-
       const key = name || "Standard";
       resumeTemplateCountMap.set(key, (resumeTemplateCountMap.get(key) || 0) + item.count);
     });
 
-    mostUsedResumeDownloadTemplatesAgg.forEach((item) => {
-      const key = toReadableTemplateName(item._id);
+    resumeDownloadsResult.rows.forEach((item) => {
+      const key = toReadableTemplateName(item.id);
       resumeTemplateCountMap.set(key, (resumeTemplateCountMap.get(key) || 0) + item.count);
     });
 
-    mostUsedCvTemplatesAgg.forEach((item) => {
-      const key = toReadableTemplateName(item._id);
+    cvDownloadsResult.rows.forEach((item) => {
+      const key = toReadableTemplateName(item.id);
       cvTemplateCountMap.set(key, (cvTemplateCountMap.get(key) || 0) + item.count);
     });
 
     const buildTopTemplates = (countMap) => {
-      const total = Array.from(countMap.values()).reduce(
-        (sum, count) => sum + count,
-        0
-      );
-
+      const total = Array.from(countMap.values()).reduce((sum, count) => sum + count, 0);
       return Array.from(countMap.entries())
         .map(([templateId, count]) => ({
           templateId,
@@ -611,26 +536,15 @@ export const getAnalyticsStats = async (req, res) => {
     const mostUsedCvTemplates = buildTopTemplates(cvTemplateCountMap);
 
     const combinedTemplateCountMap = new Map();
-    Array.from(resumeTemplateCountMap.entries()).forEach(([key, count]) => {
-      combinedTemplateCountMap.set(key, (combinedTemplateCountMap.get(key) || 0) + count);
-    });
-    Array.from(cvTemplateCountMap.entries()).forEach(([key, count]) => {
-      combinedTemplateCountMap.set(key, (combinedTemplateCountMap.get(key) || 0) + count);
-    });
+    resumeTemplateCountMap.forEach((count, key) => combinedTemplateCountMap.set(key, (combinedTemplateCountMap.get(key) || 0) + count));
+    cvTemplateCountMap.forEach((count, key) => combinedTemplateCountMap.set(key, (combinedTemplateCountMap.get(key) || 0) + count));
 
-    const totalTemplateUsage = Array.from(combinedTemplateCountMap.values()).reduce(
-      (sum, count) => sum + count,
-      0
-    );
-
+    const totalTemplateUsage = Array.from(combinedTemplateCountMap.values()).reduce((sum, count) => sum + count, 0);
     const mostUsedTemplates = Array.from(combinedTemplateCountMap.entries())
       .map(([templateId, count]) => ({
         templateId,
         count,
-        percentage:
-          totalTemplateUsage > 0
-            ? Math.round((count / totalTemplateUsage) * 100)
-            : 0,
+        percentage: totalTemplateUsage > 0 ? Math.round((count / totalTemplateUsage) * 100) : 0,
       }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
@@ -641,14 +555,13 @@ export const getAnalyticsStats = async (req, res) => {
       revenue: item.revenue
     }));
 
-    // ---------- SYSTEM UPTIME ----------
     const baseUptime = 99.95;
     const uptimeDeduction = (100 - parseFloat(apiSuccessRate)) * 0.01;
     const systemUptime = Math.max(99.90, baseUptime - uptimeDeduction).toFixed(2);
 
     res.status(200).json({
       userGrowth: {
-        count: newUsersLast30Days,
+        count: Number(newUsersLast30Days),
         note: "New users in last 30 days",
       },
       conversions: {
@@ -656,11 +569,11 @@ export const getAnalyticsStats = async (req, res) => {
         note: "Total paid subscriptions",
       },
       activeUsers: {
-        count: activeUsersLast7Days,
+        count: Number(activeUsersLast7Days),
         note: "Active last 7 days",
       },
       deletedUsers: {
-        count: deletedUsersCount,
+        count: Number(deletedUsersCount),
         note: "Total deleted accounts",
       },
       mostUsedResumeTemplates,
@@ -672,7 +585,7 @@ export const getAnalyticsStats = async (req, res) => {
         apiSuccessRate: `${apiSuccessRate}%`,
         apiFailureRate: `${apiFailureRate}%`,
         avgResponseTime: `${avgResponseTime}ms`,
-        totalApiCalls,
+        totalApiCalls: Number(totalApiCalls),
         systemUptime: `${systemUptime}%`,
       },
     });
@@ -681,5 +594,6 @@ export const getAnalyticsStats = async (req, res) => {
     res.status(500).json({ message: "Analytics fetch failed", error: error.message });
   }
 };
+
 
 

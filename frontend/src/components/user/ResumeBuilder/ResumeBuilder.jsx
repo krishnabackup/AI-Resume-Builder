@@ -451,7 +451,7 @@ const ResumeBuilder = () => {
       // required backend fields
       formDataUpload.append("jobTitle", "Resume Builder Upload");
       formDataUpload.append("templateId", selectedTemplate);
-      formDataUpload.append("resumeprofileId", "000000000000000000000000");
+      formDataUpload.append("resumeprofileId", crypto.randomUUID());
 
       const res = await axiosInstance.post(
         "/api/resume/upload",

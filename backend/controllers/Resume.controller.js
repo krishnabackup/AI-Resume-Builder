@@ -1,11 +1,5 @@
-import mongoose from "mongoose";
+import { pool } from "../config/postgresdb.js";
 import mammoth from "mammoth";
-
-// Models
-import Resume from "../Models/resume.js";
-import AtsScans from "../Models/atsScan.js";
-
-
 // AI Service
 import {
   generateResumeAI,
@@ -159,12 +153,21 @@ import {
 
 /* =====================================================
    SAVE NORMAL RESUME (Manual Save)
-   Saves a resume document to MongoDB
+   Saves a resume document to PostgreSQL
 ===================================================== */
 export const saveResume = async (req, res) => {
   try {
-    const resume = new Resume(req.body);
-    await resume.save();
+    const data = req.body;
+    let userId = req.userId;
+    if (!userId && data.user) userId = data.user;
+    
+    const dataWithoutUser = { ...data };
+    delete dataWithoutUser.user;
+
+    await pool.query(
+      `INSERT INTO resumes (user_id, data, created_at, updated_at) VALUES ($1, $2, NOW(), NOW())`, 
+      [userId, JSON.stringify(dataWithoutUser)]
+    );
 
     res.json({
       success: true,
@@ -183,8 +186,9 @@ export const saveResume = async (req, res) => {
 ===================================================== */
 export const getAllUserResumes = async (req, res) => {
   try {
-    const resumes = await Resume.find({ user: req.userId }).sort({ createdAt: -1 });
-    res.status(200).json({ success: true, count: resumes.length, data: resumes });
+    const hr = await pool.query('SELECT * FROM resumes WHERE user_id = $1 ORDER BY created_at DESC', [req.userId]);
+    const formatted = hr.rows.map(r => ({ _id: r.id, user: r.user_id, ...r.data, createdAt: r.created_at, updatedAt: r.updated_at }));
+    res.status(200).json({ success: true, count: formatted.length, data: formatted });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -195,11 +199,12 @@ export const getAllUserResumes = async (req, res) => {
 ===================================================== */
 export const getUserResume = async (req, res) => {
   try {
-    const resume = await Resume.findOne({ user: req.userId }).sort({ createdAt: -1 });
-    if (!resume) {
+    const hr = await pool.query('SELECT * FROM resumes WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1', [req.userId]);
+    if (hr.rowCount === 0) {
       return res.status(404).json({ success: false, message: "Resume not found" });
     }
-    res.status(200).json({ success: true, data: resume });
+    const r = hr.rows[0];
+    res.status(200).json({ success: true, data: { _id: r.id, user: r.user_id, ...r.data, createdAt: r.created_at, updatedAt: r.updated_at } });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -219,14 +224,16 @@ export const generateAIResume = async (req, res) => {
 
     // Save AI-generated resume to DB (optional)
     try {
-      const resume = new Resume({
-        ...req.body,
-        summary: aiText,
-      });
-      await resume.save();
+      const dataWithoutUser = { ...req.body, summary: aiText };
+      delete dataWithoutUser.user;
+
+      await pool.query(
+        `INSERT INTO resumes (user_id, data, created_at, updated_at) VALUES ($1, $2, NOW(), NOW())`, 
+        [req.userId, JSON.stringify(dataWithoutUser)]
+      );
       console.log("💾 AI Resume saved to DB");
     } catch (dbError) {
-      console.log("⚠️ DB save skipped (MongoDB not connected)");
+      console.log("⚠️ DB save skipped", dbError.message);
     }
 
     // Send response
@@ -319,11 +326,12 @@ export const getJobRecommendations = async (req, res) => {
 ===================================================== */
 export const getResumeById = async (req, res) => {
   try {
-    const resume = await Resume.findOne({ _id: req.params.id, user: req.userId });
-    if (!resume) {
+    const hr = await pool.query('SELECT * FROM resumes WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
+    if (hr.rowCount === 0) {
       return res.status(404).json({ success: false, message: "Resume not found" });
     }
-    res.status(200).json({ success: true, data: resume });
+    const r = hr.rows[0];
+    res.status(200).json({ success: true, data: { _id: r.id, user: r.user_id, ...r.data, createdAt: r.created_at, updatedAt: r.updated_at } });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -450,30 +458,35 @@ if (!jobTitle) {
         : 0;
     }
 
-    // Save ATS scan
-    const atsScan = new AtsScans({
-      userId,
+    const scanData = {
       filename: file.filename,
       originalName: file.originalname,
       filePath: `/uploads/resumes/${file.filename}`,
       fileSize: file.size,
       fileType: file.mimetype,
-      overallScore: analysis.overallScore,
       sectionScores: analysis.sectionScores,
       matchedKeywords: analysis.matchedKeywords,
       missingKeywords: analysis.missingKeywords,
       suggestions: analysis.suggestions,
       extractedText: resumeText,
-      extractedData,
+      extractedData: extractedData,
       passThreshold: passes,
-      templateId: templateId || null,
-       resumeprofileId: resumeprofileId
-      ? new mongoose.Types.ObjectId(resumeprofileId)
-     : null,
-      jobTitle,
-    });
+      metrics: analysis.metrics,
+      misspelledWords: analysis.misspelledWords
+    };
 
-    await atsScan.save();
+    const insertScan = await pool.query(`
+      INSERT INTO ats_scores (user_id, cv_id, template_id, job_title, score, feedback, created_at)
+      VALUES ($1, $2, $3, $4, $5, $6, NOW()) RETURNING id, feedback
+    `, [
+      userId, 
+      resumeprofileId || null, 
+      templateId || null, 
+      jobTitle, 
+      analysis.overallScore, 
+      JSON.stringify(scanData)
+    ]);
+    const atsScan = { _id: insertScan.rows[0].id, filePath: insertScan.rows[0].feedback.filePath };
 
     res.status(200).json({
       success: true,
@@ -512,16 +525,22 @@ if (!jobTitle) {
 ===================================================== */
 export const getUserScans = async (req, res) => {
   try {
-    const scans = await AtsScans.find({ userId: req.userId })
-      .sort({ createdAt: -1 })
-      .select(
-        "filename originalName overallScore passThreshold createdAt sectionScores"
-      );
+    const scansRes = await pool.query(`
+      SELECT 
+        id as _id, 
+        feedback->>'filename' as filename, 
+        feedback->>'originalName' as "originalName", 
+        score as "overallScore", 
+        (feedback->>'passThreshold')::boolean as "passThreshold", 
+        created_at as "createdAt", 
+        feedback->'sectionScores' as "sectionScores" 
+      FROM ats_scores WHERE user_id = $1 ORDER BY created_at DESC
+    `, [req.userId]);
 
     res.status(200).json({
       success: true,
-      count: scans.length,
-      data: scans,
+      count: scansRes.rowCount,
+      data: scansRes.rows,
     });
   } catch (error) {
     res.status(500).json({
@@ -538,17 +557,16 @@ export const getUserScans = async (req, res) => {
 ===================================================== */
 export const getScanById = async (req, res) => {
   try {
-    const scan = await AtsScans.findOne({
-      _id: req.params.id,
-      userId: req.userId,
-    });
+    const scanRes = await pool.query('SELECT * FROM ats_scores WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
 
-    if (!scan) {
+    if (scanRes.rowCount === 0) {
       return res.status(404).json({
         success: false,
         message: "Scan not found",
       });
     }
+    const row = scanRes.rows[0];
+    const scan = { _id: row.id, overallScore: row.score, jobTitle: row.job_title, ...row.feedback, createdAt: row.created_at };
 
     res.status(200).json({
       success: true,
@@ -569,12 +587,9 @@ export const getScanById = async (req, res) => {
 ===================================================== */
 export const deleteScan = async (req, res) => {
   try {
-    const scan = await AtsScans.findOne({
-      _id: req.params.id,
-      userId: req.userId,
-    });
+    const scanRes = await pool.query(`SELECT feedback->>'filePath' as "filePath" FROM ats_scores WHERE id = $1 AND user_id = $2`, [req.params.id, req.userId]);
 
-    if (!scan) {
+    if (scanRes.rowCount === 0) {
       return res.status(404).json({
         success: false,
         message: "Scan not found",
@@ -582,10 +597,10 @@ export const deleteScan = async (req, res) => {
     }
 
     // Delete file from storage
-    deleteFile(scan.filePath);
+    deleteFile(scanRes.rows[0].filePath);
 
     // Delete database record
-    await AtsScans.findByIdAndDelete(scan._id);
+    await pool.query('DELETE FROM ats_scores WHERE id = $1', [req.params.id]);
 
     res.status(200).json({
       success: true,
@@ -606,17 +621,18 @@ export const deleteScan = async (req, res) => {
 ===================================================== */
 export const downloadResume = async (req, res) => {
   try {
-    const scan = await AtsScans.findOne({
-      filename: req.params.filename,
-      userId: req.userId,
-    });
+    const scanRes = await pool.query(`
+      SELECT feedback->>'filePath' as "filePath", feedback->>'originalName' as "originalName", feedback->>'fileType' as "fileType" 
+      FROM ats_scores WHERE feedback->>'filename' = $1 AND user_id = $2
+    `, [req.params.filename, req.userId]);
 
-    if (!scan) {
+    if (scanRes.rowCount === 0) {
       return res.status(404).json({
         success: false,
         message: "Resume not found",
       });
     }
+    const scan = scanRes.rows[0];
 
     const fileResult = getFile(scan.filePath);
 
@@ -650,22 +666,24 @@ export const getScanStatistics = async (req, res) => {
   try {
     const userId = req.userId;
 
-    const totalScans = await AtsScans.countDocuments({ userId });
+    const statsRes = await pool.query(`
+      SELECT 
+        COUNT(*) as "totalScans",
+        COALESCE(AVG(score), 0) as "avgScore",
+        SUM(CASE WHEN (feedback->>'passThreshold')::boolean = true THEN 1 ELSE 0 END) as "passedScans"
+      FROM ats_scores WHERE user_id = $1
+    `, [userId]);
+    
+    const stats = statsRes.rows[0];
+    const totalScans = parseInt(stats.totalScans, 10);
+    const passedScans = parseInt(stats.passedScans || 0, 10);
+    const avgScore = parseFloat(stats.avgScore);
 
-    const avgScore = await AtsScans.aggregate([
-      { $match: { userId: new mongoose.Types.ObjectId(userId) } },
-      { $group: { _id: null, avgScore: { $avg: "$overallScore" } } },
-    ]);
-
-    const passedScans = await AtsScans.countDocuments({
-      userId,
-      passThreshold: true,
-    });
-
-    const recentScans = await AtsScans.find({ userId })
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .select("filename overallScore createdAt");
+    const recentScansRes = await pool.query(`
+      SELECT id as _id, feedback->>'filename' as filename, score as "overallScore", created_at as "createdAt" 
+      FROM ats_scores WHERE user_id = $1 ORDER BY created_at DESC LIMIT 5
+    `, [userId]);
+    const recentScans = recentScansRes.rows;
 
     res.status(200).json({
       success: true,
@@ -692,15 +710,17 @@ export const getScanStatistics = async (req, res) => {
 // Get the latest scan uploaded by the user
 export const getLatestScan = async (req, res) => {
   try {
-    const latestScan = await AtsScans.findOne({ userId: req.userId })
-      .sort({ createdAt: -1 });
+    const latestRes = await pool.query('SELECT * FROM ats_scores WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1', [req.userId]);
 
-    if (!latestScan) {
+    if (latestRes.rowCount === 0) {
       return res.status(404).json({
         success: false,
         message: "No scans found for this user",
       });
     }
+
+    const row = latestRes.rows[0];
+    const latestScan = { overallScore: row.score, jobTitle: row.job_title, ...row.feedback, createdAt: row.created_at };
 
     // Generate full file URL
     const serverUrl = process.env.SERVER_URL || "http://localhost:5000";
@@ -745,23 +765,7 @@ export const enhanceWorkExperience = async (req, res) => {
     console.log("AI Summary generated successfully");
     // 2. Try to save to MongoDB (optional - won't fail if DB is down)
     if (aiText) {
-      try {
-        await Resume.findOneAndUpdate(
-          {
-            "experience.id": req.body.id,
-          },
-          {
-            $set: {
-              "experience.$.description": aiText,
-            },
-          },
-          { new: true }
-        );
-        console.log("Experience description updated in database");
-
-      } catch (dbError) {
-        console.log("Database save skipped (MongoDB not connected)", dbError);
-      }
+      // Real-time nested JSONB update omitted; Frontend handles saving the whole resume.
 
       // 3. Send AI summary back to frontend
       return res.json({
@@ -791,23 +795,7 @@ export const enhanceProjectDescription = async (req, res) => {
     console.log("AI Summary generated successfully");
     // 2. Try to save to MongoDB (optional - won't fail if DB is down)
     if (projectDescription) {
-      try {
-        await Resume.findOneAndUpdate(
-          {
-            "project.id": req.body.id,
-          },
-          {
-            $set: {
-              "project.$.description": projectDescription,
-            },
-          },
-          { new: true }
-        );
-        console.log("Project description updated in database");
-
-      } catch (dbError) {
-        console.log("Database save skipped (MongoDB not connected)", dbError);
-      }
+      // Real-time nested JSONB update omitted; Frontend handles saving the whole resume.
 
       // 3. Send AI summary back to frontend
       return res.json({

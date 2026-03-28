@@ -68,12 +68,10 @@ export const NotificationProvider = ({ children }) => {
                     };
 
                     // Get username from userId object
-                    const username = typeof notif.userId === 'object'
-                        ? notif.userId?.username
-                        : notif.userId;
+                    const username =  notif.user ?? notif.userId;
 
                     return {
-                        id: notif._id,
+                        id: notif.id,
                         type: typeMap[notif.type] || 'system_alert',
                         title: notif.type ? notif.type.replace(/_/g, ' ') : 'Notification',
                         description: notif.message,
@@ -103,6 +101,7 @@ export const NotificationProvider = ({ children }) => {
 
     // Mark single notification as read
     const markAsRead = useCallback((id) => {
+
         setNotifications((prev) =>
             prev.map((n) =>
                 n.id === id ? { ...n, isUnread: false } : n

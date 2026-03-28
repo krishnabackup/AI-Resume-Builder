@@ -1,5 +1,4 @@
-import Blog from "../Models/Blog.js";
-import Notification from "../Models/notification.js";
+import { pool } from "../config/postgresdb.js";
 
 const formatDate = (value) => {
   if (!value) return "";
@@ -14,33 +13,31 @@ const formatDate = (value) => {
   });
 };
 
-const toBlogResponse = (blogDoc) => ({
-  id: blogDoc._id,
-  _id: blogDoc._id,
-  title: blogDoc.title,
-  excerpt: blogDoc.excerpt,
-  detail: blogDoc.detail,
-  category: blogDoc.category,
-  date: blogDoc.date || formatDate(blogDoc.createdAt),
-  image: blogDoc.image,
-  readTime: blogDoc.readTime,
-  isPublished: blogDoc.isPublished,
-  createdAt: blogDoc.createdAt,
-  updatedAt: blogDoc.updatedAt,
+const toBlogResponse = (row) => ({
+  id: row.id,
+  _id: row.id, // for frontend compatibility
+  title: row.title,
+  excerpt: row.excerpt,
+  detail: row.detail,
+  category: row.category,
+  date: row.date || formatDate(row.created_at),
+  image: row.image,
+  readTime: row.read_time,
+  isPublished: row.is_published,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
 });
 
 const createMutationNotification = async (type, message, userId) => {
   if (!userId) return;
 
   try {
-    await Notification.create({
-      actor: "user",
-      type,
-      message,
-      userId,
-    });
+    await pool.query(
+        `INSERT INTO notifications (type, message, user_id, actor, is_read, from_admin, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())`,
+        [type, message, userId, "user", false, true]
+    );
   } catch (error) {
-    // Blog operation should not fail if notification creation fails.
     console.error("Blog notification error:", error.message);
   }
 };
@@ -49,24 +46,30 @@ export const getBlogs = async (req, res) => {
   try {
     const { category, search, includeUnpublished } = req.query;
 
-    const query = includeUnpublished === "true" ? {} : { isPublished: true };
+    let queryText = "SELECT * FROM blogs WHERE 1=1";
+    const queryParams = [];
+
+    if (includeUnpublished !== "true") {
+      queryText += " AND is_published = true";
+    }
 
     if (category && category !== "All Articles") {
-      query.category = category;
+      queryParams.push(category);
+      queryText += ` AND category = $${queryParams.length}`;
     }
 
     if (search) {
-      query.$or = [
-        { title: { $regex: search, $options: "i" } },
-        { excerpt: { $regex: search, $options: "i" } },
-      ];
+      queryParams.push(`%${search}%`);
+      queryText += ` AND (title ILIKE $${queryParams.length} OR excerpt ILIKE $${queryParams.length})`;
     }
 
-    const blogs = await Blog.find(query).sort({ createdAt: -1 });
+    queryText += " ORDER BY created_at DESC";
+
+    const result = await pool.query(queryText, queryParams);
 
     return res.status(200).json({
       success: true,
-      data: blogs.map(toBlogResponse),
+      data: result.rows.map(toBlogResponse),
     });
   } catch (error) {
     console.error("Error fetching blogs:", error);
@@ -76,13 +79,13 @@ export const getBlogs = async (req, res) => {
 
 export const getBlogById = async (req, res) => {
   try {
-    const blog = await Blog.findById(req.params.id);
+    const result = await pool.query("SELECT * FROM blogs WHERE id = $1", [req.params.id]);
 
-    if (!blog) {
+    if (result.rowCount === 0) {
       return res.status(404).json({ success: false, message: "Blog not found" });
     }
 
-    return res.status(200).json({ success: true, data: toBlogResponse(blog) });
+    return res.status(200).json({ success: true, data: toBlogResponse(result.rows[0]) });
   } catch (error) {
     console.error("Error fetching blog:", error);
     return res.status(500).json({ success: false, message: error.message });
@@ -100,16 +103,14 @@ export const createBlog = async (req, res) => {
       });
     }
 
-    const blog = await Blog.create({
-      title,
-      excerpt,
-      detail,
-      category,
-      date: date || "",
-      image,
-      readTime: readTime || "",
-      isPublished: typeof isPublished === "boolean" ? isPublished : true,
-    });
+    const result = await pool.query(
+      `INSERT INTO blogs (title, excerpt, detail, category, date, image, read_time, is_published, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+       RETURNING *`,
+      [title, excerpt, detail, category, date || "", image, readTime || "", typeof isPublished === "boolean" ? isPublished : true]
+    );
+
+    const blog = result.rows[0];
 
     await createMutationNotification(
       "BLOG_CREATED",
@@ -128,25 +129,33 @@ export const updateBlog = async (req, res) => {
   try {
     const { title, excerpt, detail, category, date, image, readTime, isPublished } = req.body;
 
-    const updatePayload = {};
+    const queryParams = [];
+    const updateFields = [];
 
-    if (title !== undefined) updatePayload.title = title;
-    if (excerpt !== undefined) updatePayload.excerpt = excerpt;
-    if (detail !== undefined) updatePayload.detail = detail;
-    if (category !== undefined) updatePayload.category = category;
-    if (date !== undefined) updatePayload.date = date;
-    if (image !== undefined) updatePayload.image = image;
-    if (readTime !== undefined) updatePayload.readTime = readTime;
-    if (isPublished !== undefined) updatePayload.isPublished = isPublished;
+    if (title !== undefined) { queryParams.push(title); updateFields.push(`title = $${queryParams.length}`); }
+    if (excerpt !== undefined) { queryParams.push(excerpt); updateFields.push(`excerpt = $${queryParams.length}`); }
+    if (detail !== undefined) { queryParams.push(detail); updateFields.push(`detail = $${queryParams.length}`); }
+    if (category !== undefined) { queryParams.push(category); updateFields.push(`category = $${queryParams.length}`); }
+    if (date !== undefined) { queryParams.push(date); updateFields.push(`date = $${queryParams.length}`); }
+    if (image !== undefined) { queryParams.push(image); updateFields.push(`image = $${queryParams.length}`); }
+    if (readTime !== undefined) { queryParams.push(readTime); updateFields.push(`read_time = $${queryParams.length}`); }
+    if (isPublished !== undefined) { queryParams.push(isPublished); updateFields.push(`is_published = $${queryParams.length}`); }
 
-    const blog = await Blog.findByIdAndUpdate(req.params.id, updatePayload, {
-      new: true,
-      runValidators: true,
-    });
+    if (updateFields.length === 0) {
+      return res.status(400).json({ success: false, message: "No fields to update" });
+    }
 
-    if (!blog) {
+    updateFields.push("updated_at = NOW()");
+    queryParams.push(req.params.id);
+    const queryText = `UPDATE blogs SET ${updateFields.join(", ")} WHERE id = $${queryParams.length} RETURNING *`;
+
+    const result = await pool.query(queryText, queryParams);
+
+    if (result.rowCount === 0) {
       return res.status(404).json({ success: false, message: "Blog not found" });
     }
+
+    const blog = result.rows[0];
 
     await createMutationNotification(
       "BLOG_UPDATED",
@@ -163,11 +172,13 @@ export const updateBlog = async (req, res) => {
 
 export const deleteBlog = async (req, res) => {
   try {
-    const blog = await Blog.findByIdAndDelete(req.params.id);
+    const result = await pool.query("DELETE FROM blogs WHERE id = $1 RETURNING *", [req.params.id]);
 
-    if (!blog) {
+    if (result.rowCount === 0) {
       return res.status(404).json({ success: false, message: "Blog not found" });
     }
+
+    const blog = result.rows[0];
 
     await createMutationNotification(
       "BLOG_DELETED",

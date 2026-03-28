@@ -20,10 +20,12 @@
     "html-to-docx": "^1.8.0",
     "jsonwebtoken": "^9.0.3",
     "mammoth": "^1.11.0",
+    "mongodb": "^7.1.1",
     "mongoose": "^7.0.0",
     "multer": "^2.0.2",
     "nspell": "^2.1.5",
     "pdf-parse": "^1.1.1",
+    "pg": "^8.20.0",
     "puppeteer": "^24.37.5",
     "simple-spellchecker": "^1.0.2"
   },
