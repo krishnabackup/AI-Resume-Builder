@@ -22,6 +22,8 @@ import "../../../styles/react-pdf/AnnotationLayer.css";
 
 import mammoth from "mammoth";
 import ATSDocPreview from "./ATSDocPreview";
+import { saveFile, getFile } from "../../../utils/fileDb";
+
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
   import.meta.url,
@@ -420,26 +422,61 @@ const ATSChecker = ({ onSidebarToggle }) => {
   }, []);
 
   /* ── Saves state after refresh ── */
-  useEffect(() => {
-  const savedUrl = sessionStorage.getItem(SESSION_KEY);
-  const savedAnalysis = sessionStorage.getItem("ats_analysis_result");
+ useEffect(() => {
+  const loadStoredFile = async () => {
+    const fileId = sessionStorage.getItem(SESSION_KEY);
+    const savedAnalysis = sessionStorage.getItem("ats_analysis_result");
+    const fileType = sessionStorage.getItem("ats_file_type");
 
-  if (savedUrl) {
-    setPreviewUrl(savedUrl);
-    setPreviewType("pdf"); // assuming pdf for stored blob
-  }
+    // ✅ Restore file preview
+    if (fileId) {
+      const storedFile = await getFile(fileId);
 
-  if (savedAnalysis) {
-    const parsed = JSON.parse(savedAnalysis);
-    setAnalysisResult(parsed);
+      if (storedFile) {
+        if (fileType === "pdf") {
+          const url = URL.createObjectURL(storedFile);
+          setPreviewUrl(url);
+          setPreviewType("pdf");
+        } else if (fileType === "docx") {
+          setPreviewType("doc");
 
-    if (parsed.pronounAnalysis?.detected) {
-      setPronounErrors(parsed.pronounAnalysis.detected);
+          try {
+            const arrayBuffer = await storedFile.arrayBuffer();
+            const result = await mammoth.extractRawText({ arrayBuffer });
+            setResumeText(result.value);
+          } catch (err) {
+            console.error("DOCX restore failed:", err);
+          }
+        }
+      }
     }
 
-    setResumeText(parsed?.text || "");
-  }
+    // ✅ Restore analysis
+    if (savedAnalysis) {
+      const parsed = JSON.parse(savedAnalysis);
+
+      setAnalysisResult(parsed);
+      setAnimatedScore(parsed.overallScore || 0); // 🔥 important
+
+      if (parsed.pronounAnalysis?.detected) {
+        setPronounErrors(parsed.pronounAnalysis.detected);
+      }
+
+      setResumeText(parsed?.text || "");
+    }
+  };
+
+  loadStoredFile();
 }, []);
+
+  /* ── Preview alive after refresh ── */
+  useEffect(() => {
+  return () => {
+    if (previewUrl?.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl);
+    }
+  };
+}, [previewUrl]);
 
   /* ── Spell locator ── */
   useEffect(() => {
@@ -520,19 +557,36 @@ const handleFileChange = async (e) => {
   analysisStartTimeRef.current = Date.now();
 
   // Support PDF, DOC, and DOCX
-  if (file.type === "application/pdf" || fileExtension === 'pdf') {
-    const url = URL.createObjectURL(file);
-    setPreviewUrl(url);
-    setPreviewType('pdf');
-    sessionStorage.setItem(SESSION_KEY, url);
-  } 
-   else if (fileExtension === "docx") {
+  if (file.type === "application/pdf" || fileExtension === "pdf") {
+  const fileId = "resume_pdf";
+
+  await saveFile(fileId, file); // ✅ store in IndexedDB
+
+  const storedFile = await getFile(fileId); // ✅ retrieve
+  const url = URL.createObjectURL(storedFile);
+
+  setPreviewUrl(url);
+  setPreviewType("pdf");
+
+  sessionStorage.setItem(SESSION_KEY, fileId); // store ID, NOT blob
+  sessionStorage.setItem(
+    "ats_file_type",
+    fileExtension.toLowerCase()
+  );
+}
+ else if (fileExtension === "docx") {
+  const fileId = "resume_docx";
+
+  await saveFile(fileId, file); // ✅ SAVE DOCX
+
+  sessionStorage.setItem(SESSION_KEY, fileId); // ✅ store ID
+  sessionStorage.setItem("ats_file_type", "docx"); // ✅ store type
+
   setPreviewType("doc");
   setPreviewUrl(null);
 
   try {
     const arrayBuffer = await file.arrayBuffer();
-
     const result = await mammoth.extractRawText({ arrayBuffer });
     const extractedText = result.value;
 
@@ -541,7 +595,8 @@ const handleFileChange = async (e) => {
     console.error("DOCX parsing failed:", err);
     setResumeText("Failed to preview DOCX file.");
   }
-} else if (fileExtension === "doc") {
+}
+ else if (fileExtension === "doc") {
   setPreviewType("doc");
   setPreviewUrl(null);
 
@@ -553,8 +608,7 @@ const handleFileChange = async (e) => {
   const formData = new FormData();
   formData.append("resume", file);
   formData.append("jobTitle", "Placeholder title");
-  formData.append("templateId", "63f1c4e2a3b4d5f678901234");
-  formData.append("resumeprofileId", "63f1c4e2a3b4d5f678901235");
+
 
   try {
     const token = localStorage.getItem("token") || sessionStorage.getItem("token");
@@ -609,7 +663,7 @@ const handleFileChange = async (e) => {
       //     : 0;
       // }
       
-      setAnalysisResult(data.data);
+      // setAnalysisResult(data.data);
       setAnalysisResult(updatedData);
       if (updatedData.pronounAnalysis?.detected)
         setPronounErrors(updatedData.pronounAnalysis.detected);
