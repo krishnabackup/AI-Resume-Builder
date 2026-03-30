@@ -138,6 +138,19 @@ const ResumeBuilder = () => {
   const [documentTitle, setDocumentTitle] = useState("");
   const [showMobilePreview, setShowMobilePreview] = useState(false);
 
+  // Check if form has data to show the reset (Create New Resume) button
+  const hasData = JSON.stringify(formData) !== JSON.stringify(emptyData);
+
+  const handleResetResume = () => {
+    if (window.confirm("Are you sure you want to clear all data and start a fresh resume?")) {
+      setFormData(emptyData);
+      setDocumentTitle("");
+      setActiveSection("personal");
+      setActiveTab("builder");
+      localStorage.removeItem("resumeFormData");
+    }
+  };
+
   /*-----------To make the upload input functional-------------*/
 
   const input_file = useRef(null);
@@ -866,6 +879,8 @@ const ResumeBuilder = () => {
         showAiToggle={true}
         isAiMode={isAiMode}
         onToggleAiMode={() => setIsAiMode((v) => !v)}
+        showReset={hasData}
+        onReset={handleResetResume}
       />
 
       <div className="p-2.5 overflow-hidden">

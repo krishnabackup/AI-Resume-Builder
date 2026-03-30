@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Upload, Download, PenTool, Zap, ChevronDown } from "lucide-react";
+import { Upload, Download, PenTool, Zap, ChevronDown, Plus } from "lucide-react";
 
 const CVBuilderTopBar = ({
   activeTab,
@@ -24,6 +24,8 @@ const CVBuilderTopBar = ({
   downloadDisabled = false,
   showDownloadWord = true,
   extraButtons = null,
+  showReset = false,
+  onReset,
 }) => {
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [localTitle, setLocalTitle] = useState(title ?? "");
@@ -154,6 +156,17 @@ const CVBuilderTopBar = ({
       <div className="hidden md:flex flex-wrap justify-center sm:justify-end items-center gap-2 w-full md:w-auto">
         {/* Extra Buttons */}
         {extraButtons}
+
+        {/* Create New Resume / Reset */}
+        {showReset && (
+          <button
+            onClick={onReset}
+            className="flex items-center gap-2 text-white bg-emerald-600 rounded-lg text-sm transition-all duration-200 hover:bg-emerald-700 py-2 px-3 sm:px-5 whitespace-nowrap"
+          >
+            <Plus size={18} />
+            <span className="hidden sm:inline">Create New Resume</span>
+          </button>
+        )}
 
         {/* Upload */}
         {showUpload && (
