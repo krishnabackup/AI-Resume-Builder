@@ -147,3 +147,13 @@ mark {
 .ats-checker-page header {
   z-index: 50 !important;
 }
+
+
+/*Hide hamburger in full screen */
+body:has(.pdf-fullscreen) .lucide-menu {
+  display: none !important;
+}
+
+body:has(.doc-fullscreen) .lucide-menu {
+  display: none !important;
+}

@@ -61,7 +61,9 @@ const ATSDocPreview = ({ text }) => {
 
   return (
     <div
-      className={`flex flex-col h-full ${isFullscreen ? "fixed inset-0 z-50 bg-white" : ""}`}
+      className={`flex flex-col h-full ${
+        isFullscreen ? "fixed inset-0 z-50 bg-white doc-fullscreen" : ""
+      }`}
     >
       <div className="flex items-center justify-between px-4 border-b bg-white h-12">
         <div className="flex items-center gap-2 text-sm font-semibold">

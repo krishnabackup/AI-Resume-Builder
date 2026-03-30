@@ -141,7 +141,7 @@ const ATSPdfPreview = ({ pdfUrl, onLoadSuccess }) => {
 
   if (isFullscreen) {
     return (
-      <div className="fixed inset-0 z-50 bg-white flex flex-col">
+      <div className="fixed inset-0 z-50 bg-white flex flex-col pdf-fullscreen">
         {content}
       </div>
     );
