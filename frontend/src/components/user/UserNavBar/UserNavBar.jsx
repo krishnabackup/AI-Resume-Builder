@@ -305,7 +305,7 @@ export default function UserNavbar() {
                   <div className="px-2 pb-2 space-y-0.5">
                     <DropdownItem
                       icon={UserCog}
-                      label="Edit Profile"
+                      label="Profile"
                       onClick={() => {
                         setShowUserMenu(false);
                         navigate("/user/edit-profile");
