@@ -421,7 +421,61 @@ const ATSChecker = ({ onSidebarToggle }) => {
     return () => window.removeEventListener("resize", h);
   }, []);
 
-  /* ── Saves state after refresh ── */
+  /* ── Resume Validation Assistant ── */
+  const validateResume = (extractedText, fileName) => {
+    const textLower = extractedText.toLowerCase();
+    
+    // Check for the exact resume-related keywords specified
+    const resumeKeywords = [
+      "experience",
+      "education", 
+      "skills",
+      "projects",
+      "summary",
+      "work history"
+    ];
+    
+    const foundKeywords = resumeKeywords.filter(keyword => textLower.includes(keyword));
+    
+    // Strict validation: require at least one of the specified keywords
+    const isValid = foundKeywords.length >= 1;
+    
+    if (!isValid) {
+      return {
+        status: "invalid",
+        message: "The uploaded file does not appear to be a valid resume. Please upload a proper resume.",
+        preview: ""
+      };
+    }
+    
+    // Generate clean preview (500-800 characters)
+    let preview = extractedText.replace(/\s+/g, ' ').trim();
+    const maxLength = 650; // Middle of 500-800 range
+    
+    if (preview.length > maxLength) {
+      // Try to cut at sentence boundary to avoid cutting words abruptly
+      const truncated = preview.substring(0, maxLength);
+      const lastSentenceEnd = Math.max(
+        truncated.lastIndexOf('.'),
+        truncated.lastIndexOf('!'),
+        truncated.lastIndexOf('?')
+      );
+      
+      if (lastSentenceEnd > maxLength * 0.7) {
+        preview = truncated.substring(0, lastSentenceEnd + 1);
+      } else {
+        preview = truncated + '...';
+      }
+    }
+    
+    return {
+      status: "valid",
+      message: "Valid resume detected.",
+      preview: preview
+    };
+  };
+
+  /* ── Saves state after refresh/* ── */
  useEffect(() => {
   const loadStoredFile = async () => {
     const fileId = sessionStorage.getItem(SESSION_KEY);
@@ -545,6 +599,11 @@ const handleFileChange = async (e) => {
                         file.type === "application/msword" || 
                         file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
   
+  if (!isValidFormat) {
+    alert("Please upload a PDF, DOC, or DOCX file.");
+    return;
+  }
+  
    setAnalysisResult(null);
   setAnimatedScore(0);
   setSpellingErrors([]);
@@ -556,24 +615,97 @@ const handleFileChange = async (e) => {
   setIsAnalyzing(true);
   analysisStartTimeRef.current = Date.now();
 
-  // Support PDF, DOC, and DOCX
+  // For PDF files, we need to extract text first for validation
   if (file.type === "application/pdf" || fileExtension === "pdf") {
-  const fileId = "resume_pdf";
+    try {
+      // Create a temporary URL to read the PDF
+      const tempUrl = URL.createObjectURL(file);
+      const pdfjsLib = await import('pdfjs-dist/build/pdf.min.mjs');
+      
+      // Set worker source for the imported pdfjs
+      pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+        'pdfjs-dist/build/pdf.worker.min.mjs',
+        import.meta.url
+      ).toString();
+      
+      const loadingTask = pdfjsLib.getDocument(tempUrl);
+      const pdf = await loadingTask.promise;
+      
+      let fullText = "";
+      // Check first 3 pages max, but if no text found, try more pages
+      const pagesToCheck = Math.min(pdf.numPages, 5);
+      
+      for (let i = 1; i <= pagesToCheck; i++) {
+        try {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items.map(item => item.str).join(' ');
+          fullText += pageText + ' ';
+          
+          // If we have substantial text, we can stop
+          if (fullText.length > 500) break;
+        } catch (pageError) {
+          console.warn(`Failed to read page ${i}:`, pageError);
+          continue;
+        }
+      }
+      
+      URL.revokeObjectURL(tempUrl);
+      
+      // If no text extracted, accept the file (might be image-based PDF)
+      if (!fullText || fullText.trim().length < 50) {
+        console.log("No text extracted from PDF, accepting based on file type");
+        // Proceed with normal processing for image-based PDFs
+        const fileId = "resume_pdf";
+        await saveFile(fileId, file);
+        const storedFile = await getFile(fileId);
+        const url = URL.createObjectURL(storedFile);
 
-  await saveFile(fileId, file); // ✅ store in IndexedDB
+        setPreviewUrl(url);
+        setPreviewType("pdf");
 
-  const storedFile = await getFile(fileId); // ✅ retrieve
-  const url = URL.createObjectURL(storedFile);
+        sessionStorage.setItem(SESSION_KEY, fileId);
+        sessionStorage.setItem("ats_file_type", fileExtension.toLowerCase());
+        return; // Skip validation for image PDFs
+      }
+      
+      console.log("Extracted text length:", fullText.length);
+      
+      // Validate the extracted text
+      const validation = validateResume(fullText, file.name);
+      
+      if (validation.status === "invalid") {
+        setIsAnalyzing(false);
+        alert(validation.message);
+        // Reset file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        return;
+      }
+      
+      // If valid, proceed with normal processing
+      const fileId = "resume_pdf";
+      await saveFile(fileId, file);
+      const storedFile = await getFile(fileId);
+      const url = URL.createObjectURL(storedFile);
 
-  setPreviewUrl(url);
-  setPreviewType("pdf");
+      setPreviewUrl(url);
+      setPreviewType("pdf");
 
-  sessionStorage.setItem(SESSION_KEY, fileId); // store ID, NOT blob
-  sessionStorage.setItem(
-    "ats_file_type",
-    fileExtension.toLowerCase()
-  );
-}
+      sessionStorage.setItem(SESSION_KEY, fileId);
+      sessionStorage.setItem("ats_file_type", fileExtension.toLowerCase());
+      
+    } catch (error) {
+      console.error("PDF text extraction failed:", error);
+      setIsAnalyzing(false);
+      alert("Failed to read PDF content. Please try another file.");
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      return;
+    }
+  }
  else if (fileExtension === "docx") {
   const fileId = "resume_docx";
 
@@ -588,7 +720,26 @@ const handleFileChange = async (e) => {
   try {
     const arrayBuffer = await file.arrayBuffer();
     const result = await mammoth.extractRawText({ arrayBuffer });
-    const extractedText = result.value;
+    let extractedText = result.value;
+    
+    // Validate resume content
+    const validation = validateResume(extractedText, file.name);
+    
+    // Only proceed if resume is valid
+    if (validation.status === "invalid") {
+      setIsAnalyzing(false);
+      alert(validation.message);
+      return;
+    }
+    
+    // Limit text for very large documents to prevent performance issues
+    const wordCount = extractedText.split(/\s+/).length;
+    if (wordCount > 2000) {
+      // Use validated preview instead of truncating
+      extractedText = validation.preview;
+    } else {
+      extractedText = validation.preview; // Always use validated preview
+    }
 
     setResumeText(extractedText);
   } catch (err) {
@@ -636,41 +787,13 @@ const handleFileChange = async (e) => {
     if (data.success) {
       const updatedData = { ...data.data };
       
-      // if (updatedData.sectionScores) {
-      //   updatedData.sectionScores = updatedData.sectionScores.map(section => {
-      //     if (section.sectionName === "File Format Compatibility") {
-      //       return {
-      //         ...section,
-      //         score: isValidFormat ? section.maxScore : 0,
-      //         status: isValidFormat ? "ok" : "error",
-      //         suggestions: isValidFormat ? [] : ["Upload resume in PDF or DOC/DOCX format."]
-      //       };
-      //     }
-      //     return section;
-      //   });
-        
-      //   const totalScore = updatedData.sectionScores.reduce(
-      //     (sum, section) => sum + (section.score || 0),
-      //     0
-      //   );
-      //   const maxTotal = updatedData.sectionScores.reduce(
-      //     (sum, section) => sum + (section.maxScore || 0),
-      //     0
-      //   );
-        
-      //   updatedData.overallScore = maxTotal > 0 
-      //     ? Math.round((totalScore / maxTotal) * 100) 
-      //     : 0;
-      // }
-      
-      // setAnalysisResult(data.data);
-      setAnalysisResult(updatedData);
       if (updatedData.pronounAnalysis?.detected)
         setPronounErrors(updatedData.pronounAnalysis.detected);
       if (fileExtension !== "docx") {
         setResumeText(updatedData?.text || "");
       }
       sessionStorage.setItem("ats_analysis_result", JSON.stringify(updatedData));
+      setAnalysisResult(updatedData);
     } else {
       console.error("API returned success: false →", data?.message || data);
     }

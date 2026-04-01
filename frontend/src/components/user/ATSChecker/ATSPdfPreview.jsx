@@ -8,6 +8,7 @@ import {
   Minimize2,
   ChevronLeft,
   ChevronRight,
+  AlertTriangle,
 } from "lucide-react";
 
 import workerSrc from "pdfjs-dist/build/pdf.worker.min?url";
@@ -30,6 +31,8 @@ const ATSPdfPreview = ({ pdfUrl, onLoadSuccess }) => {
   const [zoom, setZoom] = useState(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [containerWidth, setContainerWidth] = useState(null);
+  const [documentLoaded, setDocumentLoaded] = useState(false);
+  const [isLargeDocument, setIsLargeDocument] = useState(false);
 
   useEffect(() => {
     const updateWidth = () => {
@@ -53,6 +56,8 @@ const ATSPdfPreview = ({ pdfUrl, onLoadSuccess }) => {
   const onDocumentLoadSuccess = ({ numPages }) => {
     setNumPages(numPages);
     setPageNumber(1);
+    setIsLargeDocument(numPages > 3); // Documents with more than 3 pages are considered large
+    setDocumentLoaded(true);
   };
 
   const content = (
@@ -64,6 +69,14 @@ const ATSPdfPreview = ({ pdfUrl, onLoadSuccess }) => {
         </div>
 
         <div className="flex items-center gap-4 text-sm">
+          {/* Large Document Warning */}
+          {isLargeDocument && (
+            <div className="flex items-center gap-1 px-2 py-1 bg-amber-50 text-amber-700 rounded text-xs font-medium">
+              <AlertTriangle size={12} />
+              Large Document
+            </div>
+          )}
+
           {/* Pagination */}
           <button
             disabled={pageNumber <= 1}
@@ -127,8 +140,14 @@ const ATSPdfPreview = ({ pdfUrl, onLoadSuccess }) => {
                 pageNumber={pageNumber}
                 scale={scale} 
                 width={containerWidth ? containerWidth : undefined}
-                renderTextLayer={false}
-                renderAnnotationLayer={false}
+                renderTextLayer={!isLargeDocument} // Disable text layer for large documents
+                renderAnnotationLayer={!isLargeDocument} // Disable annotations for large documents
+                loading={
+                  <div className="flex items-center justify-center p-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                    <span className="ml-2 text-sm text-gray-500">Loading page...</span>
+                  </div>
+                }
               />
             </Document>
           </div>
