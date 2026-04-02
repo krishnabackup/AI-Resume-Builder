@@ -22,7 +22,7 @@ import blogRouter from "./routers/blog.router.js";
 import downloadsRouter from "./routers/downloads.router.js";
 import coverLetterRouter from "./routers/coverletter.js";  // ✅ NEW
 import dashboardRouter from "./routers/dashboard.router.js";
-import analyticsRouter from "./routes/analytics.routes.js";
+import analyticsRouter from "./routers/analytics.routes.js";
 
 import chatbotRouter from "./routers/chatbot.router.js";
 
