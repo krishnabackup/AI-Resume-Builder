@@ -1,12 +1,4 @@
-import Notification from "../Models/notification.js";
-import AtsScans from "../Models/atsScan.js";
-import User from "../Models/User.js";
-import bcrypt from "bcryptjs";
-import Payment from "../Models/payment.js";
-import Resume from "../Models/resume.js";
-import Subscription from "../Models/subscription.js";
-import ApiMetric from "../Models/ApiMetric.js";
-import Download from "../Models/Download.js";
+
 import { pool } from "../config/postgresdb.js";
 import crypto from "crypto";
 

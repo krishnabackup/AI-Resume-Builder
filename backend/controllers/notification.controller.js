@@ -1,4 +1,4 @@
-import Notification from "../Models/notification.js";
+
 import { pool } from "../config/postgresdb.js";
 /* ================= USER NOTIFICATIONS ================= */
 
@@ -260,58 +260,3 @@ export const deleteAllNotifications = async (req, res) => {
   }
 };
 
-/* ================= TEST NOTIFICATIONS (FOR DEVELOPMENT) ================= */
-export const createTestNotifications = async (req, res) => {
-  try {
-    // Get first admin user
-    const { User } = await import("../Models/User.js");
-    const adminUser = await User.findOne({ isAdmin: true });
-
-    if (!adminUser) {
-      return res.status(400).json({ success: false, message: "No admin user found" });
-    }
-
-    // Create test notifications for admin
-    const testNotifications = [
-      {
-        type: "NEW_USER",
-        message: "New user 'John Doe' registered via email signup",
-        userId: adminUser._id,
-        actor: "user",
-        isRead: false,
-      },
-      {
-        type: "ACCOUNT_STATUS",
-        message: "User account has been activated",
-        userId: adminUser._id,
-        actor: "user",
-        isRead: false,
-      },
-      {
-        type: "PAYMENT_RECEIVED",
-        message: "Payment received for premium subscription",
-        userId: adminUser._id,
-        actor: "user",
-        isRead: true,
-      },
-      {
-        type: "SECURITY_ALERT",
-        message: "Suspicious login activity detected",
-        userId: adminUser._id,
-        actor: "user",
-        isRead: false,
-      },
-    ];
-
-    await Notification.insertMany(testNotifications);
-
-    res.status(200).json({
-      success: true,
-      message: "Test notifications created successfully",
-      count: testNotifications.length,
-    });
-  } catch (error) {
-    console.error("Create test notifications error:", error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
