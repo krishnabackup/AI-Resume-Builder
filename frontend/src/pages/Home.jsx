@@ -19,6 +19,30 @@ import template6 from "../assets/template_thumnail/JessicaClaire6.png";
 import NavBar from "../components/NavBar";
 import Footer from "./Footer";
 import { motion } from "framer-motion";
+import {
+  templates,
+  resumeTemplates,
+  howItWorksSteps,
+  features,
+} from "./homeData";
+
+const imageMap = {
+  featureImage1,
+  featureImage2,
+  featureImage3,
+  featureImage4,
+  work1,
+  work2,
+  quick,
+  work4,
+  work5,
+  template1,
+  template2,
+  template3,
+  template4,
+  template5,
+  template6,
+};
 
 import {
   ArrowRight,
@@ -77,78 +101,6 @@ function LandingPage() {
     }
   };
 
-  const templates = [
-    {
-      name: "AI Assistant",
-      desc: "Smart resume generation powered by AI",
-      image: featureImage1,
-      bgColor: "from-blue-500 to-cyan-500",
-    },
-    {
-      name: "Tailored Summary",
-      desc: "Customized professional summary",
-      image: featureImage2,
-      bgColor: "from-purple-500 to-pink-500",
-    },
-    {
-      name: "Tailor to Job",
-      desc: "Match your resume to job requirements",
-      image: featureImage3,
-      bgColor: "from-orange-500 to-red-500",
-    },
-    {
-      name: "Resume Preview",
-      desc: "Real-time resume preview and editing",
-      image: featureImage4,
-      bgColor: "from-green-500 to-teal-500",
-    },
-  ];
-
-  const resumeTemplates = [
-    {
-      id: 1,
-      name: "Atlantic Blue",
-      category: "modern",
-      desc: "Modern and professional design",
-      image: template1,
-    },
-    {
-      id: 2,
-      name: "Classic",
-      category: "traditional",
-      desc: "Traditional and timeless layout",
-      image: template2,
-    },
-    {
-      id: 3,
-      name: "Corporate",
-      category: "traditional",
-      desc: "Professional corporate style",
-      image: template3,
-    },
-    {
-      id: 4,
-      name: "Modern Pro",
-      category: "modern",
-      desc: "Sleek and contemporary design",
-      image: template4,
-    },
-    {
-      id: 5,
-      name: "Executive",
-      category: "executive",
-      desc: "Perfect for senior positions",
-      image: template5,
-    },
-    {
-      id: 6,
-      name: "Creative Edge",
-      category: "creative",
-      desc: "Stand out with creative flair",
-      image: template6,
-    },
-  ];
-
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTemplateIndex((prev) => (prev + 1) % templates.length);
@@ -205,91 +157,6 @@ function LandingPage() {
       if (el) el.scrollIntoView({ behavior: "auto", block: "start" });
     }
   }, [location]);
-
-  const howItWorksSteps = [
-    {
-      image: work1,
-      heading: "Easily create or import your resume",
-      description:
-        "Choose from professionally designed templates or upload your existing resume to improve its structure, formatting, and content for a more polished result.",
-    },
-    {
-      image: work2,
-      heading: "Check and analyze your resume score",
-      description:
-        "Get real-time ATS insights as you build your resume, or upload an existing one to analyze structure, keywords, and formatting.",
-    },
-    {
-      image: quick,
-      heading: "Quickly customize your resume with AI",
-      description:
-        "Enter your experience details, and our AI generates clear, impactful bullet points that showcase your skills and achievements professionally.",
-    },
-    {
-      image: work4,
-      heading: "Improve your resume instantly in one click",
-      description:
-        "Tailor your resume to any job listing in one click with instant, role-specific improvements that boost relevance and highlight key skills.",
-    },
-    {
-      image: work5,
-      heading: "Your winning resume is ready!",
-      description:
-        "Download your job-ready resume in your preferred format, or create multiple tailored versions for different roles to boost success.",
-    },
-  ];
-
-  const features = [
-    {
-      icon: <FileSearch className="text-blue-600 size-6" />,
-      title: "ATS Score Checker",
-      description:
-        "Analyze your resume against specific job descriptions to ensure you pass through Applicant Tracking Systems.",
-      path: "/ats-checker",
-    },
-    {
-      icon: <Layout className="text-green-600 size-6" />,
-      title: "Categorized Templates",
-      description:
-        "Access a curated library of Contemporary, Creative, and Traditional templates tailored for every industry.",
-      path: "/TemplatesFeature",
-    },
-    {
-      icon: <Zap className="text-yellow-600 size-6" />,
-      title: "Guided AI Builder",
-      description:
-        "Create a fresh resume with a step-by-step guided experience and AI-powered content suggestions.",
-      path: "/AI-builder",
-    },
-    {
-      icon: <Edit3 className="text-orange-600 size-6" />,
-      title: "AI Content Enhancement",
-      description:
-        "Upload existing PDF or Word docs to transform weak bullet points into high-impact, achievement-oriented text.",
-      path: "/content-enhance",
-    },
-    {
-      icon: <BarChart3 className="text-purple-600 size-6" />,
-      title: "Live Quality Scoring",
-      description:
-        "Get a real-time AI score out of 100 as you edit, helping you reach that 90%+ 'Interview-Ready' threshold.",
-      path: "/score-checker",
-    },
-    {
-      icon: <Layers className="text-indigo-600 size-6" />,
-      title: "Resume Manager",
-      description:
-        "Organize multiple versions of your resumes for different roles and track your total download history.",
-      path: "/resume-hub",
-    },
-    {
-      icon: <Activity className="text-cyan-500 size-6" />,
-      title: "Strategic Growth Insights",
-      description:
-        "Monitor average ATS performance and track document engagement with actionable AI-driven career data.",
-      path: "/growths",
-    },
-  ];
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-[#1a2e52] font-['Outfit']">
@@ -370,7 +237,7 @@ function LandingPage() {
                     }`}
                 >
                   <img
-                    src={template.image}
+                    src={imageMap[template.image]}
                     alt={template.name}
                     className={`object-contain ${template.name === "Tailored Summary" ||
                       template.name === "Tailor to Job"
@@ -421,7 +288,7 @@ function LandingPage() {
 
                 {/* IMAGE BOX */}
                 <img
-                  src={step.image}
+                  src={imageMap[step.image]}
                   alt={step.heading}
                   className="w-full md:w-1/2 max-w-md md:max-w-none h-auto object-contain rounded-xl"
                 />
@@ -495,7 +362,7 @@ function LandingPage() {
                             border border-gray-100 overflow-hidden"
                   >
                     <img
-                      src={t.image}
+                      src={imageMap[t.image]}
                       alt={t.name}
                       className="object-contain object-top w-full h-full transition-transform duration-500"
                     />
