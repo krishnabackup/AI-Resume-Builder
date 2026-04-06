@@ -22,6 +22,11 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { SortablePlanCard } from "./SortablePlanCard.jsx";
 
+// Cache for subscription data
+let cachedSubscriptionData = null;
+let lastFetchTime = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 // Helper to generate unique IDs
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -50,7 +55,7 @@ const SortableFeatureItem = ({ id, feature, onChange, onRemove }) => {
       </div>
       <input
         type="text"
-        value={feature.text}
+        value={feature.text ?? ""}
         onChange={(e) => onChange(e.target.value)}
         className="flex-1 min-w-0 break-words px-2 py-1 text-sm border border-gray-300 rounded focus:border-blue-500 focus:outline-none"
         placeholder="Feature description"
@@ -100,9 +105,18 @@ const AdminSubscription = () => {
     }
   }, [plans]);
 
-  const fetchData = async () => {
+  const fetchData = async (forceRefetch = false) => {
     try {
       setLoading(true);
+
+      const now = Date.now();
+      if (!forceRefetch && cachedSubscriptionData && (now - lastFetchTime) < CACHE_DURATION) {
+        setPaidUsers(cachedSubscriptionData.paidUsers);
+        setFreeUsersCount(cachedSubscriptionData.freeUsersCount);
+        setStats(cachedSubscriptionData.stats);
+        setLoading(false);
+        return;
+      }
 
       // Fetch users, plans and stats concurrently
       const [usersResponse, plansResponse, statsResponse] = await Promise.all([
@@ -122,6 +136,13 @@ const AdminSubscription = () => {
       setPaidUsers(pro);
       setFreeUsersCount(free.length);
       setStats(statsResponse.data);
+
+      cachedSubscriptionData = {
+        paidUsers: pro,
+        freeUsersCount: free.length,
+        stats: statsResponse.data,
+      };
+      lastFetchTime = Date.now();
 
       setLoading(false);
     } catch (err) {
@@ -361,7 +382,7 @@ const AdminSubscription = () => {
                     <div className="flex items-center justify-between mb-3 sm:mb-4">
                       <input
                         type="text"
-                        value={plan.name}
+                        value={plan.name ?? ""}
                         onChange={(e) => updatePlanField(plan.id, 'name', e.target.value)}
                         className="text-lg sm:text-xl font-semibold text-gray-900 bg-transparent border border-dashed border-transparent hover:border-gray-300 focus:border-blue-500 focus:outline-none rounded w-full min-w-0 break-words px-1.5 py-0.5"
                       />
@@ -386,13 +407,13 @@ const AdminSubscription = () => {
                       <h3>Badge Tag :</h3>
                       <input
                         type="text"
-                        value={plan.badge}
+                        value={plan.badge ?? ""}
                         onChange={(e) => updatePlanField(plan.id, 'badge', e.target.value)}
                         className="text-lg sm:text-xl font-medium text-gray-800 bg-transparent border border-dashed border-transparent hover:border-gray-300 focus:border-blue-500 focus:outline-none rounded w-full min-w-0 break-words px-1.5 py-0.5"
                       />
                     </div>
                     <textarea
-                      value={plan.description}
+                      value={plan.description ?? ""}
                       onChange={(e) => updatePlanField(plan.id, 'description', e.target.value)}
                       className="text-sm text-gray-500 bg-transparent border border-dashed border-transparent hover:border-gray-300 focus:border-blue-500 focus:outline-none rounded w-full resize-none break-words px-1.5 py-1"
                       rows={2}
@@ -404,7 +425,7 @@ const AdminSubscription = () => {
                       <div className="flex items-center gap-2 mt-1">
                         <input
                           type="number"
-                          value={plan.price}
+                          value={plan.price ?? ""}
                           disabled={!plan.active || editingPricePlanId !== plan.id}
                           onChange={(e) => updatePrice(plan.id, e.target.value)}
                           className={`w-full px-3 py-2 rounded-lg border border-gray-300 text-gray-900 ${

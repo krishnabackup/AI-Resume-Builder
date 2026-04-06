@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import axiosInstance from '../api/axios';
 
 const NotificationContext = createContext();
@@ -15,9 +15,12 @@ export const NotificationProvider = ({ children }) => {
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const fetchInProgress = useRef(false); // Ref for network deduplication
 
     // Fetch notifications from API
     const fetchNotifications = useCallback(async () => {
+        if (fetchInProgress.current) return;
+        fetchInProgress.current = true;
         setLoading(true);
         setError(null);
         try {
@@ -113,6 +116,7 @@ export const NotificationProvider = ({ children }) => {
             setError(err.message);
             setNotifications([]);
         } finally {
+            fetchInProgress.current = false;
             setLoading(false);
         }
     }, []);
@@ -171,11 +175,11 @@ export const NotificationProvider = ({ children }) => {
     useEffect(() => {
         fetchNotifications();
 
-        // Polling - refresh every 30 seconds
-        const interval = setInterval(fetchNotifications, 30000);
+        // Polling - refresh every 60 seconds
+        const interval = setInterval(fetchNotifications, 60000);
 
         return () => clearInterval(interval);
-    }, [fetchNotifications]);
+    }, []);
 
     const unreadCount = notifications.filter(n => n.isUnread).length;
 
