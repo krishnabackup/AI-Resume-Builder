@@ -17,7 +17,7 @@ async function getAIResponse(prompt, temperature) {
     const response = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       {
-        model: "nvidia/nemotron-3-nano-30b-a3b",
+        model: "meta-llama/llama-3.3-70b-instruct:free",
         messages: [
           { role: "user", content: prompt }
         ],
@@ -298,31 +298,146 @@ export const generateCoverLetterAI = async (jobDetails, sectionType) => {
 };
 
 
-// ✅ 4. Extract Data from Resume Text (FIX #1)
+// ✅ 4. Extract Data from Resume Text (AI-powered)
 export async function extractResumeData(resumeText) {
   try {
-    console.log("Extracting resume data from text...");
+    console.log("Extracting resume data from text via AI...");
 
     const prompt = `
-      Parse this resume text into JSON:
+      You are an expert resume parser. Extract the following information from the resume text below and return it as a valid JSON object.
+
+      IMPORTANT:
+      - Return ONLY the raw JSON object. No markdown formatting, no \`\`\`json, no explanations.
+      - Every field must be present even if empty.
+      - For arrays, return an empty array [] if no data is found.
+      - For strings, return "" if no data is found.
+      - Extract ALL experience entries, education entries, projects, and certifications — do not skip any.
+      - Keep descriptions verbatim from the resume. Do not summarize or rewrite them.
+      - Each project should be a single object in the 'projects' array. DO NOT split bullet points of the SAME project into multiple objects. Group them into one 'description'.
+      - Each experience entry should be a single object.
+      - DO NOT hallucinate or guess missing information (e.g. website, portfolio, linkedin, location). If it is not explicitly written in the resume text, leave the string empty ("").
+      - The location field must ONLY contain city and state/country. DO NOT include the candidate's name or email address in the location field.
+
+      Expected JSON structure:
       {
-        "fullName": "",
-        "email": "",
-        "phone": "",
-        "skills": {"technical": [], "soft": []},
-        "experience": [{"title": "", "company": "", "description": ""}],
-        "education": [{"degree": "", "school": "", "year": ""}]
+        "fullName": "string",
+        "email": "string",
+        "phone": "string",
+        "location": "string (city, state or city, country)",
+        "linkedin": "string (LinkedIn URL if present)",
+        "website": "string (portfolio or personal website URL if present)",
+        "summary": "string (professional summary/objective/profile section text)",
+        "skills": {
+          "technical": ["array of technical skills"],
+          "soft": ["array of soft skills"]
+        },
+        "experience": [
+          {
+            "title": "job title",
+            "company": "company name",
+            "location": "location if present",
+            "startDate": "start date",
+            "endDate": "end date or Present",
+            "description": "full description with responsibilities and achievements"
+          }
+        ],
+        "education": [
+          {
+            "degree": "degree title (e.g. B.Tech in Computer Science)",
+            "school": "institution name",
+            "location": "location if present",
+            "startDate": "start date",
+            "graduationDate": "graduation date",
+            "gpa": "GPA/CGPA if mentioned"
+          }
+        ],
+        "projects": [
+          {
+            "name": "project name",
+            "description": "project description",
+            "technologies": "comma-separated technologies used",
+            "link": {"github": "", "liveLink": "", "other": ""}
+          }
+        ],
+        "certifications": [
+          {
+            "name": "certification name",
+            "issuer": "issuing organization",
+            "date": "date obtained",
+            "link": ""
+          }
+        ]
       }
-      Resume: ${resumeText.substring(0, 4000)}
+
+      Resume Text:
+      ${resumeText.substring(0, 6000)}
     `;
     const response = await getAIResponse(prompt, 0.1);
-    return JSON.parse(response);
-  } catch (error) {
-    console.error("Resume extraction failed:", error);
+
+    // Clean up potential markdown formatting from AI response
+    let cleanJson = response.trim();
+    if (cleanJson.startsWith('\`\`\`json')) {
+      cleanJson = cleanJson.replace(/^\`\`\`json\n?/, '').replace(/\n?\`\`\`$/, '');
+    } else if (cleanJson.startsWith('\`\`\`')) {
+      cleanJson = cleanJson.replace(/^\`\`\`\n?/, '').replace(/\n?\`\`\`$/, '');
+    }
+
+    const parsed = JSON.parse(cleanJson);
+
+    // Ensure all expected fields exist with defaults
     return {
-      fullName: "", email: "", phone: "",
+      fullName: parsed.fullName || "",
+      email: parsed.email || "",
+      phone: parsed.phone || "",
+      location: parsed.location || "",
+      linkedin: parsed.linkedin || "",
+      website: parsed.website || "",
+      summary: parsed.summary || "",
+      skills: {
+        technical: parsed.skills?.technical || [],
+        soft: parsed.skills?.soft || [],
+      },
+      experience: (parsed.experience || []).map(exp => ({
+        id: Math.random().toString(36).slice(2),
+        title: exp.title || "",
+        company: exp.company || "",
+        location: exp.location || "",
+        startDate: exp.startDate || "",
+        endDate: exp.endDate || "",
+        description: exp.description || "",
+      })),
+      education: (parsed.education || []).map(edu => ({
+        id: Math.random().toString(36).slice(2),
+        school: edu.school || "",
+        degree: edu.degree || "",
+        location: edu.location || "",
+        startDate: edu.startDate || "",
+        graduationDate: edu.graduationDate || "",
+        gpa: edu.gpa || "",
+      })),
+      projects: (parsed.projects || []).map(proj => ({
+        id: Math.random().toString(36).slice(2),
+        name: proj.name || "",
+        description: proj.description || "",
+        technologies: proj.technologies || "",
+        link: proj.link || { github: "", liveLink: "", other: "" },
+      })),
+      certifications: (parsed.certifications || []).map(cert => ({
+        id: Math.random().toString(36).slice(2),
+        name: cert.name || "",
+        issuer: cert.issuer || "",
+        date: cert.date || "",
+        link: cert.link || "",
+      })),
+    };
+  } catch (error) {
+    console.error("AI Resume extraction failed:", error);
+    return {
+      fullName: "", email: "", phone: "", location: "",
+      linkedin: "", website: "", summary: "",
       skills: { technical: [], soft: [] },
-      experience: [], education: []
+      experience: [], education: [],
+      projects: [], certifications: []
     };
   }
 }

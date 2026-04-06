@@ -19,17 +19,38 @@ const AcademicTemplate = ({ formData }) => (
             .filter(Boolean)
             .join(" • ")}
         </div>
-        {(formData.linkedin || formData.website) && (
+        {(formData.linkedin || formData.website || formData.github) && (
           <div className="text-slate-600 text-sm mt-1">
             {formData.linkedin && (
-              <a href={formatExternalUrl(formData.linkedin)} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+              <a 
+                href={formData.linkedin.startsWith("http") ? formData.linkedin : `https://${formData.linkedin}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline mr-2"
+              >
                 {formData.linkedin}
               </a>
             )}
-            {formData.linkedin && formData.website && <span> • </span>}
+            {formData.linkedin && formData.website && <span className="mr-2">•</span>}
             {formData.website && (
-              <a href={formatExternalUrl(formData.website)} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+              <a 
+                href={formData.website.startsWith("http") ? formData.website : `https://${formData.website}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline mr-2"
+              >
                 {formData.website}
+              </a>
+            )}
+            {(formData.linkedin || formData.website) && formData.github && <span className="mr-2">•</span>}
+            {formData.github && (
+              <a 
+                href={formData.github.startsWith("http") ? formData.github : `https://${formData.github}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline mr-2"
+              >
+                {formData.github}
               </a>
             )}
           </div>

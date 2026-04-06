@@ -1,199 +1,203 @@
 import React from "react";
 
-const Simple = () => {
+const Simple = ({formData}) => {
+  const {fullName,
+    email,
+    phone,
+    location,
+    website,
+    linkedin,
+    github,
+    summary,
+    experience,
+    education,
+    skills,
+    projects,
+    certifications,} = formData;
   return (
     <div className="max-w-4xl resume-root space-y-6 mx-auto bg-white p-10 shadow-xl rounded-xl text-gray-800 leading-relaxed">
+
       {/* Header */}
       <div className="border-b pb-4 mb-6">
-        <h1 className="text-3xl font-bold tracking-wide">Alok Ranjan</h1>
-        <p className="text-sm mt-1">
-          BS (Hons) Computer Science & Data Analytics | IIT Patna
-        </p>
+        <h1 className="text-3xl font-bold tracking-wide">{fullName}</h1>
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm mt-2 text-gray-600">
-          <span>📞 +91-6202585952</span>
-          <span>✉️ alok_2312res78@iitp.ac.in</span>
-          <span>🌐 Portfolio</span>
-          <span>🐙 GitHub</span>
-          <span>🔗 LinkedIn</span>
+          {phone && <span>📞 +91-{phone}</span>}
+          {email && <span>✉️ {email}</span>}
+          {location && <span>{location}</span>}
+          {website && <span>🌐 <a href={website.startsWith('http') ? website : `https://${website}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{website}</a></span>}
+          {github && <span>🐙 <a href={github.startsWith('http') ? github : `https://${github}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{github}</a></span>}
+          {linkedin && <span>🔗 <a href={linkedin.startsWith('http') ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{linkedin}</a></span>}
+          {formData?.extraLinks?.map((link, index) => (
+            <span key={index}> 
+              <a href={link.url.startsWith("http") ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                {link.label}
+              </a>
+            </span>
+          ))}
         </div>
       </div>
 
+
+      {/* Summary */}
+      {summary && (
+        <section className="mb-6">
+          <h2 className="border-b text-lg font-semibold mb-2 pb-1">
+            Professional Summary
+          </h2>
+          <p className="text-sm">{summary}</p>
+        </section>
+      )}
+
       {/* Education */}
-      <section className="mb-6">
-        <h2 className="text-lg font-semibold border-b mb-2 pb-1">Education</h2>
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span className="font-medium">
-              B.Sc (Hons) Computer Science & Data Analytics — IIT Patna
-            </span>
-            <span>2025 – Present</span>
-          </div>
-          <p className="text-gray-600">CGPA: 8.19 (Current)</p>
+      {education?.length > 0 && (
+        <section className="mb-6">
+          <h2 className="text-lg font-semibold border-b mb-2 pb-1">Education</h2>
+          <div className="space-y-2 text-sm">
+            {education.map((edu)=>(
+              <div key={edu.id} className="mb-4 text-sm">
 
-          <div className="flex justify-between mt-2">
-            <span className="font-medium">Senior Secondary (XII) — CBSE</span>
-            <span>2022</span>
+                <div  className="flex justify-between">
+                  <div className="flex flex-col gap-2 ">
+                    <div className="flex items-center">
+                      <span className="font-semibold">{edu.school || "University Name"} </span>
+                      <span className="italic"> — {edu.degree}</span>
+                    </div>
+                    {edu.location && <p className="font-bold">{edu.location}</p>}
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {edu.graduationDate && <span>{edu.graduationDate}</span>}
+                    {edu.gpa && <p className="font-bold">GPA : {edu.gpa}</p>}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-          <p className="text-gray-600">84.2%</p>
-
-          <div className="flex justify-between mt-2">
-            <span className="font-medium">Secondary (X) — CBSE</span>
-            <span>2020</span>
-          </div>
-          <p className="text-gray-600">76%</p>
-        </div>
-      </section>
+        </section>
+      )}
+      
 
       {/* Projects */}
-      <section className="mb-6">
-        <h2 className="text-lg font-semibold border-b mb-2 pb-1">Projects</h2>
+      {projects?.length > 0 && (
+        <section className="mb-6 text-sm">
+          <h2 className="border-b pb-1 mb-2 text-lg font-bold">
+            Projects
+          </h2>
 
-        <div className="mb-4">
-          <div className="flex justify-between text-sm font-medium">
-            <span>WallpaperBot — MERN Web App</span>
-            <span>Jul 2025 – Present</span>
-          </div>
-          <ul className="list-disc list-inside text-sm text-gray-600 mt-1 space-y-1">
-            <li>
-              Wallpaper platform with role-based access for owners and users.
-            </li>
-            <li>
-              JWT + Firebase authentication with REST APIs using Node, Express,
-              MongoDB.
-            </li>
-            <li>
-              React, Redux, Tailwind frontend with Cloudinary + Multer uploads.
-            </li>
-          </ul>
-        </div>
 
-        <div className="mb-4">
-          <div className="flex justify-between text-sm font-medium">
-            <span>BotWears — MERN E-Commerce</span>
-            <span>Nov 2025 – Present</span>
-          </div>
-          <ul className="list-disc list-inside text-sm text-gray-600 mt-1 space-y-1">
-            <li>Full-stack clothing store with Admin/User dashboards.</li>
-            <li>Google login + JWT authentication with AI voice navigation.</li>
-            <li>Search, filters, recommendations, and inventory management.</li>
-          </ul>
-        </div>
+          {projects.map((project) => (
+            <div key={project.id} className="project-item mb-3">
+              <p className="font-semibold">
+                {project.name}
+                {project.link && (
+                  <span className="font-normal text-blue-600 ml-1">
+                    ({project.link})
+                  </span>
+                )}
+              </p>
 
-        <div>
-          <div className="flex justify-between text-sm font-medium">
-            <span>ALook — AI Image Enhancer</span>
-            <span>Dec 2024 – Jan 2025</span>
-          </div>
-          <ul className="list-disc list-inside text-sm text-gray-600 mt-1 space-y-1">
-            <li>AI-powered photo enhancement using PicsArt API.</li>
-            <li>
-              React + Tailwind responsive frontend with instant HD output.
-            </li>
-          </ul>
-        </div>
-      </section>
 
-      {/* Internships */}
-      <section className="mb-6">
-        <h2 className="text-lg font-semibold border-b mb-2 pb-1">
-          Internships
-        </h2>
+              {project.technologies && (
+                <p className="italic text-[12px] mb-1">
+                  Technologies: {project.technologies}
+                </p>
+              )}
 
-        <div className="mb-4">
-          <div className="flex justify-between text-sm font-medium">
-            <span>Hybrid Integrated Internship Program — GUVI (HCL)</span>
-            <span>Jun 2025 – Sep 2025</span>
-          </div>
-          <ul className="list-disc list-inside text-sm text-gray-600 mt-1 space-y-1">
-            <li>
-              Hands-on industry-style projects in Python, ML, and Data Science.
-            </li>
-            <li>Worked with TensorFlow, scikit-learn, and MySQL.</li>
-            <li>Completed multiple assignments and received certification.</li>
-          </ul>
-        </div>
 
-        <div>
-          <div className="flex justify-between text-sm font-medium">
-            <span>Web Development Intern — ApexPlanet (AICTE Approved)</span>
-            <span>Oct 2025 – Nov 2025</span>
-          </div>
-          <ul className="list-disc list-inside text-sm text-gray-600 mt-1 space-y-1">
-            <li>
-              Built responsive layouts, forms, to-do app, image gallery, weather
-              app.
-            </li>
-            <li>Developed a full portfolio website as final project.</li>
-          </ul>
-        </div>
-      </section>
+              {project.description && <p>{project.description}</p>}
+            </div>
+          ))}
+        </section>
+      )}
+
+      {/* Experience */}
+      {experience?.length > 0 && (
+        <section className="mb-6 text-sm">
+          <h2 className="border-b  pb-1 mb-2 text-lg font-bold">
+            Professional Experience
+          </h2>
+
+
+          {experience.map((job) => (
+            <div key={job.id} className="experience-item mb-4">
+              <div className="flex justify-between">
+                <div>
+                  <p className="font-semibold">
+                    {job.title || "Senior Software Engineer"}
+                  </p>
+                  <p className="italic">
+                    {job.company || "Tech Innovations Inc."}
+                  </p>
+                </div>
+
+
+                <div className="text-right text-[10px] italic">
+                  <p>{job.location}</p>
+                  <p>
+                    {job.startDate} – {job.endDate || "Present"}
+                  </p>
+                </div>
+              </div>
+
+
+              {job.description && (
+                <ul className="list-disc ml-5 mt-2 space-y-1">
+                  {job.description.split("\n").map((line, index) => (
+                    <li key={index}>{line}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ))}
+        </section>
+      )}
 
       {/* Skills */}
-      <section className="mb-6">
-        <h2 className="text-lg font-semibold border-b mb-2 pb-1">
-          Technical Skills
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-2 text-sm text-gray-700">
-          <p>
-            <span className="font-medium">Programming:</span> Python,
-            JavaScript, SQL
-          </p>
-          <p>
-            <span className="font-medium">Frameworks:</span> React, Next.js,
-            Node.js, Express
-          </p>
-          <p>
-            <span className="font-medium">Libraries:</span> Pandas, NumPy,
-            scikit-learn, Redux Toolkit
-          </p>
-          <p>
-            <span className="font-medium">Databases:</span> MongoDB, MySQL
-          </p>
-          <p>
-            <span className="font-medium">Tools:</span> Git, Postman, PowerBI,
-            VS Code, Google Colab
-          </p>
-          <p>
-            <span className="font-medium">Web/App:</span> HTML, CSS, React
-            Native
-          </p>
-        </div>
-      </section>
+      {(skills?.technical?.length > 0 || skills?.soft?.length > 0) && (
+        <section className="mb-6 text-sm">
+          <h2 className="border-b pb-1 mb-2 text-lg font-bold ">
+            Technical Skills
+          </h2>
 
-      {/* Courses */}
-      <section className="mb-6">
-        <h2 className="text-lg font-semibold border-b mb-2 pb-1">
-          Key Courses Taken
-        </h2>
-        <p className="text-sm text-gray-700">
-          Data Mining, DBMS, Machine Learning, Data Science
-        </p>
-      </section>
 
-      {/* POR */}
-      <section className="mb-6">
-        <h2 className="text-lg font-semibold border-b mb-2 pb-1">
-          Positions of Responsibility
-        </h2>
-        <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
-          <li>Member, Technology Club — IIT Patna</li>
-          <li>
-            Participated in workshops, quizzes, coding competitions, and tech
-            events.
-          </li>
-        </ul>
-      </section>
+          {skills.technical?.length > 0 && (
+            <p className="mb-1">
+              <span className="font-semibold">Technical: </span>
+              {skills.technical.join(", ")}
+            </p>
+          )}
+
+
+          {skills.soft?.length > 0 && (
+            <p>
+              <span className="font-semibold">Soft Skills: </span>
+              {skills.soft.join(", ")}
+            </p>
+          )}
+        </section>
+      )}
 
       {/* Certifications */}
-      <section>
-        <h2 className="text-lg font-semibold border-b mb-2 pb-1">
-          Certifications
-        </h2>
-        <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
-          <li>GeeksforGeeks — React Native Mobile App Development</li>
-          <li>GUVI (HCL) — Data Science Certification</li>
-        </ul>
-      </section>
+      {certifications?.length > 0 && (
+        <section className="text-sm">
+          <h2 className="border-b pb-1 mb-2 font-bold text-lg">
+            Certifications
+          </h2>
+
+
+          {certifications.map((cert) => (
+            <div key={cert.id} className="certification-item mb-2 flex justify-between items-center">
+              <div>
+                <p className="font-semibold">{cert.name}</p>
+                <p className="text-sm">
+                  {cert.issuer} • {cert.date}
+                </p>
+              </div>
+              <a href={cert.link} target="_blank" className="text-sm text-blue-500">credentials</a>
+            </div>
+          ))}
+        </section>
+      )}
+
     </div>
   );
 };

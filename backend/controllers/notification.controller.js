@@ -1,29 +1,39 @@
-import Notification from "../Models/notification.js";
 
+import { pool } from "../config/postgresdb.js";
 /* ================= USER NOTIFICATIONS ================= */
 
 // GET user notifications (sirf system → user)
 export const getUserNotifications = async (req, res) => {
   try {
-    const userId = req.userId; // auth middleware se aa raha h
+    const userId = req.userId;
 
-    const notifications = await Notification.find({
-      userId,
-      actor: "system", // ✅ system generated
-    })
-      .sort({ createdAt: -1 });
+    // ✅ Get notifications
+    const notificationsResult = await pool.query(
+      `
+      SELECT *
+      FROM notifications
+      WHERE user_id = $1 AND actor = $2
+      ORDER BY created_at DESC
+      `,
+      [userId, "system"]
+    );
 
-    const unreadCount = await Notification.countDocuments({
-      userId,
-      actor: "system",
-      isRead: false,
-    });
+    // ✅ Get unread count
+    const unreadResult = await pool.query(
+      `
+      SELECT COUNT(*) 
+      FROM notifications
+      WHERE user_id = $1 AND actor = $2 AND is_read = false
+      `,
+      [userId, "system"]
+    );
 
     res.status(200).json({
       success: true,
-      unreadCount,
-      data: notifications,
+      unreadCount: parseInt(unreadResult.rows[0].count, 10),
+      data: notificationsResult.rows,
     });
+
   } catch (error) {
     console.error("User notification error:", error);
     res.status(500).json({ success: false, message: error.message });
@@ -35,15 +45,28 @@ export const markUserNotificationsRead = async (req, res) => {
   try {
     const userId = req.userId;
 
-    await Notification.updateMany(
-      { userId, actor: "system", isRead: false },
-      { $set: { isRead: true } }
+    await pool.query(
+      `
+      UPDATE notifications
+      SET is_read = true, updated_at = NOW()
+      WHERE user_id = $1
+        AND actor = $2
+        AND is_read = false
+      `,
+      [userId, "system"]
     );
 
-    res.status(200).json({ success: true });
+    res.status(200).json({
+      success: true,
+      message: "Notifications marked as read",
+    });
+
   } catch (error) {
     console.error("Mark user notifications error:", error);
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
@@ -52,16 +75,58 @@ export const markUserNotificationsRead = async (req, res) => {
 // GET admin notifications (sirf user → admin)
 export const getAdminNotifications = async (req, res) => {
   try {
-    const notifications = await Notification.find({
-      actor: "user", // ✅ user ne koi action kiya
-    })
-      .populate("userId", "username email")
-      .sort({ createdAt: -1 });
+    
+    const notificationsResult = await pool.query(
+      `
+      SELECT 
+        n.id,
+        n.type,
+        n.message,
+        n.actor,
+        n.is_read,
+        n.created_at,
+        EXTRACT(EPOCH FROM (NOW() - n.created_at))::int AS age_seconds,
+        n.user_id,
+        u.username,
+        u.email
+      FROM notifications n
+      LEFT JOIN users u ON u.id = n.user_id
+      WHERE n.actor = 'user'
+      ORDER BY n.created_at DESC
+      `,
+      []
+    );
 
-    const unreadCount = await Notification.countDocuments({
-      actor: "user",
-      isRead: false,
+    const notifications = notificationsResult.rows.map((n) => {
+      const messageSenderMatch =
+        n.type === "ADMIN_REQUEST" && typeof n.message === "string"
+          ? n.message.match(/^(.+?)\s+has requested for admin access$/i)
+          : null;
+
+      return {
+        id: n.id,
+        type: n.type,
+        message: n.message,
+        actor: n.actor,
+        isRead: n.is_read,
+        createdAt: n.created_at,
+        ageSeconds: Math.max(0, n.age_seconds || 0),
+        userId: n.user_id,
+        user: messageSenderMatch?.[1] || n.username || n.email || "User"
+      };
     });
+
+  
+    const countResult = await pool.query(
+      `
+      SELECT COUNT(*)::int AS count
+      FROM notifications
+      WHERE actor = 'user' AND is_read = false
+      `
+    );
+
+    const unreadCount = countResult.rows[0].count;
+
 
     res.status(200).json({
       success: true,
@@ -70,22 +135,31 @@ export const getAdminNotifications = async (req, res) => {
     });
   } catch (error) {
     console.error("Admin notification error:", error);
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
 // MARK ALL READ (admin)
 export const markAdminNotificationsRead = async (req, res) => {
   try {
-    await Notification.updateMany(
-      { actor: "user", isRead: false },
-      { $set: { isRead: true } }
+    await pool.query(
+      `
+      UPDATE notifications
+      SET is_read = true
+      WHERE actor = 'user' AND is_read = false
+      `
     );
 
     res.status(200).json({ success: true });
   } catch (error) {
     console.error("Mark admin notifications error:", error);
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
@@ -96,105 +170,102 @@ export const markNotificationRead = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const notification = await Notification.findByIdAndUpdate(
-      id,
-      { $set: { isRead: true } },
-      { new: true }
-    );
-
-    if (!notification) {
-      return res.status(404).json({ success: false, message: "Notification not found" });
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "Notification ID required",
+      });
     }
 
-    res.status(200).json({ success: true, data: notification });
+    const updatedNotification = await pool.query(
+      `UPDATE notifications
+       SET is_read = true
+       WHERE id = $1
+       RETURNING *`,
+      [id]
+    );
+
+    if (updatedNotification.rowCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Notification not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: updatedNotification.rows[0],
+    });
   } catch (error) {
     console.error("Mark notification read error:", error);
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
 // DELETE SINGLE NOTIFICATION
+
 export const deleteNotification = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const notification = await Notification.findByIdAndDelete(id);
-
-    if (!notification) {
-      return res.status(404).json({ success: false, message: "Notification not found" });
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "Notification ID required",
+      });
     }
 
-    res.status(200).json({ success: true, message: "Notification deleted" });
+    const result = await pool.query(
+      `DELETE FROM notifications
+       WHERE id = $1
+       RETURNING *`,
+      [id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Notification not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Notification deleted",
+      data: result.rows[0],
+    });
   } catch (error) {
     console.error("Delete notification error:", error);
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
 // DELETE ALL NOTIFICATIONS
 export const deleteAllNotifications = async (req, res) => {
   try {
-    await Notification.deleteMany({ actor: "user" });
-
-    res.status(200).json({ success: true, message: "All notifications deleted" });
-  } catch (error) {
-    console.error("Delete all notifications error:", error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-/* ================= TEST NOTIFICATIONS (FOR DEVELOPMENT) ================= */
-export const createTestNotifications = async (req, res) => {
-  try {
-    // Get first admin user
-    const { User } = await import("../Models/User.js");
-    const adminUser = await User.findOne({ isAdmin: true });
-
-    if (!adminUser) {
-      return res.status(400).json({ success: false, message: "No admin user found" });
-    }
-
-    // Create test notifications for admin
-    const testNotifications = [
-      {
-        type: "NEW_USER",
-        message: "New user 'John Doe' registered via email signup",
-        userId: adminUser._id,
-        actor: "user",
-        isRead: false,
-      },
-      {
-        type: "ACCOUNT_STATUS",
-        message: "User account has been activated",
-        userId: adminUser._id,
-        actor: "user",
-        isRead: false,
-      },
-      {
-        type: "PAYMENT_RECEIVED",
-        message: "Payment received for premium subscription",
-        userId: adminUser._id,
-        actor: "user",
-        isRead: true,
-      },
-      {
-        type: "SECURITY_ALERT",
-        message: "Suspicious login activity detected",
-        userId: adminUser._id,
-        actor: "user",
-        isRead: false,
-      },
-    ];
-
-    await Notification.insertMany(testNotifications);
+    const result = await pool.query(
+      `DELETE FROM notifications
+       WHERE actor = $1`,
+      ["user"]
+    );
 
     res.status(200).json({
       success: true,
-      message: "Test notifications created successfully",
-      count: testNotifications.length,
+      message: "All notifications deleted",
+      deletedCount: result.rowCount,
     });
   } catch (error) {
-    console.error("Create test notifications error:", error);
-    res.status(500).json({ success: false, message: error.message });
+    console.error("Delete all notifications error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
+

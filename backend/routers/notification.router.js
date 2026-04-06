@@ -9,7 +9,6 @@ import {
   markNotificationRead,
   deleteNotification,
   deleteAllNotifications,
-  createTestNotifications,
 } from "../controllers/notification.controller.js";
 
 const router = express.Router();
@@ -27,7 +26,5 @@ router.delete("/admin/delete-all", isAuth, deleteAllNotifications);
 router.put("/:id/read", isAuth, markNotificationRead);
 router.delete("/:id", isAuth, deleteNotification);
 
-/* -------- TEST ENDPOINT (DEVELOPMENT ONLY) -------- */
-router.post("/test/create", isAuth, createTestNotifications);
 
 export default router;

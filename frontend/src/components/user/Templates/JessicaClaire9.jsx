@@ -12,6 +12,7 @@ const JessicaClaire9 = ({ data }) => {
         location = "San Francisco, CA",
         linkedin = "",
         website = "",
+        github = "",
         extraLinks = [],
         experience = [],
         education = [],
@@ -131,20 +132,28 @@ const JessicaClaire9 = ({ data }) => {
                             {linkedin && (
                                 <div className="contact-item">
                                     <span className="contact-label">LinkedIn</span>
-                                    <a href={formatExternalUrl(linkedin)} target="_blank" rel="noopener noreferrer">Profile</a>
+                                    <a href={linkedin.startsWith('http') ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer">Profile</a>
                                 </div>
                             )}
                             {website && (
                                 <div className="contact-item">
                                     <span className="contact-label">Website</span>
-                                    <a href={formatExternalUrl(website)} target="_blank" rel="noopener noreferrer">Portfolio</a>
+                                    <a href={website.startsWith('http') ? website : `https://${website}`} target="_blank" rel="noopener noreferrer">Portfolio</a>
                                 </div>
                             )}
-                            {visibleExtraLinks.map((link, index) => (
-                                <div key={`${link.label}-${index}`} className="contact-item">
-                                    <span className="contact-label">{link.label}</span>
-                                    <a href={formatExternalUrl(link.url)} target="_blank" rel="noopener noreferrer">Profile</a>
+                            {github && (
+                                <div className="contact-item">
+                                    <span className="contact-label">GitHub</span>
+                                    <a href={github.startsWith('http') ? github : `https://${github}`} target="_blank" rel="noopener noreferrer">Profile</a>
                                 </div>
+                            )}
+                            {extraLinks?.map((link, index) => (
+                                link.label && link.url && (
+                                    <div key={index} className="contact-item">
+                                        <span className="contact-label">{link.label}</span>
+                                        <a href={link.url.startsWith('http') ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer">{link.label}</a>
+                                    </div>
+                                )
                             ))}
                         </div>
                     </div>

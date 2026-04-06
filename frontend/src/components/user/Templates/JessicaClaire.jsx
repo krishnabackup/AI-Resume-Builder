@@ -12,92 +12,240 @@ const JessicaClaire = ({ data }) => {
         location = "San Francisco, CA",
         linkedin = "",
         website = "",
-        extraLinks = [],
-        education = [],
+        github = "",
         experience = [],
-        skills = [],
-        languages = [],
-        awards = []
+        education = [],
+        skills = { technical: [], soft: [] },
+        projects = [],
+        certifications = []
     } = data;
 
+    const technicalSkills = skills?.technical || [];
+    const softSkills = skills?.soft || [];
+    const allSkills = [...technicalSkills, ...softSkills];
+    const halfSkill = Math.ceil(allSkills.length / 2);
+    const skillsCol1 = allSkills.slice(0, halfSkill);
+    const skillsCol2 = allSkills.slice(halfSkill);
+
     return (
-        <div className="jessica-claire">
-            <header className="header">
-                <h1 className="name">{fullName}</h1>
-                <div className="contact-info">
-                    <span><a href={formatMailto(email)}>{email}</a></span>
-                    <span><a href={formatTel(phone)}>{phone}</a></span>
-                    <span>{location}</span>
+        <div className="jessica-claire-template">
+            {/* Header */}
+            <div className="firstsection">
+                <div className="monogram">
+                    <div style={{
+                    border: "1px solid #fff",
+                    display: "inline-block",
+                    padding: "10px 15px",
+                    fontSize: "14px"
+                    }}>
+                    {fullName
+                        .split(" ")
+                        .map(n => n[0])
+                        .join("")
+                        .slice(0, 2)}
+                    </div>
                 </div>
-                <SocialLinks 
-                    formData={{ linkedin, website, extraLinks }}
-                />
-            </header>
+
+                <div className="name">{fullName}</div>
+            </div>
+
+            <div className='parentContainer'>
+
+                <div className='left-box'>
+
+                    {/* Summary */}
+                    {summary && (
+                        <div className="mb-8 firstsection-left">
+                            <div className="heading">
+                                <div className="sectiontitle">Professional Summary</div>
+                            </div>
+                            <div className="paragraph">
+                                <p>{summary}</p>
+                            </div>
+                        </div>
+                    )}
+
+
+                    {/* Experience */}
+                    {experience.length > 0 && (
+                        <div className="section">
+                            <div className="heading">
+                                <div className="sectiontitle">Work History</div>
+                            </div>
+                            {experience.map((job) => (
+                                <div key={job.id} className="paragraph">
+                                    <div className="singlecolumn">
+                                        <div style={{ display: 'inline-block', width: '100%' }}>
+                                            <span className="paddedline txtBold" style={{ display: 'inline' }}>
+                                                <span className="jobtitle">{job.title}</span>
+                                                {job.title && <span>, </span>}
+                                            </span>
+                                            <span className="paddedline txtItl" style={{ display: 'inline' }}>
+                                                <span className="jobdates">
+                                                    {job.startDate} to {job.endDate || "Current"}
+                                                </span>
+                                            </span>
+                                        </div>
+                                        <div className="paddedline">
+                                            <span className="companyname txtBold">{job.company}</span>
+                                            {job.company && job.location && <span> – </span>}
+                                            <span className="joblocation txtItl">{job.location}</span>
+                                        </div>
+                                        <div className="jobline" style={{ marginTop: '5px' }}>
+                                            <p>{job.description}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Projects */}
+                    {projects.length > 0 && (
+                        <div className="section">
+                            <div className="heading">
+                                <div className="sectiontitle">Projects</div>
+                            </div>
+                            {projects.map((proj) => (
+                                <div key={proj.id} className="paragraph">
+                                    <div className="singlecolumn">
+                                        <span className="paddedline txtBold">
+                                            <span className="jobtitle">{proj.name}</span>
+                                        </span>
+                                        <span className="paddedline" style={{ fontSize: '11px', fontStyle: 'italic' }}>
+                                            {proj.technologies}
+                                        </span>
+                                        <div className="jobline" style={{ marginTop: '5px' }}>
+                                            <p>{proj.description}</p>
+                                        </div>
+                                        {/* Links */}
+                                        <div style={{ marginTop: '4px', fontSize: '11px' }}>
+                                            {proj.link?.liveLink && (
+                                                <span style={{ marginRight: '10px' }}>Live: <a href={proj.link.liveLink} target="_blank" rel="noopener noreferrer">{proj.link.liveLink}</a></span>
+                                            )}
+                                            {proj.link?.github && (
+                                                <span>GitHub: <a href={proj.link.github} target="_blank" rel="noopener noreferrer">{proj.link.github}</a></span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+
+                    {/* Certifications */}
+                    {certifications.length > 0 && (
+                        <div className="section">
+                            <div className="heading">
+                                <div className="sectiontitle">Certifications</div>
+                            </div>
+                            {certifications.map((cert) => (
+                                <div key={cert.id} className="paragraph">
+                                    <div className="singlecolumn">
+                                        <span className="paddedline">
+                                            <span className="jobtitle">{cert.name}</span>
+                                        </span>
+                                        <span className="paddedline">
+                                            <span>{cert.issuer}</span> - <span>{cert.date}</span>
+                                        </span>
+                                        {cert.link && (
+                                            <span className="paddedline">
+                                                <a href={cert.link} target="_blank" rel="noopener noreferrer">View Credential</a>
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+
+                <div className='right-box'>
+                    {/* Contact Info */}
+                    <div className="mb-8">
+                        <div className="paragraph">
+                            <div className="address">
+                                <ul>
+                                    <li className="first">
+                                        {location}
+                                    </li>
+                                    {phone && <li>{phone}</li>}
+                                    {email && <li>{email}</li>}
+                                    {linkedin && <li><a href={linkedin.startsWith('http') ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer">{linkedin}</a></li>}
+                                    {website && <li><a href={website.startsWith('http') ? website : `https://${website}`} target="_blank" rel="noopener noreferrer">{website}</a></li>}
+                                    {data?.github && <li><a href={data.github.startsWith('http') ? data.github : `https://${data.github}`} target="_blank" rel="noopener noreferrer">{data.github}</a></li>}
+                                    {data?.extraLinks?.map((link, index) => (
+                                        link.label && link.url && <li key={index}><a href={link.url.startsWith('http') ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer">{link.label}: {link.url}</a></li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Skills */}
+                    {allSkills.length > 0 && (
+                        <div className="section">
+                            <div className="heading">
+                                <div className="sectiontitle">Skills</div>
+                            </div>
+                            <div className="paragraph firstparagraph">
+                                <table className="twocol">
+                                    <tbody>
+                                        <tr>
+                                            <td className="twocol_1">
+                                                <ul>
+                                                    {skillsCol1.map((skill, index) => (
+                                                        <li key={index}>{skill}</li>
+                                                    ))}
+                                                </ul>
+                                            </td>
+                                            <td className="twocol_2">
+                                                <ul>
+                                                    {skillsCol2.map((skill, index) => (
+                                                        <li key={index}>{skill}</li>
+                                                    ))}
+                                                </ul>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Education */}
+                    {education.length > 0 && (
+                        <div className="section">
+                            <div className="heading">
+                                <div className="sectiontitle">Education</div>
+                            </div>
+                            {education.map((edu) => (
+                                <div key={edu.id} className="paragraph">
+                                    <div className="singlecolumn">
+                                        <span className="paddedline">
+                                            <span className="degree">{edu.degree}</span>
+                                            {edu.school && <span>: </span>}
+                                            <span>{edu.school}</span>
+                                            {edu.graduationDate && <span>, {edu.graduationDate}</span>}
+                                        </span>
+                                        <span className="paddedline">
+                                            <span>{edu.location}</span>
+                                        </span>
+                                        {edu.gpa && <span className="paddedline">GPA: {edu.gpa}</span>}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+
             
-            <section className="summary">
-                <h2>Professional Summary</h2>
-                <p>{summary}</p>
-            </section>
 
-            {experience.length > 0 && (
-                <section className="experience">
-                    <h2>Experience</h2>
-                    {experience.map((exp, index) => (
-                        <div key={index} className="experience-item">
-                            <h3>{exp.position}</h3>
-                            <h4>{exp.company}</h4>
-                            <p className="date">{exp.startDate} - {exp.endDate}</p>
-                            <p>{exp.description}</p>
-                        </div>
-                    ))}
-                </section>
-            )}
+            
 
-            {education.length > 0 && (
-                <section className="education">
-                    <h2>Education</h2>
-                    {education.map((edu, index) => (
-                        <div key={index} className="education-item">
-                            <h3>{edu.degree}</h3>
-                            <h4>{edu.school}</h4>
-                            <p className="date">{edu.year}</p>
-                        </div>
-                    ))}
-                </section>
-            )}
-
-            {skills.length > 0 && (
-                <section className="skills">
-                    <h2>Skills</h2>
-                    <ul>
-                        {skills.map((skill, index) => (
-                            <li key={index}>{skill}</li>
-                        ))}
-                    </ul>
-                </section>
-            )}
-
-            {languages.length > 0 && (
-                <section className="languages">
-                    <h2>Languages</h2>
-                    <ul>
-                        {languages.map((lang, index) => (
-                            <li key={index}>{lang}</li>
-                        ))}
-                    </ul>
-                </section>
-            )}
-
-            {awards.length > 0 && (
-                <section className="awards">
-                    <h2>Awards</h2>
-                    <ul>
-                        {awards.map((award, index) => (
-                            <li key={index}>{award}</li>
-                        ))}
-                    </ul>
-                </section>
-            )}
         </div>
     );
 };

@@ -348,6 +348,21 @@ const AdminTemplateSection = ({
   handleToggleStatus,
 }) => {
   const scrollRef = React.useRef(null);
+  const [showControls, setShowControls] = React.useState(false);
+
+  React.useEffect(() => {
+    const checkScroll = () => {
+      if (scrollRef.current) {
+        const { scrollWidth, clientWidth } = scrollRef.current;
+        setShowControls(scrollWidth > clientWidth);
+      }
+    };
+    
+    // Check initially and also on resize
+    setTimeout(checkScroll, 50);
+    window.addEventListener('resize', checkScroll);
+    return () => window.removeEventListener('resize', checkScroll);
+  }, [items]);
 
   const scroll = (direction) => {
     if (scrollRef.current) {
@@ -373,16 +388,18 @@ const AdminTemplateSection = ({
       </div>
 
       <div className="relative group/section">
-        <button
-          onClick={() => scroll("left")}
-          className="absolute left-0 top-1/2 -translate-y-1/2 -ml-4 z-10 w-10 h-10 bg-white border border-slate-200 shadow-lg rounded-full flex items-center justify-center text-slate-700 opacity-0 group-hover/section:opacity-100 transition-all duration-200 hover:bg-slate-50 hover:scale-110 disabled:opacity-0"
-        >
-          <ChevronLeft size={20} />
-        </button>
+        {showControls && (
+          <button
+            onClick={() => scroll("left")}
+            className="absolute left-0 top-1/2 -translate-y-1/2 -ml-4 z-10 w-10 h-10 bg-white border border-slate-200 shadow-lg rounded-full flex items-center justify-center text-slate-700 opacity-0 group-hover/section:opacity-100 transition-all duration-200 hover:bg-slate-50 hover:scale-110 disabled:opacity-0"
+          >
+            <ChevronLeft size={20} />
+          </button>
+        )}
 
         <div
           ref={scrollRef}
-          className="flex gap-6 overflow-x-auto pb-6 pt-1 px-1 -mx-1 scroll-smooth hide-scrollbar"
+          className={`flex gap-6 pb-6 pt-1 px-1 -mx-1 scroll-smooth hide-scrollbar ${showControls ? "overflow-x-auto" : "overflow-x-visible flex-wrap"}`}
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {items.map((tpl, index) => (
@@ -397,12 +414,14 @@ const AdminTemplateSection = ({
           ))}
         </div>
 
-        <button
-          onClick={() => scroll("right")}
-          className="absolute right-0 top-1/2 -translate-y-1/2 -mr-4 z-10 w-10 h-10 bg-white border border-slate-200 shadow-lg rounded-full flex items-center justify-center text-slate-700 opacity-0 group-hover/section:opacity-100 transition-all duration-200 hover:bg-slate-50 hover:scale-110"
-        >
-          <ChevronRight size={20} />
-        </button>
+        {showControls && (
+          <button
+            onClick={() => scroll("right")}
+            className="absolute right-0 top-1/2 -translate-y-1/2 -mr-4 z-10 w-10 h-10 bg-white border border-slate-200 shadow-lg rounded-full flex items-center justify-center text-slate-700 opacity-0 group-hover/section:opacity-100 transition-all duration-200 hover:bg-slate-50 hover:scale-110"
+          >
+            <ChevronRight size={20} />
+          </button>
+        )}
       </div>
     </div>
   );

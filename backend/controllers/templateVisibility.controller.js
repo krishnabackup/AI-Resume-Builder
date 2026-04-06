@@ -1,12 +1,12 @@
-import TemplateVisibility from "../Models/templateVisibility.js";
+import { pool } from "../config/postgresdb.js";
 
 // Get all visibility statuses
 export const getVisibilityStatuses = async (req, res) => {
     try {
-        const statuses = await TemplateVisibility.find({});
+        const result = await pool.query("SELECT template_id, is_active FROM template_visibilities");
         // Convert array to object map for easy frontend lookup: { "jessica-claire": true, ... }
-        const statusMap = statuses.reduce((acc, curr) => {
-            acc[curr.templateId] = curr.isActive;
+        const statusMap = result.rows.reduce((acc, curr) => {
+            acc[curr.template_id] = curr.is_active;
             return acc;
         }, {});
 
@@ -26,25 +26,30 @@ export const toggleVisibility = async (req, res) => {
             return res.status(400).json({ msg: "Template ID is required" });
         }
 
-        let visibility = await TemplateVisibility.findOne({ templateId });
+        // Check if the record already exists
+        const result = await pool.query("SELECT is_active FROM template_visibilities WHERE template_id = $1", [templateId]);
 
-        if (!visibility) {
-            // If not exists, create it with isActive: false (since default is true, toggling means false)
-            // Wait, if it doesn't exist, it is implicitly true. So first toggle makes it false.
-            visibility = new TemplateVisibility({
-                templateId,
-                isActive: false // Toggling from implicit true -> false
-            });
+        let newStatus;
+        if (result.rowCount === 0) {
+            // If it doesn't exist, it was implicitly active. Toggling it means making it explicitly inactive.
+            newStatus = false;
+            await pool.query(
+                "INSERT INTO template_visibilities (template_id, is_active, created_at, updated_at) VALUES ($1, $2, NOW(), NOW())",
+                [templateId, newStatus]
+            );
         } else {
-            visibility.isActive = !visibility.isActive;
+            // Flip the existing status
+            newStatus = !result.rows[0].is_active;
+            await pool.query(
+                "UPDATE template_visibilities SET is_active = $1, updated_at = NOW() WHERE template_id = $2",
+                [newStatus, templateId]
+            );
         }
-
-        await visibility.save();
 
         res.status(200).json({
             msg: "Visibility updated",
             templateId,
-            isActive: visibility.isActive
+            isActive: newStatus
         });
 
     } catch (error) {

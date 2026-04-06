@@ -12,6 +12,7 @@ const JessicaClaire7 = ({ data }) => {
         location = "San Francisco, CA",
         linkedin = "",
         website = "",
+        github = "",
         extraLinks = [],
         experience = [],
         education = [],
@@ -87,12 +88,11 @@ const JessicaClaire7 = ({ data }) => {
                         <div className="contact-item">
                             {location}
                         </div>
-                        {linkedin && <div className="contact-item"><a href={formatExternalUrl(linkedin)} target="_blank" rel="noopener noreferrer">LinkedIn</a></div>}
-                        {website && <div className="contact-item"><a href={formatExternalUrl(website)} target="_blank" rel="noopener noreferrer">Website</a></div>}
-                        {visibleExtraLinks.map((link, index) => (
-                            <div key={`${link.label}-${index}`} className="contact-item">
-                                <a href={formatExternalUrl(link.url)} target="_blank" rel="noopener noreferrer">{link.label}</a>
-                            </div>
+                        {linkedin && <div className="contact-item"><a href={linkedin.startsWith('http') ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer">LinkedIn</a></div>}
+                        {website && <div className="contact-item"><a href={website.startsWith('http') ? website : `https://${website}`} target="_blank" rel="noopener noreferrer">Website</a></div>}
+                        {github && <div className="contact-item"><a href={github.startsWith('http') ? github : `https://${github}`} target="_blank" rel="noopener noreferrer">GitHub</a></div>}
+                        {extraLinks?.map((link, index) => (
+                            link.label && link.url && <div key={index} className="contact-item"><a href={link.url.startsWith('http') ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer">{link.label}</a></div>
                         ))}
                     </div>
 

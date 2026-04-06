@@ -51,19 +51,19 @@ const ExecutiveTemplate = ({ formData }) => {
             {linkedin && (
               <div>
                 <p className="font-semibold text-gray-400">LinkedIn</p>
-                <p className="break-words"><a href={formatExternalUrl(linkedin)} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">{linkedin}</a></p>
+                <p className="break-words"><a href={linkedin.startsWith('http') ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{linkedin}</a></p>
               </div>
             )}
             {github && (
               <div>
                 <p className="font-semibold text-gray-400">GitHub</p>
-                <p className="break-words"><a href={formatExternalUrl(github)} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">{github}</a></p>
+                <p className="break-words"><a href={github.startsWith('http') ? github : `https://${github}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{github}</a></p>
               </div>
             )}
             {website && (
               <div>
                 <p className="font-semibold text-gray-400">Website</p>
-                <p className="break-words"><a href={formatExternalUrl(website)} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">{website}</a></p>
+                <p className="break-words"><a href={website.startsWith('http') ? website : `https://${website}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{website}</a></p>
               </div>
             )}
             {/* Extra Links */}

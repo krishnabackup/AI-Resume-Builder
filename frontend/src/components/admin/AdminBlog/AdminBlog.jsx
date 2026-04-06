@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   Search,
   Calendar,
@@ -60,16 +60,20 @@ export default function AdminBlog() {
     setExpandedPosts((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const filteredPosts = blogs.filter((post) => {
-    const matchesCategory =
-      activeCategory === "All Articles" || post.category === activeCategory;
+  const filteredPosts = useMemo(() => {
+    return blogs.filter((post) => {
+      const matchesCategory =
+        activeCategory === "All Articles" || post.category === activeCategory;
 
-    const matchesSearch =
-      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
+      const title = post.title?.toLowerCase() || "";
+      const excerpt = post.excerpt?.toLowerCase() || "";
+      const search = searchQuery.toLowerCase();
 
-    return matchesCategory && matchesSearch;
-  });
+      const matchesSearch = title.includes(search) || excerpt.includes(search);
+
+      return matchesCategory && matchesSearch;
+    });
+  }, [blogs, activeCategory, searchQuery]);
 
   const resetForm = () => {
     setFormData({
@@ -138,18 +142,15 @@ export default function AdminBlog() {
     }
   };
 
-  const handleDelete = (id) => {
-    const doDelete = async () => {
-      try {
-        setError("");
-        await axiosInstance.delete(`/api/blog/${id}`);
-        await fetchBlogs();
-      } catch (apiError) {
-        setError(apiError.response?.data?.message || "Failed to delete blog");
-      }
-    };
-
-    doDelete();
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this blog?")) return;
+    try {
+      setError("");
+      await axiosInstance.delete(`/api/blog/${id}`);
+      await fetchBlogs();
+    } catch (apiError) {
+      setError(apiError.response?.data?.message || "Failed to delete blog");
+    }
   };
 
   return (
@@ -360,93 +361,90 @@ export default function AdminBlog() {
         </div>
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-
           {filteredPosts.map((post) => (
             <div
               key={post._id || post.id}
-              className="bg-white rounded-2xl shadow hover:shadow-xl transition overflow-hidden"
+              className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow border border-slate-100 overflow-hidden flex flex-col"
             >
-
-              <div className="relative h-44 sm:h-52">
-
+              <div className="relative h-48">
                 <img
-                  src={post.image}
+                  src={post.image || "https://via.placeholder.com/400x200?text=No+Image"}
                   alt={post.title}
                   className="w-full h-full object-cover"
                 />
-
-                <span className="absolute top-3 left-3 bg-white text-blue-600 px-3 py-1 text-xs font-bold rounded-lg shadow">
+                <span className="absolute top-3 left-3 bg-blue-600 text-white px-2.5 py-1 text-[10px] font-bold rounded-lg shadow-sm uppercase tracking-wider">
                   {post.category}
                 </span>
-
+                {!post.isPublished && (
+                   <span className="absolute top-3 right-3 bg-amber-500 text-white px-2.5 py-1 text-[10px] font-bold rounded-lg shadow-sm uppercase tracking-wider">
+                    Draft
+                  </span>
+                )}
               </div>
 
-              <div className="p-4 sm:p-6">
-
-                <div className="flex items-center gap-2 text-xs text-gray-400 mb-3">
+              <div className="p-5 flex flex-col flex-1">
+                <div className="flex items-center gap-2 text-xs text-slate-400 mb-3">
                   <Calendar size={14} />
-                  {post.date} • {post.readTime}
+                  <span>{post.date || 'No date'}</span>
+                  <span>•</span>
+                  <span>{post.readTime || '5 min read'}</span>
                 </div>
 
-                <h3 className="text-base sm:text-lg font-bold mb-3">
+                <h3 className="text-lg font-bold text-slate-800 mb-2 line-clamp-2 leading-snug">
                   {post.title}
                 </h3>
 
-                <p className="text-sm text-gray-500 mb-4 line-clamp-3">
+                <p className="text-sm text-slate-500 mb-4 line-clamp-2">
                   {post.excerpt}
                 </p>
 
-                <div
-                  className={`overflow-hidden transition-all ${
-                    expandedPosts[post._id || post.id]
-                      ? "max-h-40 opacity-100 mb-4"
-                      : "max-h-0 opacity-0"
-                  }`}
-                >
-                  <p className="text-sm text-gray-600">
-                    {post.detail}
-                  </p>
-                </div>
-
-                <button
-                  onClick={() => togglePost(post._id || post.id)}
-                  className="text-blue-600 font-semibold flex items-center gap-2 text-sm"
-                >
-                  {expandedPosts[post._id || post.id]
-                    ? "Show Less"
-                    : "Read More"}
-
-                  <ChevronDown
-                    className={`w-4 h-4 transition ${
-                      expandedPosts[post._id || post.id]
-                        ? "rotate-180"
-                        : ""
-                    }`}
-                  />
-                </button>
-
-                <div className="flex justify-end gap-4 mt-6">
-
+                <div className="mt-auto pt-4 flex items-center justify-between border-t border-slate-50">
                   <button
-                    onClick={() => handleEdit(post)}
-                    className="text-blue-600 hover:text-blue-800"
+                    onClick={() => togglePost(post._id || post.id)}
+                    className="text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-1.5 text-xs transition-colors"
                   >
-                    <Pencil size={18} />
+                    {expandedPosts[post._id || post.id] ? "Show Less" : "Read Content"}
+                    <ChevronDown
+                      size={14}
+                      className={`transition-transform duration-200 ${expandedPosts[post._id || post.id] ? "rotate-180" : ""}`}
+                    />
                   </button>
 
-                  <button
-                    onClick={() => handleDelete(post._id || post.id)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => handleEdit(post)}
+                      className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                      title="Edit Post"
+                    >
+                      <Pencil size={16} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(post._id || post.id)}
+                      className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                      title="Delete Post"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
 
+                <AnimatePresence>
+                  {expandedPosts[post._id || post.id] && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="pt-4 mt-4 border-t border-slate-50 text-sm text-slate-600 whitespace-pre-wrap leading-relaxed">
+                        {post.detail}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
           ))}
-
         </div>
       )}
 

@@ -41,42 +41,8 @@ const AcademicSidebarTemplate = ({ formData }) => {
             </div>
           )}
           {formData.location && <div>{formData.location}</div>}
-          {formData.linkedin && (
-            <div>
-              <a
-                href={formatExternalUrl(formData.linkedin)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
-              >
-                {formData.linkedin}
-              </a>
-            </div>
-          )}
-          {formData.website && (
-            <div>
-              <a
-                href={formatExternalUrl(formData.website)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
-              >
-                {formData.website}
-              </a>
-            </div>
-          )}
-          {visibleExtraLinks.map((link, index) => (
-            <div key={`${link.label}-${index}`}>
-              <a
-                href={formatExternalUrl(link.url)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
-              >
-                {link.label}: {link.url}
-              </a>
-            </div>
-          ))}
+          {formData.linkedin && <div>{formData.linkedin}</div>}
+          {formData.website && <div>{formData.website}</div>}
         </div>
 
         {formData.skills?.technical?.length > 0 && (

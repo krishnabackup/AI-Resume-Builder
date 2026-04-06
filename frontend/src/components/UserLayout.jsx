@@ -7,7 +7,7 @@ export default function UserLayout() {
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar – desktop */}
       <div className="hidden md:block">
-        <Sidebar />
+        <Sidebar/>
       </div>
 
       {/* Main content */}

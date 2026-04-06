@@ -15,6 +15,7 @@ import "./EditProfile.css";
 import UserNavBar from "../UserNavBar/UserNavBar";
 import axios from "../../../api/axios";
 import toast from "react-hot-toast";
+import ReactGoogleAutocomplete from "react-google-autocomplete";
 
 const EditProfile = () => {
 
@@ -35,6 +36,11 @@ const EditProfile = () => {
 
   const [loading, setLoading] = useState(false);
   const [fetchingProfile, setFetchingProfile] = useState(true);
+  const [errors, setErrors] = useState({
+    fullName: "",
+    phone: "",
+    location: ""
+  });
 
   useEffect(() => {
 
@@ -79,13 +85,59 @@ const EditProfile = () => {
 
   }, []);
 
-  const handleChange = (e) => {
+  // Validation functions
+  const validateFullName = (value) => {
+    if (!value.trim()) return ""; // Optional field
+    const nameRegex = /^[a-zA-Z\s'\-]+$/;
+    return nameRegex.test(value) ? "" : "Full name can only contain letters, spaces, hyphens, and apostrophes";
+  };
 
+  const validatePhone = (value) => {
+    if (!value.trim()) return ""; // Optional field
+    const phoneRegex = /^[\d\s\+\-\(\)]+$/;
+    return phoneRegex.test(value) ? "" : "Phone can only contain digits, +, -, spaces, and parentheses";
+  };
+
+  const validateLocation = (value) => {
+    const trimmedValue = value.trim();
+    if (!trimmedValue) {
+      return "Location is required";
+    }
+    if (trimmedValue.length < 2) {
+      return "Location must be at least 2 characters";
+    }
+    const locationRegex = /^[a-zA-Z0-9\s,\.\-]+$/;
+    return locationRegex.test(trimmedValue) ? "" : "Location can only contain letters, numbers, spaces, commas, periods, and hyphens";
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value
     });
 
+    // Real-time validation
+    let error = "";
+    switch (name) {
+      case "fullName":
+        error = validateFullName(value);
+        break;
+      case "phone":
+        error = validatePhone(value);
+        break;
+      case "location":
+        error = validateLocation(value);
+        break;
+      default:
+        break;
+    }
+
+    setErrors(prev => ({
+      ...prev,
+      [name]: error
+    }));
   };
 
   const addLink = () => {
@@ -124,27 +176,48 @@ const EditProfile = () => {
   };
 
   const handleSave = async () => {
+    // Validate all fields before submission
+    const fullNameError = validateFullName(formData.fullName);
+    const phoneError = validatePhone(formData.phone);
+    const locationError = validateLocation(formData.location);
 
-    try {
+    const newErrors = {
+      fullName: fullNameError,
+      phone: phoneError,
+      location: locationError
+    };
 
-      setLoading(true);
+    setErrors(newErrors);
 
-      const res = await axios.put("/api/user/profile", formData);
-
-      toast.success(res.data?.message || "Profile updated");
-
-    } catch (err) {
-
-      console.error(err);
-
-      toast.error(err?.response?.data?.message || "Update failed");
-
-    } finally {
-
-      setLoading(false);
-
+    // Check if there are any validation errors
+    if (Object.values(newErrors).some(error => error !== "")) {
+      toast.error("Please fix the validation errors before saving");
+      return;
     }
 
+    try {
+      setLoading(true);
+      const res = await axios.put("/api/user/profile", formData);
+      
+      // Show success message
+      toast.success("Profile updated successfully!", {
+        duration: 3000,
+        position: 'top-right'
+      });
+      
+      // Redirect to profile overview after successful save
+      setTimeout(() => {
+        navigate("/user/profile");
+      }, 1000);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update profile. Please try again.", {
+        duration: 4000,
+        position: 'top-right'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   // 🔹 Dynamic Member Since Year
@@ -372,7 +445,11 @@ const EditProfile = () => {
                           name="fullName"
                           value={formData.fullName}
                           onChange={handleChange}
+                          className={errors.fullName ? "input-error" : ""}
                         />
+                        {errors.fullName && (
+                          <span className="error-message">{errors.fullName}</span>
+                        )}
 
                       </div>
 
@@ -406,7 +483,11 @@ const EditProfile = () => {
                           name="phone"
                           value={formData.phone}
                           onChange={handleChange}
+                          className={errors.phone ? "input-error" : ""}
                         />
+                        {errors.phone && (
+                          <span className="error-message">{errors.phone}</span>
+                        )}
 
                       </div>
 
@@ -417,15 +498,57 @@ const EditProfile = () => {
                       <div className="field-group full-width">
 
                         <label>
-                          <MapPin size={16}/> Location
+                          <MapPin size={16}/> Location *
                         </label>
 
-                        <input
-                          type="text"
-                          name="location"
-                          value={formData.location}
-                          onChange={handleChange}
-                        />
+                        {import.meta.env.VITE_GOOGLE_MAPS_API_KEY ? (
+                          <ReactGoogleAutocomplete
+                            apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+                            onPlaceSelected={(place) => {
+                              const location = place.formatted_address || place.name || "";
+                              setFormData((prev) => ({ ...prev, location }));
+                              // Validate the selected location
+                              const error = validateLocation(location);
+                              setErrors(prev => ({ ...prev, location: error }));
+                            }}
+                            defaultValue={formData.location}
+                            onChange={(e) => {
+                              handleChange(e);
+                            }}
+                            name="location"
+                            style={{
+                              width: '100%',
+                              padding: '0.75rem',
+                              borderRadius: '10px',
+                              border: errors.location ? '1px solid #ef4444' : '1px solid #d1d5db',
+                              fontSize: '0.9rem',
+                              outline: 'none',
+                              color: '#1e293b'
+                            }}
+                          />
+                        ) : (
+                          <input
+                            type="text"
+                            name="location"
+                            value={formData.location}
+                            onChange={handleChange}
+                            placeholder="Enter your location*"
+                            className={errors.location ? "input-error" : ""}
+                            required
+                            style={{
+                              width: '100%',
+                              padding: '0.75rem',
+                              borderRadius: '10px',
+                              border: errors.location ? '1px solid #ef4444' : '1px solid #d1d5db',
+                              fontSize: '0.9rem',
+                              outline: 'none',
+                              color: '#1e293b'
+                            }}
+                          />
+                        )}
+                        {errors.location && (
+                          <span className="error-message">{errors.location}</span>
+                        )}
 
                       </div>
 
@@ -433,11 +556,34 @@ const EditProfile = () => {
 
                   </div>
 
+                  <div className="form-section">
+                    <h3>Bio</h3>
+                    <div className="field-row">
+                      <div className="field-group full-width">
+                        <textarea
+                          name="bio"
+                          value={formData.bio}
+                          onChange={handleChange}
+                          placeholder="Tell us about yourself..."
+                          style={{
+                            width: '100%',
+                            padding: '0.75rem',
+                            borderRadius: '10px',
+                            border: '1px solid #d1d5db',
+                            fontSize: '0.9rem',
+                            minHeight: '100px',
+                            resize: 'vertical'
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="form-actions">
 
                     <button
                       className="btn-cancel"
-                      onClick={() => navigate("/user/dashboard")}
+                      onClick={() => navigate("/user/profile")}
                     >
                       <X size={18}/> Cancel
                     </button>

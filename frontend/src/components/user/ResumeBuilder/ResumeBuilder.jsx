@@ -137,6 +137,20 @@ const ResumeBuilder = () => {
   const [isAiMode, setIsAiMode] = useState(false);
   const [documentTitle, setDocumentTitle] = useState("");
   const [showMobilePreview, setShowMobilePreview] = useState(false);
+  const [parsingConfidence, setParsingConfidence] = useState(null);
+
+  // Check if form has data to show the reset (Create New Resume) button
+  const hasData = JSON.stringify(formData) !== JSON.stringify(emptyData);
+
+  const handleResetResume = () => {
+    if (window.confirm("Are you sure you want to clear all data and start a fresh resume?")) {
+      setFormData(emptyData);
+      setDocumentTitle("");
+      setActiveSection("personal");
+      setActiveTab("builder");
+      localStorage.removeItem("resumeFormData");
+    }
+  };
 
   /*-----------To make the upload input functional-------------*/
 
@@ -189,13 +203,17 @@ const ResumeBuilder = () => {
   const [showCompletionPopup, setShowCompletionPopup] = useState(false);
   const isSectionValid = () => {
     switch (activeSection) {
-      case "personal":
+      case "personal": {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const isEmailValid = formData?.email?.trim() && emailRegex.test(formData.email);
+        const isPhoneValid = formData?.phone && formData.phone.replace(/[^0-9]/g, '').length >= 10;
         return (
           formData?.fullName?.trim() &&
-          formData?.email?.trim() &&
-          formData?.phone?.trim() &&
+          isEmailValid &&
+          isPhoneValid &&
           formData?.location?.trim()
         );
+      }
 
       case "work":
         // If no experience entries, allow skipping
@@ -247,12 +265,22 @@ const ResumeBuilder = () => {
   const getEmptyFieldNames = () => {
     const empty = [];
     switch (activeSection) {
-      case "personal":
+      case "personal": {
         if (!formData?.fullName?.trim()) empty.push("Full Name");
-        if (!formData?.email?.trim()) empty.push("Email");
-        if (!formData?.phone?.trim()) empty.push("Phone");
+        if (!formData?.email?.trim()) {
+          empty.push("Email");
+        } else {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(formData.email)) empty.push("Valid Email");
+        }
+        if (!formData?.phone?.trim()) {
+          empty.push("Phone");
+        } else {
+          if (formData.phone.replace(/[^0-9]/g, '').length < 10) empty.push("Valid Phone Number");
+        }
         if (!formData?.location?.trim()) empty.push("Location");
         break;
+      }
       case "work":
         if (formData?.experience?.length > 0) {
           formData.experience.forEach((exp, i) => {
@@ -328,13 +356,13 @@ const ResumeBuilder = () => {
     return () => ro.disconnect();
   }, [activeTab]);
 
-  /* Lock body scroll when mobile preview sheet is open (mobile only) */
+  /* Lock body scroll when preview is open */
   useEffect(() => {
-    document.body.style.overflow = showMobilePreview ? "hidden" : "";
+    document.body.style.overflow = (showMobilePreview || isPreviewExpanded) ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [showMobilePreview]);
+  }, [showMobilePreview, isPreviewExpanded]);
 
   const GenerateResumePDF = async (resumeHtml) => {
     try {
@@ -451,7 +479,7 @@ const ResumeBuilder = () => {
       // required backend fields
       formDataUpload.append("jobTitle", "Resume Builder Upload");
       formDataUpload.append("templateId", selectedTemplate);
-      formDataUpload.append("resumeprofileId", "000000000000000000000000");
+      formDataUpload.append("resumeprofileId", crypto.randomUUID());
 
       const res = await axiosInstance.post(
         "/api/resume/upload",
@@ -470,6 +498,9 @@ const ResumeBuilder = () => {
         alert("Failed to parse resume.");
         return;
       }
+
+      const confidence = res.data?.data?.parsingConfidence;
+      setParsingConfidence(confidence);
 
       // Auto-fill builder form - use correct field names from backend
       setFormData((prev) => ({
@@ -673,7 +704,7 @@ const ResumeBuilder = () => {
                     {warning && warningFields.length > 0 && (
                       <div className="text-sm text-red-700 bg-yellow-100 border border-yellow-300 px-4 py-2 mb-3 rounded-lg">
                         <span className="font-semibold">
-                          The following fields are empty:
+                          The following fields are empty or invalid:
                         </span>{" "}
                         {warningFields.join(", ")}
                       </div>
@@ -742,7 +773,7 @@ const ResumeBuilder = () => {
                 {warning && warningFields.length > 0 && (
                   <div className="text-sm text-red-700 bg-yellow-100 border border-yellow-300 px-4 py-2 mb-3 rounded-lg">
                     <span className="font-semibold">
-                      The following fields are empty:
+                      The following fields are empty or invalid:
                     </span>{" "}
                     {warningFields.join(", ")}
                   </div>
@@ -799,9 +830,10 @@ const ResumeBuilder = () => {
           {!isPreviewHidden && !isPreviewExpanded && (
             <div className="hidden lg:flex flex-1 flex-col min-w-0">
               <div
-                className="rounded-2xl overflow-hidden border border-slate-100 bg-white"
+                className="rounded-2xl overflow-hidden border border-slate-100 bg-white sticky"
                 style={{
-                  minHeight: "calc(100vh - 80px)",
+                  top: "100px",
+                  height: "calc(100vh - 120px)",
                   boxShadow:
                     "0 4px 24px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)",
                 }}
@@ -835,7 +867,7 @@ const ResumeBuilder = () => {
 
       {/* Full-screen preview overlay (existing behavior) */}
       {isPreviewExpanded && (
-        <div className="fixed inset-0 z-[99999] bg-white overflow-auto">
+        <div className="fixed inset-0 z-[99999] bg-white overflow-hidden">
           <LivePreview
             ref={previewRef}
             formData={formData}
@@ -866,6 +898,9 @@ const ResumeBuilder = () => {
         showAiToggle={true}
         isAiMode={isAiMode}
         onToggleAiMode={() => setIsAiMode((v) => !v)}
+        showReset={hasData}
+        onReset={handleResetResume}
+        parsingConfidence={parsingConfidence}
       />
 
       <div className="p-2.5 overflow-hidden">

@@ -167,6 +167,38 @@ const CoverLetterBuilder = () => {
   const [formData, setFormData] = useState(defaultFormData);
   const [isLoadingData, setIsLoadingData] = useState(true);
 
+  // Check if form has data to show the reset (Create New) button
+  const hasData = Boolean(
+    formData.fullName ||
+    formData.email ||
+    formData.phone ||
+    formData.address ||
+    formData.linkedin ||
+    formData.recipientName ||
+    formData.recipientTitle ||
+    formData.companyName ||
+    formData.companyAddress ||
+    formData.jobTitle ||
+    formData.jobReference ||
+    formData.jobSummary ||
+    formData.jobDescription ||
+    formData.openingParagraph ||
+    formData.bodyParagraph1 ||
+    formData.bodyParagraph2 ||
+    formData.closingParagraph ||
+    (formData.salutation !== "Sincerely" && formData.salutation !== "") ||
+    formData.customSalutation
+  );
+
+  const handleResetCoverLetter = () => {
+    if (window.confirm("Are you sure you want to clear all data and start a fresh cover letter?")) {
+      setFormData(defaultFormData);
+      setDocumentTitle("");
+      setActiveSection("sender");
+      setActiveTab("builder");
+    }
+  };
+
   const [selectedTemplate, setSelectedTemplate] = useState("professional");
 
   const [activeSection, setActiveSection] = useState("sender");
@@ -845,7 +877,9 @@ const CoverLetterBuilder = () => {
         showUpload={true}
         onUpload={handleUpload}
         showDesigner={false}
-        
+        showReset={hasData}
+        onReset={handleResetCoverLetter}
+        resetLabel="Create new Cover Letter"
       />
 
       {activeTab === "templates" ? (

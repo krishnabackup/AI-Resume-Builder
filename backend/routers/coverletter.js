@@ -1,7 +1,7 @@
 import express from "express";
 import puppeteer from "puppeteer";
-import CoverLetter from "../Models/CoverLetter.js";
 import isAuth from "../middlewares/isAuth.js";
+import { pool } from "../config/postgresdb.js";
 
 const router = express.Router();
 
@@ -23,9 +23,9 @@ const DEFAULT_CONTENT = {
 ──────────────────────────────────────────────────────────────────────────── */
 router.get("/", isAuth, async (req, res) => {
   try {
-    const doc = await CoverLetter.findOne({ user: req.userId });
+    const docRes = await pool.query('SELECT * FROM cover_letters WHERE user_id = $1', [req.userId]);
 
-    if (!doc) {
+    if (docRes.rowCount === 0) {
       // New user — return empty scaffold (nothing saved yet)
       return res.json({
         templateId: "professional",
@@ -34,10 +34,12 @@ router.get("/", isAuth, async (req, res) => {
       });
     }
 
+    const doc = docRes.rows[0];
+
     res.json({
-      templateId: doc.templateId,
-      documentTitle: doc.documentTitle,
-      content: { ...DEFAULT_CONTENT, ...doc.content.toObject() },
+      templateId: doc.template_id,
+      documentTitle: doc.document_title,
+      content: { ...DEFAULT_CONTENT, ...doc.content },
     });
   } catch (err) {
     console.error("GET /api/coverletter error:", err);
@@ -53,20 +55,20 @@ router.get("/", isAuth, async (req, res) => {
 router.put("/", isAuth, async (req, res) => {
   try {
     const { content = {}, templateId, documentTitle } = req.body;
+    const finalContent = { ...DEFAULT_CONTENT, ...content };
 
-    const doc = await CoverLetter.findOneAndUpdate(
-      { user: req.userId },
-      {
-        $set: {
-          templateId: templateId || "professional",
-          documentTitle: documentTitle || "",
-          content: { ...DEFAULT_CONTENT, ...content },
-        },
-      },
-      { new: true, upsert: true, runValidators: true }
-    );
+    const docRes = await pool.query(`
+      INSERT INTO cover_letters (id, user_id, template_id, document_title, content, created_at, updated_at)
+      VALUES (gen_random_uuid(), $1, $2, $3, $4, NOW(), NOW())
+      ON CONFLICT (user_id) DO UPDATE SET
+        template_id = EXCLUDED.template_id,
+        document_title = EXCLUDED.document_title,
+        content = EXCLUDED.content,
+        updated_at = NOW()
+      RETURNING updated_at
+    `, [req.userId, templateId || "professional", documentTitle || "", JSON.stringify(finalContent)]);
 
-    res.json({ success: true, updatedAt: doc.updatedAt });
+    res.json({ success: true, updatedAt: docRes.rows[0].updated_at });
   } catch (err) {
     console.error("PUT /api/coverletter error:", err);
     res.status(500).json({ message: "Failed to save cover letter" });
@@ -79,7 +81,7 @@ router.put("/", isAuth, async (req, res) => {
 ──────────────────────────────────────────────────────────────────────────── */
 router.delete("/", isAuth, async (req, res) => {
   try {
-    await CoverLetter.findOneAndDelete({ user: req.userId });
+    await pool.query('DELETE FROM cover_letters WHERE user_id = $1', [req.userId]);
     res.json({ success: true });
   } catch (err) {
     console.error("DELETE /api/coverletter error:", err);

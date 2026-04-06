@@ -21,8 +21,12 @@ const AcademicSidebarTemplate = ({ formData }) => {
           {formData.email && <div>{formData.email}</div>}
           {formData.phone && <div>{formData.phone}</div>}
           {formData.location && <div>{formData.location}</div>}
-          {formData.linkedin && <div>{formData.linkedin}</div>}
-          {formData.website && <div>{formData.website}</div>}
+          {formData.linkedin && <div><a href={formData.linkedin.startsWith('http') ? formData.linkedin : `https://${formData.linkedin}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{formData.linkedin}</a></div>}
+          {formData.website && <div><a href={formData.website.startsWith('http') ? formData.website : `https://${formData.website}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{formData.website}</a></div>}
+          {formData.github && <div><a href={formData.github.startsWith('http') ? formData.github : `https://${formData.github}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{formData.github}</a></div>}
+          {formData?.extraLinks?.map((link, index) => (
+            link.label && link.url && <div key={index}><a href={link.url.startsWith('http') ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{link.label}</a></div>
+          ))}
           {/* Extra Links */}
           {formData?.extraLinks?.map((link, index) => (
             <div key={index}>

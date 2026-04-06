@@ -8,6 +8,7 @@ const EliteSidebarResume = ({ formData }) => {
   email,
   phone,
   location,
+  github,
   experience = [],
   education = []
 } = formData;
@@ -117,7 +118,7 @@ const skills =
           <aside className="w-[35%] border-l border-dashed border-gray-400 p-10">
 
             {/* DETAILS */}
-            {(email || phone || location || formData?.linkedin || formData?.website || formData?.extraLinks?.length > 0) && (
+            {(email || phone || location || formData?.linkedin || formData?.website || formData?.github || formData?.extraLinks?.length > 0) && (
               <section className="mb-10">
                 <h2 className="font-semibold text-teal-800 mb-3">Details</h2>
 
@@ -158,6 +159,15 @@ const skills =
                       <span className="w-3 h-3 bg-yellow-400 rounded-full" />
                       <a href={formData.website.startsWith("http") ? formData.website : `https://${formData.website}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
                         Website
+                      </a>
+                    </div>
+                  )}
+
+                  {github && (
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 bg-yellow-400 rounded-full" />
+                      <a href={github.startsWith("http") ? github : `https://${github}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                        GitHub
                       </a>
                     </div>
                   )}

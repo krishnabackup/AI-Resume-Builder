@@ -1,10 +1,5 @@
 import jwt from "jsonwebtoken";
-import mongoose from "mongoose";
-
-const getUserModel = async () => {
-  const mod = await import("../Models/User.js");
-  return mod.default || mod.User;
-};
+import { pool } from "../config/postgresdb.js";
 
 
 const isAuth = async (req, res, next) => {
@@ -31,15 +26,27 @@ const isAuth = async (req, res, next) => {
       return res.status(401).json({ message: "Invalid Token" });
     }
 
-    let tokenId = verifyToken.id;
+    const tokenId = verifyToken.id;
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-    if (!mongoose.Types.ObjectId.isValid(tokenId)) {
-      const User = await getUserModel();
-      const admin = await User.findOne({ isAdmin: true });
-      if (admin) tokenId = admin._id;
+    if (!uuidRegex.test(tokenId)) {
+      // It's likely a MongoDB Object ID. We mapped this in users.mongodb_id.
+      // Lookup the new Postgres UUID.
+      try {
+        const userRes = await pool.query("SELECT id FROM users WHERE id = $1", [tokenId]);
+        if (userRes.rowCount > 0) {
+          req.userId = userRes.rows[0].id;
+        } else {
+          return res.status(401).json({ message: "Session expired or invalid format. Please log in again." });
+        }
+      } catch (err) {
+        console.error("isAuth DB lookup error:", err);
+        return res.status(401).json({ message: "Database connection error in auth" });
+      }
+    } else {
+      req.userId = tokenId;
     }
 
-    req.userId = tokenId;
     next();
   } catch (error) {
     console.log("isAuth error:", error);

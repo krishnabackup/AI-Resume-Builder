@@ -327,7 +327,7 @@ const AdminProfile = () => {
                                         </div>
                                     </div>
 
-                                    {/* <div className="form-section">
+                                    <div className="form-section">
                                         <h3>Bio</h3>
                                         <div className="field-row">
                                             <div className="field-group full-width">
@@ -348,7 +348,7 @@ const AdminProfile = () => {
                                                 />
                                             </div>
                                         </div>
-                                    </div> */}
+                                    </div>
 
                                     <div className="form-actions">
                                         <button

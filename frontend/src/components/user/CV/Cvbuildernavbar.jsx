@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Upload, Download, PenTool, Zap, ChevronDown } from "lucide-react";
+import { Upload, Download, PenTool, Zap, ChevronDown, Plus } from "lucide-react";
 
 const CVBuilderTopBar = ({
   activeTab,
@@ -24,6 +24,10 @@ const CVBuilderTopBar = ({
   downloadDisabled = false,
   showDownloadWord = true,
   extraButtons = null,
+  showReset = false,
+  onReset,
+  resetLabel = "Create New Resume",
+  parsingConfidence = null,
 }) => {
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [localTitle, setLocalTitle] = useState(title ?? "");
@@ -148,12 +152,38 @@ const CVBuilderTopBar = ({
             </button>
           </div>
         )}
+
+        {/* Parsing Confidence Indicator */}
+        {parsingConfidence && (
+          <div 
+            title={parsingConfidence.includes('AI') ? 'AI assisted in parsing this resume' : `Parsing quality: ${parsingConfidence}`}
+            className={`px-3 py-1.5 flex items-center gap-1.5 rounded-xl text-xs font-medium whitespace-nowrap shadow-sm border ${
+              parsingConfidence.includes('High') ? 'bg-green-50 text-green-700 border-green-200' :
+              parsingConfidence === 'Medium' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+              'bg-red-50 text-red-700 border-red-200'
+            }`}
+          >
+            <Zap size={14} className={parsingConfidence.includes('High') ? 'text-green-600' : parsingConfidence === 'Medium' ? 'text-yellow-600' : 'text-red-600'} />
+            {parsingConfidence.includes('AI') ? 'AI Assisted Extraction' : `${parsingConfidence} Match`}
+          </div>
+        )}
       </div>
 
       {/* ── Right section (desktop / tablet) ── */}
       <div className="hidden md:flex flex-wrap justify-center sm:justify-end items-center gap-2 w-full md:w-auto">
         {/* Extra Buttons */}
         {extraButtons}
+
+        {/* Create New Resume / Reset */}
+        {showReset && (
+          <button
+            onClick={onReset}
+            className="flex items-center gap-2 text-white bg-emerald-600 rounded-lg text-sm transition-all duration-200 hover:bg-emerald-700 py-2 px-3 sm:px-5 whitespace-nowrap"
+          >
+            <Plus size={18} />
+            <span className="hidden sm:inline">{resetLabel}</span>
+          </button>
+        )}
 
         {/* Upload */}
         {showUpload && (

@@ -9,11 +9,14 @@ const Eclipse = ({ formData }) => {
     email,
     phone,
     location,
+    linkedin,
+    website,
+    github,
     summary,
     skills,
     experience,
     education,
-  } = formData;
+  } = formData || {};
 
   return (
     <div className="bg-[#e9e9e9] p-10 flex justify-center">
@@ -36,12 +39,12 @@ const Eclipse = ({ formData }) => {
 
             {/* DETAILS */}
             <SectionTitle title="DETAILS" />
-            {formData.linkedin && (
+            {linkedin && (
               <InfoBlock 
                 label="LINKEDIN" 
                 value={
-                  <a href={formData.linkedin.startsWith("http") ? formData.linkedin : `https://${formData.linkedin}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
-                    {formData.linkedin}
+                  <a href={linkedin.startsWith("http") ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                    {linkedin}
                   </a>
                 } 
               />
@@ -52,6 +55,16 @@ const Eclipse = ({ formData }) => {
                 value={
                   <a href={formData.website.startsWith("http") ? formData.website : `https://${formData.website}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
                     {formData.website}
+                  </a>
+                } 
+              />
+            )}
+            {github && (
+              <InfoBlock 
+                label="GITHUB" 
+                value={
+                  <a href={github.startsWith("http") ? github : `https://${github}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                    {github}
                   </a>
                 } 
               />

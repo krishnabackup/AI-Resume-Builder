@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
   FileText,
@@ -131,9 +131,12 @@ export default function UserSidebar() {
       {/* Sidebar */}
       <motion.aside
         className="fixed top-0 left-0 z-40 bg-white border-r border-slate-200 flex flex-col"
-        style={{ width: isCollapsed ? 80 : 256, height: "100vh" }}
-        animate={{ x: isMobileOpen || window.innerWidth >= 768 ? 0 : "-100%" }}
-        transition={{ type: "spring", stiffness: 220, damping: 25 }}
+        style={{height: "100vh", willChange:'transform'}}
+        animate={{ 
+          x: isMobileOpen || window.innerWidth >= 768 ? 0 : "-100%",
+          width: isCollapsed ? 80 : 256
+        }}
+        transition={{ duration: 0.3, ease:"linear"}}
       >
         <nav className="p-3 space-y-2 mt-16 flex-1">
           {menuItems.map((item, index) => {
@@ -153,13 +156,31 @@ export default function UserSidebar() {
                   onMouseEnter={() => isCollapsed && setHoveredItem(item.id)}
                   onMouseLeave={() => setHoveredItem(null)}
                   className={`w-full flex items-center relative rounded-xl transition-all
-                    ${isCollapsed ? "justify-center px-0" : "gap-3 px-4"} py-3
+                     ${isCollapsed ? "" : "gap-3"} py-3 px-4
                     ${active ? "bg-blue-50 text-blue-600 font-semibold" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"}`}
+                  
                 >
-                  <Icon size={22} />
-                  {!isCollapsed && (
-                    <span className="whitespace-nowrap">{item.label}</span>
-                  )}
+                  <div className="w-6 flex justify-center">
+                    <Icon size={22} />
+                  </div>
+                  
+                  
+                  <AnimatePresence>
+                    {!isCollapsed && (
+                      <motion.span
+                        className="whitespace-nowrap"
+                        initial={{ opacity: 0,filter:"blur(10px)" ,width: 0 }}
+                        animate={{ opacity: 1,filter:"blur(0px)", width:"auto" }}
+                        exit={{ opacity: 0,filter:"blur(10px)", width: 0 }}
+                        transition={{ duration: 0.3 ,ease:'easeInOut' }}
+                        layout
+                      >
+                        {item.label}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+
+                  
                   {item.badge && (
                     <motion.span
                       initial={{ scale: 0 }}
@@ -186,10 +207,25 @@ export default function UserSidebar() {
             onMouseEnter={() => isCollapsed && setHoveredItem("logout")}
             onMouseLeave={() => setHoveredItem(null)}
             className={`w-full flex items-center rounded-xl transition-all text-red-500 hover:bg-red-50
-              ${isCollapsed ? "justify-center px-0" : "gap-3 px-4"} py-3`}
+              ${isCollapsed ? "" : "gap-3"} py-3 px-4`}
           >
-            <LogOut size={22} />
-            {!isCollapsed && <span>Logout</span>}
+            <div className="w-6 flex justify-center">
+              <LogOut size={22} />
+            </div>
+            
+            <AnimatePresence>
+              {!isCollapsed && (
+                <motion.span
+                  initial={{ opacity: 0,filter:"blur(10px)", width: 0 }}
+                  animate={{ opacity: 1,filter:"blur(0px)", width: "auto" }}
+                  exit={{ opacity: 0,filter:"blur(10px)", width: 0 }}
+                  transition={{ duration: 0.3 , ease:'easeInOut'}}
+                  layout
+                >
+                  Logout
+                </motion.span>
+              )}
+            </AnimatePresence>
           </button>
           {/* Tooltip for logout in collapsed state */}
           {isCollapsed && hoveredItem === "logout" && (

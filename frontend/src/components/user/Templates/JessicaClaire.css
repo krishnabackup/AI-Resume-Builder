@@ -83,17 +83,20 @@
 .jessica-claire-template .parentContainer {
     display: flex;
     width: 100%;
+    height: 100%;
 }
 
 .jessica-claire-template .left-box {
-    width: 60%;
-    padding: 20px;
+    width: 50%;
+    padding: 10px;
+    min-height: 1123px;
 }
 
 .jessica-claire-template .right-box {
     width: 40%;
     background-color: #f5f5f5;
     padding: 20px;
+    min-height: 1123px;
 }
 
 .jessica-claire-template .paragraph {
@@ -105,7 +108,7 @@
 .jessica-claire-template ul {
     list-style: none;
     padding: 0;
-    margin: 5px 0 0 10px;
+    margin: 5px 0 0 20px;
 }
 
 .jessica-claire-template li {

@@ -1,14 +1,11 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   Mail,
   Phone,
   MapPin,
   Scale,
   ChevronRight,
-  AlertCircle,
 } from "lucide-react";
-import UpToSkillsImg from "../assets/UptoSkills.webp";
 import NavBar from "../components/NavBar";
 import Footer from "./Footer";
 import { motion } from "framer-motion";
@@ -22,7 +19,6 @@ const fadeUp = {
   },
 };
 const TermsAndConditions = () => {
-  const navigate = useNavigate();
 
   useEffect(() => {
     window.scrollTo(0, 0);

@@ -1,5 +1,6 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 
 import Home from "./pages/Home";
 import TemplatesPage from "./pages/TemplatesPage";
@@ -129,6 +130,55 @@ function App() {
           </Route>
         </Routes>
       </div>
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#ffffff',
+            color: '#1f2937',
+            border: '1px solid #e5e7eb',
+            borderRadius: '10px',
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+            fontFamily: "'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+            fontSize: '14px',
+            fontWeight: '500',
+            padding: '12px 16px',
+            minHeight: '48px'
+          },
+          success: {
+            duration: 3000,
+            iconTheme: {
+              primary: '#10b981',
+              secondary: '#ffffff',
+            },
+            style: {
+              background: '#ffffff',
+              color: '#065f46',
+              border: '1px solid #10b981',
+            }
+          },
+          error: {
+            duration: 4000,
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#ffffff',
+            },
+            style: {
+              background: '#ffffff',
+              color: '#991b1b',
+              border: '1px solid #ef4444',
+            }
+          },
+          loading: {
+            style: {
+              background: '#ffffff',
+              color: '#0f172a',
+              border: '1px solid #0f172a',
+            }
+          }
+        }}
+      />
     </BrowserRouter>
   );
 }

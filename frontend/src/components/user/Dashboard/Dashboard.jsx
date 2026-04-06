@@ -397,7 +397,7 @@ const Dashboard = ({ setActivePage }) => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
             <HorizontalStatCard
               icon={CheckCircle}
-              label="Avg ATS Score"
+              label="Current ATS Score"
               value={summaryData?.avgAtsScore > 0 ? summaryData.avgAtsScore : "0"}
               subtext={summaryData?.avgAtsScore > 0 ? "Out of 100" : "No scans yet"}
               iconColor="text-emerald-600"

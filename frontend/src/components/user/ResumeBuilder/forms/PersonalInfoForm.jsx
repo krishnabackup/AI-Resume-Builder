@@ -51,7 +51,8 @@ const PersonalInfoForm = ({ formData, onInputChange, onUseSummary, highlightEmpt
   const handleEmailChange = (e) => {
     const val = e.target.value;
     onInputChange("email", val);
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // RFC 5322 Official Standard Email Regex
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
     if (val && !emailRegex.test(val)) {
       setEmailError(true);
     } else {
@@ -64,7 +65,9 @@ const PersonalInfoForm = ({ formData, onInputChange, onUseSummary, highlightEmpt
     const cleanVal = val.replace(/[^0-9+]/g, '');
     onInputChange("phone", cleanVal);
 
-    if (cleanVal && cleanVal.replace(/[^0-9]/g, '').length < 10) {
+    // E.164 standard: + followed by 1 to 15 digits
+    const phoneRegex = /^\+[1-9]\d{1,14}$/;
+    if (cleanVal && !phoneRegex.test(cleanVal)) {
       setPhoneError(true);
     } else {
       setPhoneError(false);
@@ -185,7 +188,7 @@ const PersonalInfoForm = ({ formData, onInputChange, onUseSummary, highlightEmpt
             placeholder="1234567890"
             onChange={handlePhoneChange}
           />
-          {phoneError && <span className="text-xs text-red-500 font-medium">Please enter a valid phone number</span>}
+          {phoneError && <span className="text-xs text-red-500 font-medium">Please enter a valid phone number in E.164 format (e.g. +1234567890)</span>}
         </div>
 
         {/* Location */}

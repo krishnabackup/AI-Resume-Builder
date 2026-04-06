@@ -1,145 +1,282 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { TrendingUp, Users, UserCheck, UserMinus, Activity, Zap, Shield, Crown, Award, Gem, RefreshCw } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  TrendingUp, Users, UserCheck, UserMinus, Activity,
+  Zap, Shield, Crown, Award, Gem, RefreshCw
+} from "lucide-react";
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid,
+  Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell
+} from "recharts";
 import axiosInstance from "../../../api/axios";
 import AdminTopPagesAnalytics from "../AdminTopPagesAnalytics";
 
-export default function AdminAnalytics() {
-  const [userGrowth, setUserGrowth] = useState({ count: 0, note: "" });
-  const [conversions, setConversions] = useState({ count: 0, note: "" });
-  const [activeUsers, setActiveUsers] = useState({ count: 0, note: "" });
-  const [deletedUsers, setDeletedUsers] = useState({ count: 0, note: "" });
-  const [mostUsedResumeTemplates, setMostUsedResumeTemplates] = useState([]);
-  const [mostUsedCvTemplates, setMostUsedCvTemplates] = useState([]);
-  const [templateView, setTemplateView] = useState("resume");
-  const [refreshingTemplates, setRefreshingTemplates] = useState(false);
-  const [chartData, setChartData] = useState([]);
-  const [subscriptionBreakdown, setSubscriptionBreakdown] = useState([]);
-  const [summary, setSummary] = useState({
+// ─── Constants (stable refs, never re-created) ────────────────────────────────
+
+const INITIAL_ANALYTICS = {
+  userGrowth: { count: 0, note: "" },
+  conversions: { count: 0, note: "" },
+  activeUsers: { count: 0, note: "" },
+  deletedUsers: { count: 0, note: "" },
+  mostUsedResumeTemplates: [],
+  mostUsedCvTemplates: [],
+  chartData: [],
+  subscriptionBreakdown: [],
+  summary: {
     apiSuccessRate: "0%",
     apiFailureRate: "0%",
     avgResponseTime: "0ms",
     totalApiCalls: 0,
-    systemUptime: "99.98%"
-  });
+    systemUptime: "99.98%",
+  },
+};
+
+const TEMPLATE_COLORS = {
+  resume: {
+    text: ["text-blue-600", "text-purple-600", "text-emerald-600", "text-orange-600", "text-slate-500"],
+    bg: ["bg-blue-50", "bg-purple-50", "bg-emerald-50", "bg-orange-50", "bg-slate-50"],
+  },
+  cv: {
+    text: ["text-indigo-600", "text-cyan-600", "text-teal-600", "text-amber-600", "text-slate-500"],
+    bg: ["bg-indigo-50", "bg-cyan-50", "bg-teal-50", "bg-amber-50", "bg-slate-50"],
+  },
+};
+
+const PIE_COLORS = ["#94a3b8", "#3b82f6", "#8b5cf6", "#f59e0b", "#10b981"];
+
+const POLL_INTERVAL_MS = 30_000;
+
+// ─── Pure helpers (defined once, outside component) ───────────────────────────
+
+function getPlanConfig(rawPlan) {
+  const key = String(rawPlan ?? "").trim().toLowerCase();
+  if (key === "free")
+    return { icon: <Users size={18} />, color: "bg-slate-500", light: "bg-slate-50", text: "text-slate-600", border: "border-slate-100" };
+  if (key === "pro")
+    return { icon: <TrendingUp size={18} />, color: "bg-blue-600", light: "bg-blue-50", text: "text-blue-700", border: "border-blue-100" };
+  if (key.includes("premium"))
+    return { icon: <Award size={18} />, color: "bg-purple-600", light: "bg-purple-50", text: "text-purple-700", border: "border-purple-100" };
+  if (key.includes("ultra") || key.includes("lifetime") || key.includes("life time"))
+    return { icon: <Crown size={18} />, color: "bg-amber-500", light: "bg-amber-50", text: "text-amber-700", border: "border-amber-100" };
+  if (key.includes("basic"))
+    return { icon: <Zap size={18} />, color: "bg-emerald-500", light: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-100" };
+  return { icon: <Gem size={18} />, color: "bg-slate-400", light: "bg-slate-50", text: "text-slate-600", border: "border-slate-100" };
+}
+
+function mergeAnalytics(prev, data) {
+  return {
+    userGrowth: data.userGrowth ?? prev.userGrowth,
+    conversions: data.conversions ?? prev.conversions,
+    activeUsers: data.activeUsers ?? prev.activeUsers,
+    deletedUsers: data.deletedUsers ?? prev.deletedUsers,
+    mostUsedResumeTemplates: data.mostUsedResumeTemplates ?? data.mostUsedTemplates ?? [],
+    mostUsedCvTemplates: data.mostUsedCvTemplates ?? [],
+    chartData: data.chartData ?? [],
+    subscriptionBreakdown: data.subscriptionBreakdown ?? [],
+    summary: data.summary ?? prev.summary,
+  };
+}
+
+// ─── Sub-components (memoised) ────────────────────────────────────────────────
+
+const StatCard = React.memo(({ title, value, note, icon, iconBg, valueColor }) => (
+  <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition">
+    <div className="flex items-center justify-between">
+      <p className="text-slate-500 text-sm">{title}</p>
+      <div className={`${iconBg} p-3 rounded-full`}>{icon}</div>
+    </div>
+    <p className={`text-3xl font-bold mt-3 ${valueColor}`}>{value}</p>
+    <p className="text-slate-500 text-sm mt-2">{note}</p>
+  </div>
+));
+
+const TemplateList = React.memo(({ templates, type }) => {
+  const { text: textColors, bg: bgColors } = TEMPLATE_COLORS[type];
+  if (!templates.length) {
+    return (
+      <div className="text-center text-slate-400 py-6 border border-dashed border-slate-200 rounded-xl">
+        No {type} template usage yet
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-3 text-sm">
+      {templates.map((template, index) => (
+        <div
+          key={`${type}-${template.templateId}-${index}`}
+          className={`flex justify-between items-center p-3 rounded-xl ${bgColors[index % bgColors.length]}`}
+        >
+          <span className="font-medium text-slate-700">{template.templateId}</span>
+          <span className={`${textColors[index % textColors.length]} font-bold`}>
+            {template.count} uses ({template.percentage}%)
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+});
+
+const SubscriptionCard = React.memo(({ item, totalUsers }) => {
+  const config = useMemo(() => getPlanConfig(item.plan), [item.plan]);
+  const percentage = totalUsers > 0 ? Math.round((item.count / totalUsers) * 100) : 0;
+  return (
+    <div className={`p-5 rounded-2xl border ${config.border} bg-white`}>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-3">
+          <div className={`p-2.5 rounded-xl ${config.light} ${config.text}`}>{config.icon}</div>
+          <div>
+            <h4 className="font-bold text-slate-800">{item.plan}</h4>
+            <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Subscription Tier</p>
+          </div>
+        </div>
+        <div className="text-right">
+          <p className="text-2xl font-black text-slate-900 leading-none">{item.count}</p>
+          <p className="text-[10px] font-bold text-slate-400 mt-1">{percentage}% SHARE</p>
+        </div>
+      </div>
+      <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+        <div
+          className={`h-full rounded-full ${config.color} transition-all duration-1000`}
+          style={{ width: `${percentage}%` }}
+        />
+      </div>
+    </div>
+  );
+});
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
+export default function AdminAnalytics() {
+  const [analyticsData, setAnalyticsData] = useState(INITIAL_ANALYTICS);
+  const [templateView, setTemplateView] = useState("resume");
+  const [refreshingTemplates, setRefreshingTemplates] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
-  const displaySubscriptionBreakdown = useMemo(() => {
-    return [...subscriptionBreakdown].sort((a, b) => b.count - a.count);
-  }, [subscriptionBreakdown]);
+  // Stable ref so fetchAnalyticsData never needs to be in a dep array for the interval
+  const isMountedRef = useRef(true);
 
-  const totalSubscriptionUsers = useMemo(() => {
-    return displaySubscriptionBreakdown.reduce((acc, curr) => acc + curr.count, 0);
-  }, [displaySubscriptionBreakdown]);
-
-  const fetchAnalyticsData = useCallback(async (showLoader = false) => {
+  const fetchAnalyticsData = useCallback(async (showLoader = false, signal = null) => {
     if (showLoader) setLoading(true);
     try {
-      const response = await axiosInstance.get("/api/admin/analytics-stat");
-      setUserGrowth(response.data.userGrowth);
-      setConversions(response.data.conversions);
-      setActiveUsers(response.data.activeUsers);
-      setDeletedUsers(response.data.deletedUsers || { count: 0, note: "" });
-      setMostUsedResumeTemplates(
-        response.data.mostUsedResumeTemplates || response.data.mostUsedTemplates || []
-      );
-      setMostUsedCvTemplates(response.data.mostUsedCvTemplates || []);
-      setChartData(response.data.chartData || []);
-      setSubscriptionBreakdown(response.data.subscriptionBreakdown || []);
-      setSummary(response.data.summary || {
-        apiSuccessRate: "0%",
-        apiFailureRate: "0%",
-        avgResponseTime: "0ms",
-        totalApiCalls: 0,
-        systemUptime: "99.98%"
-      });
-    } catch (error) {
-      console.error("Error fetching analytics:", error);
+      const { data } = await axiosInstance.get("/api/admin/analytics-stat", { signal });
+      if (!isMountedRef.current) return;
+      setAnalyticsData(prev => mergeAnalytics(prev, data));
+      setLastUpdated(new Date().toLocaleTimeString());
+    } catch (err) {
+      if (err.name !== "CanceledError") console.error("Error fetching analytics:", err);
     } finally {
-      setLoading(false);
-      setRefreshingTemplates(false);
+      if (isMountedRef.current) {
+        if (showLoader) setLoading(false);
+        setRefreshingTemplates(false);
+      }
     }
-  }, []);
+  }, []); // no deps — helper fns are stable module-level refs
 
   useEffect(() => {
-    fetchAnalyticsData(true);
-    const fetchInterval = setInterval(() => fetchAnalyticsData(false), 5000);
-    return () => clearInterval(fetchInterval); 
+    isMountedRef.current = true;
+    const controller = new AbortController();
+    fetchAnalyticsData(true, controller.signal);
+    const id = setInterval(() => fetchAnalyticsData(false, controller.signal), POLL_INTERVAL_MS);
+    return () => {
+      isMountedRef.current = false;
+      controller.abort();
+      clearInterval(id);
+    };
   }, [fetchAnalyticsData]);
 
- 
+  // ── Derived data ────────────────────────────────────────────────────────────
 
-  const stats = [
+  const displaySubscriptionBreakdown = useMemo(
+    () => [...analyticsData.subscriptionBreakdown].sort((a, b) => b.count - a.count),
+    [analyticsData.subscriptionBreakdown]
+  );
+
+  const totalSubscriptionUsers = useMemo(
+    () => displaySubscriptionBreakdown.reduce((acc, { count }) => acc + count, 0),
+    [displaySubscriptionBreakdown]
+  );
+
+  const retentionRate = useMemo(() => {
+    const total = (analyticsData.activeUsers.count || 0) + (analyticsData.deletedUsers.count || 0);
+    return total > 0 ? Math.round((analyticsData.activeUsers.count / total) * 100) : 0;
+  }, [analyticsData.activeUsers.count, analyticsData.deletedUsers.count]);
+
+  const retentionStyle = useMemo(() => {
+    if (retentionRate >= 80) return { color: "text-indigo-600", bar: "bg-indigo-600", label: "Healthy retention" };
+    if (retentionRate >= 60) return { color: "text-amber-500", bar: "bg-amber-500", label: "Moderate retention" };
+    return { color: "text-red-500", bar: "bg-red-500", label: "Needs attention" };
+  }, [retentionRate]);
+
+  const stats = useMemo(() => [
     {
       title: "User Growth",
-      value: loading ? "..." : `${userGrowth.count} Users`,
-      note: userGrowth.note,
+      value: loading ? "..." : `${analyticsData.userGrowth.count} Users`,
+      note: analyticsData.userGrowth.note,
       icon: <TrendingUp className="text-green-600" />,
       iconBg: "bg-green-50",
       valueColor: "text-slate-900",
     },
     {
       title: "Paid Conversions",
-      value: loading ? "..." : `${conversions.count} Users`,
-      note: conversions.note,
+      value: loading ? "..." : `${analyticsData.conversions.count} Users`,
+      note: analyticsData.conversions.note,
       icon: <Users className="text-blue-600" />,
       iconBg: "bg-blue-50",
       valueColor: "text-slate-900",
     },
     {
       title: "Active Users",
-      value: loading ? "..." : `${activeUsers.count} Users`,
-      note: activeUsers.note,
+      value: loading ? "..." : `${analyticsData.activeUsers.count} Users`,
+      note: analyticsData.activeUsers.note,
       icon: <UserCheck className="text-purple-600" />,
       iconBg: "bg-purple-50",
       valueColor: "text-slate-900",
     },
     {
       title: "Deleted Users",
-      value: loading ? "..." : `${deletedUsers.count} Users`,
-      note: deletedUsers.note,
+      value: loading ? "..." : `${analyticsData.deletedUsers.count} Users`,
+      note: analyticsData.deletedUsers.note,
       icon: <UserMinus className="text-red-600" />,
       iconBg: "bg-red-50",
       valueColor: "text-slate-900",
     },
-  ];
+  ], [loading, analyticsData.userGrowth, analyticsData.conversions, analyticsData.activeUsers, analyticsData.deletedUsers]);
+
+  const handleRefreshTemplates = useCallback(() => {
+    setRefreshingTemplates(true);
+    fetchAnalyticsData(false);
+  }, [fetchAnalyticsData]);
+
+  const handleTemplateViewResume = useCallback(() => setTemplateView("resume"), []);
+  const handleTemplateViewCv = useCallback(() => setTemplateView("cv"), []);
+
+  // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
     <div className="min-h-screen flex-1 p-4 sm:p-6 bg-slate-50 text-slate-900">
       {/* Header */}
-      <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold">System Analytics</h1>
-        <p className="text-sm sm:text-base text-slate-600 mt-1 sm:mt-2">
-          Deep dive into platform performance & user engagement.
-        </p>
+      <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold">System Analytics</h1>
+          <p className="text-sm sm:text-base text-slate-600 mt-1 sm:mt-2">
+            Deep dive into platform performance &amp; user engagement.
+          </p>
+        </div>
+        {lastUpdated && (
+          <div className="text-xs text-slate-400 bg-white px-3 py-1.5 rounded-full border border-slate-200 w-fit">
+            Last updated: <span className="font-medium">{lastUpdated}</span>
+          </div>
+        )}
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-5 mb-10">
-        {stats.map((item) => (
-          <div
-            key={item.title}
-            className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition"
-          >
-            <div className="flex items-center justify-between">
-              <p className="text-slate-500 text-sm">{item.title}</p>
-              <div className={`${item.iconBg} p-3 rounded-full`}>
-                {item.icon}
-              </div>
-            </div>
-
-            <p className={`text-3xl font-bold mt-3 ${item.valueColor}`}>
-              {item.value}
-            </p>
-
-            <p className="text-slate-500 text-sm mt-2">{item.note}</p>
-          </div>
-        ))}
+        {stats.map(item => <StatCard key={item.title} {...item} />)}
       </div>
 
-      {/* System Performance & Rating Metrics */}
+      {/* System Performance */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* Platform Health Score */}
+        {/* Platform Health */}
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold">Platform Health</h3>
@@ -149,19 +286,19 @@ export default function AdminAnalytics() {
           </div>
           <div className="flex items-baseline gap-2">
             <span className="text-4xl font-bold text-green-600">
-              {loading ? "..." : summary.apiSuccessRate.replace("%", "")}
+              {loading ? "..." : analyticsData.summary.apiSuccessRate.replace("%", "")}
             </span>
             <span className="text-slate-500">/100</span>
           </div>
           <p className="text-sm text-slate-500 mt-2">
-            {parseFloat(summary.apiSuccessRate) > 95 ? "System running smoothly" : "Monitoring performance"}
+            {parseFloat(analyticsData.summary.apiSuccessRate) > 95 ? "System running smoothly" : "Monitoring performance"}
           </p>
           <div className="mt-4 bg-slate-100 rounded-full h-2">
-            <div className="bg-green-600 h-2 rounded-full" style={{ width: summary.apiSuccessRate }}></div>
+            <div className="bg-green-600 h-2 rounded-full" style={{ width: analyticsData.summary.apiSuccessRate }} />
           </div>
         </div>
 
-        {/* User Retention Rate */}
+        {/* User Retention */}
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold">User Retention Rate</h3>
@@ -169,29 +306,20 @@ export default function AdminAnalytics() {
               <RefreshCw className="text-indigo-600" size={20} />
             </div>
           </div>
-          {(() => {
-            const total = (activeUsers.count || 0) + (deletedUsers.count || 0);
-            const rate = total > 0 ? Math.round((activeUsers.count / total) * 100) : 0;
-            const color = rate >= 80 ? "text-indigo-600" : rate >= 60 ? "text-amber-500" : "text-red-500";
-            const barColor = rate >= 80 ? "bg-indigo-600" : rate >= 60 ? "bg-amber-500" : "bg-red-500";
-            const label = rate >= 80 ? "Healthy retention" : rate >= 60 ? "Moderate retention" : "Needs attention";
-            return (
-              <>
-                <div className="flex items-baseline gap-2">
-                  <span className={`text-4xl font-bold ${color}`}>
-                    {loading ? "..." : `${rate}%`}
-                  </span>
-                </div>
-                <p className="text-sm text-slate-500 mt-2">{label}</p>
-                <div className="mt-4 bg-slate-100 rounded-full h-2">
-                  <div className={`h-2 rounded-full ${barColor}`} style={{ width: `${rate}%` }}></div>
-                </div>
-                <p className="text-xs text-slate-400 mt-2">
-                  {loading ? "" : `${activeUsers.count} active · ${deletedUsers.count} churned`}
-                </p>
-              </>
-            );
-          })()}
+          <div className="flex items-baseline gap-2">
+            <span className={`text-4xl font-bold ${retentionStyle.color}`}>
+              {loading ? "..." : `${retentionRate}%`}
+            </span>
+          </div>
+          <p className="text-sm text-slate-500 mt-2">{retentionStyle.label}</p>
+          <div className="mt-4 bg-slate-100 rounded-full h-2">
+            <div className={`h-2 rounded-full ${retentionStyle.bar}`} style={{ width: `${retentionRate}%` }} />
+          </div>
+          {!loading && (
+            <p className="text-xs text-slate-400 mt-2">
+              {analyticsData.activeUsers.count} active · {analyticsData.deletedUsers.count} churned
+            </p>
+          )}
         </div>
 
         {/* Response Time */}
@@ -204,7 +332,7 @@ export default function AdminAnalytics() {
           </div>
           <div className="flex items-baseline gap-2">
             <span className="text-4xl font-bold text-blue-600">
-              {loading ? "..." : summary.avgResponseTime.replace("ms", "")}
+              {loading ? "..." : analyticsData.summary.avgResponseTime.replace("ms", "")}
             </span>
             <span className="text-slate-500">ms</span>
           </div>
@@ -212,138 +340,59 @@ export default function AdminAnalytics() {
         </div>
       </div>
 
-      {/* Data Quality & Security Metrics */}
+      {/* Small metric cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6">
-        {/* Uptime */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-sm text-slate-500">System Uptime</p>
-            <div className="bg-green-50 p-2 rounded-full">
-              <Shield className="text-green-600" size={16} />
+        {[
+          { label: "System Uptime", value: analyticsData.summary.systemUptime, note: "Last 30 days", noteColor: "text-slate-500", icon: <Shield className="text-green-600" size={16} />, iconBg: "bg-green-50" },
+          { label: "Total API Calls", value: analyticsData.summary.totalApiCalls, note: "Last 30 days", noteColor: "text-slate-500", icon: <Activity className="text-purple-600" size={16} />, iconBg: "bg-purple-50" },
+          { label: "API Success Rate", value: analyticsData.summary.apiSuccessRate, note: "Real-time health", noteColor: "text-green-600", icon: <Zap className="text-blue-600" size={16} />, iconBg: "bg-blue-50" },
+          { label: "API Failure Rate", value: analyticsData.summary.apiFailureRate, note: "Real-time error monitoring", noteColor: "text-red-600", icon: <Activity className="text-red-600" size={16} />, iconBg: "bg-red-50" },
+        ].map(({ label, value, note, noteColor, icon, iconBg }) => (
+          <div key={label} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm text-slate-500">{label}</p>
+              <div className={`${iconBg} p-2 rounded-full`}>{icon}</div>
             </div>
+            <p className="text-2xl font-bold text-slate-900">{loading ? "..." : value}</p>
+            <p className={`text-xs ${noteColor} mt-1`}>{note}</p>
           </div>
-          <p className="text-2xl font-bold text-slate-900">
-            {loading ? "..." : summary.systemUptime}
-          </p>
-          <p className="text-xs text-slate-500 mt-1">Last 30 days</p>
-        </div>
-
-        {/* Data Accuracy */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-sm text-slate-500">Total API Calls</p>
-            <div className="bg-purple-50 p-2 rounded-full">
-              <Activity className="text-purple-600" size={16} />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-slate-900">
-            {loading ? "..." : summary.totalApiCalls}
-          </p>
-          <p className="text-xs text-slate-500 mt-1">Last 30 days</p>
-        </div>
-
-        {/* API Success Rate */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-sm text-slate-500">API Success Rate</p>
-            <div className="bg-blue-50 p-2 rounded-full">
-              <Zap className="text-blue-600" size={16} />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-slate-900">
-            {loading ? "..." : summary.apiSuccessRate}
-          </p>
-          <p className="text-xs text-green-600 mt-1">Real-time health</p>
-        </div>
-
-        {/* Error Rate */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-sm text-slate-500">API Failure Rate</p>
-            <div className="bg-red-50 p-2 rounded-full">
-              <Activity className="text-red-600" size={16} />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-slate-900">
-            {loading ? "..." : summary.apiFailureRate}
-          </p>
-          <p className="text-xs text-red-600 mt-1">Real-time error monitoring</p>
-        </div>
+        ))}
       </div>
 
-      {/* Growth & Revenue */}
+      {/* Growth & Revenue Chart */}
       <div className="mb-8 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-          <h2 className="text-lg font-semibold mb-1">
-            Platform Growth & Revenue
-          </h2>
-          <p className="text-sm text-slate-500 mb-6">User acquisition vs Revenue generated</p>
-
-          {loading ? (
-            <div className="h-64 flex items-center justify-center text-slate-400">
-              Loading chart data...
-            </div>
-          ) : chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis
-                  dataKey="month"
-                  stroke="#64748b"
-                  fontSize={12}
-                />
-                <YAxis yAxisId="left" stroke="#64748b" fontSize={12} />
-                <YAxis yAxisId="right" orientation="right" stroke="#64748b" fontSize={12} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#fff',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '8px'
-                  }}
-                />
-                <Legend />
-
-                <Line
-                  yAxisId="right"
-                  type="monotone"
-                  dataKey="revenue"
-                  stroke="#10b981"
-                  strokeWidth={2}
-                  name="Revenue (₹)"
-                  dot={{ fill: '#10b981', r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-
-                <Line
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="users"
-                  stroke="#3b82f6"
-                  strokeWidth={2}
-                  name="New Users"
-                  dot={{ fill: '#3b82f6', r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-64 flex items-center justify-center text-slate-400 border border-dashed border-slate-300 rounded-xl">
-              No trend data available yet
-            </div>
-          )}
+        <h2 className="text-lg font-semibold mb-1">Platform Growth &amp; Revenue</h2>
+        <p className="text-sm text-slate-500 mb-6">User acquisition vs Revenue generated</p>
+        {loading ? (
+          <div className="h-64 flex items-center justify-center text-slate-400">Loading chart data...</div>
+        ) : analyticsData.chartData.length > 0 ? (
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={analyticsData.chartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
+              <YAxis yAxisId="left" stroke="#64748b" fontSize={12} />
+              <YAxis yAxisId="right" orientation="right" stroke="#64748b" fontSize={12} />
+              <Tooltip contentStyle={{ backgroundColor: "#fff", border: "1px solid #e2e8f0", borderRadius: "8px" }} />
+              <Legend />
+              <Line yAxisId="right" type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={2} name="Revenue (₹)" dot={{ fill: "#10b981", r: 4 }} activeDot={{ r: 6 }} />
+              <Line yAxisId="left" type="monotone" dataKey="users" stroke="#3b82f6" strokeWidth={2} name="New Users" dot={{ fill: "#3b82f6", r: 4 }} activeDot={{ r: 6 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="h-64 flex items-center justify-center text-slate-400 border border-dashed border-slate-300 rounded-xl">
+            No trend data available yet
+          </div>
+        )}
       </div>
 
-      {/* Templates + Top Pages Row */}
+      {/* Templates + Top Pages */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {/* Most Used Templates */}
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Most Used Templates</h2>
             <button
               type="button"
-              onClick={() => {
-                setRefreshingTemplates(true);
-                fetchAnalyticsData(false);
-              }}
+              onClick={handleRefreshTemplates}
               disabled={refreshingTemplates || loading}
               className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition disabled:opacity-60 disabled:cursor-not-allowed"
             >
@@ -353,85 +402,34 @@ export default function AdminAnalytics() {
           </div>
 
           <div className="inline-flex bg-slate-100 rounded-lg p-1 mb-4">
-            <button
-              type="button"
-              onClick={() => setTemplateView("resume")}
-              className={`px-3 py-1.5 text-sm font-medium rounded-md transition ${
-                templateView === "resume"
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
-              }`}
-            >
-              Resume
-            </button>
-            <button
-              type="button"
-              onClick={() => setTemplateView("cv")}
-              className={`px-3 py-1.5 text-sm font-medium rounded-md transition ${
-                templateView === "cv"
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
-              }`}
-            >
-              CV
-            </button>
+            {[{ key: "resume", label: "Resume" }, { key: "cv", label: "CV" }].map(({ key, label }) => (
+              <button
+                key={key}
+                type="button"
+                onClick={key === "resume" ? handleTemplateViewResume : handleTemplateViewCv}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition ${
+                  templateView === key ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
 
           {loading ? (
             <div className="text-center text-slate-400 py-8">Loading...</div>
-          ) : templateView === "resume" ? (
-            mostUsedResumeTemplates.length > 0 ? (
-              <div className="space-y-3 text-sm">
-                {mostUsedResumeTemplates.map((template, index) => {
-                  const colors = ["text-blue-600", "text-purple-600", "text-emerald-600", "text-orange-600", "text-slate-500"];
-                  const bgs = ["bg-blue-50", "bg-purple-50", "bg-emerald-50", "bg-orange-50", "bg-slate-50"];
-                  return (
-                    <div key={`resume-${template.templateId}-${index}`} className={`flex justify-between items-center p-3 rounded-xl ${bgs[index % bgs.length]}`}>
-                      <span className="font-medium text-slate-700">
-                        {template.templateId}
-                      </span>
-                      <span className={`${colors[index % colors.length]} font-bold`}>
-                        {template.count} uses ({template.percentage}%)
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-center text-slate-400 py-6 border border-dashed border-slate-200 rounded-xl">
-                No resume template usage yet
-              </div>
-            )
           ) : (
-            mostUsedCvTemplates.length > 0 ? (
-              <div className="space-y-3 text-sm">
-                {mostUsedCvTemplates.map((template, index) => {
-                  const colors = ["text-indigo-600", "text-cyan-600", "text-teal-600", "text-amber-600", "text-slate-500"];
-                  const bgs = ["bg-indigo-50", "bg-cyan-50", "bg-teal-50", "bg-amber-50", "bg-slate-50"];
-                  return (
-                    <div key={`cv-${template.templateId}-${index}`} className={`flex justify-between items-center p-3 rounded-xl ${bgs[index % bgs.length]}`}>
-                      <span className="font-medium text-slate-700">
-                        {template.templateId}
-                      </span>
-                      <span className={`${colors[index % colors.length]} font-bold`}>
-                        {template.count} uses ({template.percentage}%)
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-center text-slate-400 py-6 border border-dashed border-slate-200 rounded-xl">
-                No CV template usage yet
-              </div>
-            )
+            <TemplateList
+              templates={templateView === "resume" ? analyticsData.mostUsedResumeTemplates : analyticsData.mostUsedCvTemplates}
+              type={templateView}
+            />
           )}
         </div>
 
         <AdminTopPagesAnalytics />
       </div>
 
-      {/* Subscription Breakdown Section */}
+      {/* Subscription Breakdown */}
       <div className="mt-8 bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <div>
@@ -441,7 +439,7 @@ export default function AdminAnalytics() {
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-center">
-          {/* Visual Overview - Donut Chart */}
+          {/* Donut Chart */}
           <div className="xl:col-span-4 flex justify-center">
             {loading ? (
               <div className="w-64 h-64 rounded-full bg-slate-50 animate-pulse border-4 border-slate-100 flex items-center justify-center text-slate-300">
@@ -451,91 +449,32 @@ export default function AdminAnalytics() {
               <div className="relative w-full max-w-[280px]">
                 <ResponsiveContainer width="100%" height={280}>
                   <PieChart>
-                    <Pie
-                      data={displaySubscriptionBreakdown}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={75}
-                      outerRadius={100}
-                      paddingAngle={5}
-                      dataKey="count"
-                    >
-                      {displaySubscriptionBreakdown.map((entry, index) => {
-                        const colors = ['#94a3b8', '#3b82f6', '#8b5cf6', '#f59e0b', '#10b981'];
-                        return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
-                      })}
+                    <Pie data={displaySubscriptionBreakdown} cx="50%" cy="50%" innerRadius={75} outerRadius={100} paddingAngle={5} dataKey="count">
+                      {displaySubscriptionBreakdown.map((_, index) => (
+                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                      ))}
                     </Pie>
                     <Tooltip />
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-3xl font-bold text-slate-900">
-                    {totalSubscriptionUsers}
-                  </span>
+                  <span className="text-3xl font-bold text-slate-900">{totalSubscriptionUsers}</span>
                   <span className="text-xs text-slate-500 font-medium uppercase tracking-widest">Total Users</span>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Detailed Cards */}
+          {/* Subscription Cards */}
           <div className="xl:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-4">
             {loading ? (
-              Array(4).fill(0).map((_, i) => (
+              Array.from({ length: 4 }, (_, i) => (
                 <div key={i} className="h-28 bg-slate-50 rounded-2xl animate-pulse" />
               ))
             ) : displaySubscriptionBreakdown.length > 0 ? (
-              displaySubscriptionBreakdown.map((item, index) => {
-                const key = String(item.plan || "").trim().toLowerCase();
-                const getConfig = () => {
-                  if (key === "free") {
-                    return { icon: <Users size={18} />, color: "bg-slate-500", light: "bg-slate-50", text: "text-slate-600", border: "border-slate-100" };
-                  }
-                  if (key === "pro") {
-                    return { icon: <TrendingUp size={18} />, color: "bg-blue-600", light: "bg-blue-50", text: "text-blue-700", border: "border-blue-100" };
-                  }
-                  if (key.includes("premium")) {
-                    return { icon: <Award size={18} />, color: "bg-purple-600", light: "bg-purple-50", text: "text-purple-700", border: "border-purple-100" };
-                  }
-                  if (key.includes("ultra") || key.includes("lifetime") || key.includes("life time")) {
-                    return { icon: <Crown size={18} />, color: "bg-amber-500", light: "bg-amber-50", text: "text-amber-700", border: "border-amber-100" };
-                  }
-                  if (key.includes("basic")) {
-                    return { icon: <Zap size={18} />, color: "bg-emerald-500", light: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-100" };
-                  }
-                  return { icon: <Gem size={18} />, color: "bg-slate-400", light: "bg-slate-50", text: "text-slate-600", border: "border-slate-100" };
-                };
-
-                const config = getConfig();
-                const total = totalSubscriptionUsers || 1;
-                const percentage = Math.round((item.count / total) * 100);
-
-                return (
-                  <div key={item.plan} className={`p-5 rounded-2xl border ${config.border} bg-white`}>
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className={`p-2.5 rounded-xl ${config.light} ${config.text}`}>
-                          {config.icon}
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-slate-800">{item.plan}</h4>
-                          <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Subscription Tier</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-black text-slate-900 leading-none">{item.count}</p>
-                        <p className="text-[10px] font-bold text-slate-400 mt-1">{percentage}% SHARE</p>
-                      </div>
-                    </div>
-                    <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                      <div
-                        className={`h-full rounded-full ${config.color} transition-all duration-1000`}
-                        style={{ width: `${percentage}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                );
-              })
+              displaySubscriptionBreakdown.map(item => (
+                <SubscriptionCard key={item.plan} item={item} totalUsers={totalSubscriptionUsers} />
+              ))
             ) : (
               <div className="col-span-2 text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
                 <Users size={32} className="mx-auto text-slate-300 mb-3" />

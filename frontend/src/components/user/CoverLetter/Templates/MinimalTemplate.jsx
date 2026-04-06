@@ -3,7 +3,7 @@ import { formatExternalUrl, formatMailto, formatTel } from "../../Templates/soci
 
 const MinimalTemplate = ({ formData }) => {
   const {
-    fullName, email, phone, address, linkedin,
+    fullName, email, phone, address, linkedin, website, github, extraLinks,
     recipientName, recipientTitle, companyName, companyAddress,
     jobTitle, jobReference, jobSummary, jobDescription,
     openingParagraph, bodyParagraph1, bodyParagraph2, closingParagraph,
@@ -23,9 +23,12 @@ const MinimalTemplate = ({ formData }) => {
       <div className="mb-20">
         <h1 className="text-4xl font-light text-slate-900 tracking-tight lowercase mb-4">{fullName || "your name"}</h1>
         <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-slate-400 font-medium">
-          <span><a href={formatMailto(email)} className="hover:underline">{email}</a></span>
-          <span><a href={formatTel(phone)} className="hover:underline">{phone}</a></span>
-          <span className="truncate max-w-[150px]"><a href={formatExternalUrl(linkedin)} target="_blank" rel="noopener noreferrer" className="hover:underline">{linkedin}</a></span>
+          <span>{email}</span>
+          <span>{phone}</span>
+          {linkedin && <span className="truncate max-w-[150px]"><a href={linkedin.startsWith('http') ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">LinkedIn</a></span>}
+          {website && <span className="truncate max-w-[150px]"><a href={website.startsWith('http') ? website : `https://${website}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Website</a></span>}
+          {github && <span className="truncate max-w-[150px]"><a href={github.startsWith('http') ? github : `https://${github}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">GitHub</a></span>}
+          {extraLinks?.map((link, index) => (link.label && link.url && <span key={index} className="truncate max-w-[150px]"><a href={link.url.startsWith('http') ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{link.label}</a></span>))}
           <span className="truncate max-w-[150px] italic">{address}</span>
         </div>
       </div>

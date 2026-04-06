@@ -7,6 +7,9 @@ const EclipseTemplate = ({ formData }) => {
     location,
     email,
     phone,
+    linkedin,
+    website,
+    github,
     summary,
     experience = [],
     education = [],
@@ -36,6 +39,9 @@ const EclipseTemplate = ({ formData }) => {
             {location && <span>{location}</span>}
             {email && <span>{email}</span>}
             {phone && <span>{phone}</span>}
+            {linkedin && <span><a href={linkedin.startsWith('http') ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{linkedin}</a></span>}
+            {website && <span><a href={website.startsWith('http') ? website : `https://${website}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{website}</a></span>}
+            {github && <span><a href={github.startsWith('http') ? github : `https://${github}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{github}</a></span>}
             {/* Extra Links */}
             {formData?.extraLinks?.map((link, index) => (
               <span key={index}>

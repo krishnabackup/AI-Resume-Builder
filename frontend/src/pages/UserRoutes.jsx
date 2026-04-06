@@ -11,7 +11,8 @@ import { UserNotificationProvider } from "../context/UserNotificationContext";
 // Pages
 import Dashboard from "../components/user/Dashboard/Dashboard";
 import ATSChecker from "../components/user/ATSChecker/ATSChecker";
-import Profile from "../components/user/Profile/EditProfile";
+import ProfileOverview from "../components/user/Profile/ProfileOverview";
+import EditProfile from "../components/user/Profile/EditProfile";
 import Security from "../components/user/Profile/Security";
 import ResumeBuilder from "../components/user/ResumeBuilder/ResumeBuilder";
 import Templates from "../components/user/Templates/TemplatesDashboardPage";
@@ -75,7 +76,8 @@ const UserRoutes = () => {
 
           <Route path="ats-checker" element={<ATSChecker />} />
           <Route path="downloads" element={<Downloads />} />
-          <Route path="edit-profile" element={<Profile />} />
+          <Route path="profile" element={<ProfileOverview />} />
+          <Route path="edit-profile" element={<EditProfile />} />
           <Route path="security" element={<Security />} />
           <Route path="notifications" element={<UserNotifications />} />
 

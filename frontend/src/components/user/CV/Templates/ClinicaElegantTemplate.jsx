@@ -8,6 +8,9 @@ const ClinicaElegantTemplate = ({ formData }) => {
     address,
     phone,
     email,
+    linkedin,
+    website,
+    github,
     summary,
     skills = [],
     experience = [],
@@ -42,6 +45,27 @@ const ClinicaElegantTemplate = ({ formData }) => {
               {address && <p>{address}</p>}
               {phone && <p>{phone}</p>}
               {email && <p>{email}</p>}
+              {linkedin && (
+                <p>
+                  <a href={linkedin.startsWith("http") ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                    {linkedin}
+                  </a>
+                </p>
+              )}
+              {website && (
+                <p>
+                  <a href={website.startsWith("http") ? website : `https://${website}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                    {website}
+                  </a>
+                </p>
+              )}
+              {github && (
+                <p>
+                  <a href={github.startsWith("http") ? github : `https://${github}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                    {github}
+                  </a>
+                </p>
+              )}
               {/* Extra Links */}
               {formData?.extraLinks?.map((link, index) => (
                 <p key={index}>

@@ -173,6 +173,31 @@ const CVBuilder = () => {
     }
   });
 
+  // Check if form has data to show the reset (Create New) button
+  const hasData = Boolean(
+    formData.fullName ||
+    formData.email ||
+    formData.phone ||
+    formData.location ||
+    formData.summary ||
+    formData.resumeText ||
+    (formData.experience && formData.experience.some(e => e.company || e.title)) ||
+    (formData.education && formData.education.some(e => e.school || e.degree)) ||
+    (formData.skills?.technical?.length > 0) ||
+    (formData.skills?.soft?.length > 0) ||
+    (formData.projects && formData.projects.some(p => p.name))
+  );
+
+  const handleResetCV = () => {
+    if (window.confirm("Are you sure you want to clear all data and start a fresh CV?")) {
+      setFormData(createEmptyResume());
+      setDocumentTitle("");
+      setActiveSection("personal");
+      setActiveTab("builder");
+      localStorage.removeItem("cvBuilderFormData");
+    }
+  };
+
   /* ======================================================
    SAVE RECENT ACTIVITY (visited / preview / download)
 ====================================================== */
@@ -814,7 +839,7 @@ const CVBuilder = () => {
 
               if (!matched && currentExp && trimmedLine.length > 30) {
                 // Add as description if it looks like a responsibility/achievement
-                if (trimmedLine.match(/^•|^-|\*|^\d+\.|^[A-Z][a-z]/)) {
+                if (trimmedLine.match(/^[•\-*·\u2022\u2023\u25E6\u2043\u2219]|^\d+\.|^[A-Z][a-z]/)) {
                   currentExp.description += trimmedLine + "\n";
                 }
               }
@@ -1122,6 +1147,9 @@ const CVBuilder = () => {
         onTitleChange={(_, val) => setDocumentTitle(val)}
         isAiMode={isAiMode}
         onToggleAiMode={() => setIsAiMode((v) => !v)}
+        showReset={hasData}
+        onReset={handleResetCV}
+        resetLabel="Create new CV"
       />
 
       <div className="px-2 pt-4 pb-9 sm:px-4 lg:px-4 w-screen max-w-full mx-0">

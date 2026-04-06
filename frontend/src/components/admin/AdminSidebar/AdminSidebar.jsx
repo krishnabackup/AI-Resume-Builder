@@ -137,12 +137,12 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed, isMobileOpen
       {/* Sidebar */}
       <motion.aside
         className="fixed top-0 left-0 z-[90] bg-white border-r border-slate-200 flex flex-col"
-        style={{
-          width: isMobile ? SIDEBAR_WIDTH.expanded : isCollapsed ? SIDEBAR_WIDTH.collapsed : SIDEBAR_WIDTH.expanded,
-          height: "100vh",
+        animate={{ 
+          x: isMobile && !isMobileOpen ? -SIDEBAR_WIDTH.expanded : 0,
+          width: isMobile ? SIDEBAR_WIDTH.expanded : isCollapsed ? SIDEBAR_WIDTH.collapsed : SIDEBAR_WIDTH.expanded
         }}
-        animate={{ x: isMobile && !isMobileOpen ? -SIDEBAR_WIDTH.expanded : 0 }}
-        transition={{ type: "spring", stiffness: 220, damping: 25 }}
+        transition={{ duration: 0.3 }}
+        style={{ height: "100vh" }}
       >
         {/* Menu */}
         <nav className={`p-3 space-y-2 mt-16 flex-1 ${isCollapsed && !isMobile ? 'overflow-visible' : 'overflow-y-auto'}`}>
@@ -160,7 +160,7 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed, isMobileOpen
                 <button
                   onClick={() => handleNavigate(item.path)}
                   className={`w-full flex items-center rounded-xl transition-all
-                    ${isCollapsed && !isMobile ? "justify-center px-0" : "gap-3 px-4"} py-3
+                    ${isCollapsed && !isMobile ? "" : "gap-3"} py-3 px-4
                     ${active
                       ? "bg-blue-50 text-blue-600 font-semibold"
                       : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
@@ -168,10 +168,23 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed, isMobileOpen
                     ${item.id === 'notifications' && unreadCount > 0 ? 'relative' : ''}`}
                   aria-current={active ? "page" : undefined}
                 >
-                  <Icon size={22} aria-hidden="true" />
-                  {(!isCollapsed || isMobile) && (
-                    <span className="whitespace-nowrap">{item.label}</span>
-                  )}
+                  <div className="w-6 flex justify-center">
+                    <Icon size={22} aria-hidden="true" />
+                  </div>
+                    <AnimatePresence>
+                    {(!isCollapsed || isMobile) && (
+                      <motion.span
+                        className="whitespace-nowrap"
+                        initial={{ opacity: 0,filter:"blur(10px)", width: 0 }}
+                        animate={{ opacity: 1,filter:"blur(0px)", width: "auto" }}
+                        exit={{ opacity: 0,filter:"blur(10px)", width: 0 }}
+                        transition={{ duration: 0.3, ease:"easeInOut" }}
+                        layout
+                      >
+                        {item.label}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
 
                   {/* ← ADDED Notification Badge */}
                   {item.id === 'notifications' && unreadCount > 0 && (
@@ -219,11 +232,26 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed, isMobileOpen
             <button
               onClick={() => navigate("/")}
               className={`w-full flex items-center rounded-xl transition-all text-red-500 hover:bg-red-50
-                ${isCollapsed && !isMobile ? "justify-center px-0" : "gap-3 px-4"} py-3`}
+                ${isCollapsed && !isMobile ? "" : "gap-3 "} py-3 px-4`}
               aria-label="Logout"
             >
-              <LogOut size={22} aria-hidden="true" />
-              {(!isCollapsed || isMobile) && <span>Logout</span>}
+              <div className="w-6 flex justify-center">
+                <LogOut size={22} aria-hidden="true" />
+              </div>
+              
+              <AnimatePresence>
+                {(!isCollapsed || isMobile) && (
+                  <motion.span
+                    initial={{ opacity: 0,filter:"blur(10px)", width: 0 }}
+                    animate={{ opacity: 1,filter:"blur(0px)", width: "auto" }}
+                    exit={{ opacity: 0,filter:"blur(10px)", width: 0 }}
+                    transition={{ duration: 0.3, ease:"easeInOut" }}
+                    layout
+                  >
+                    Logout
+                  </motion.span>
+                )}
+              </AnimatePresence>
             </button>
 
             {/* Tooltip when collapsed - Desktop only */}

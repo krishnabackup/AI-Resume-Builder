@@ -12,6 +12,7 @@ const JessicaClaire10 = ({ data }) => {
         location = "San Francisco, CA",
         linkedin = "",
         website = "",
+        github = "",
         extraLinks = [],
         experience = [],
         education = [],
@@ -38,20 +39,28 @@ const JessicaClaire10 = ({ data }) => {
                     {linkedin && (
                         <>
                             <span>|</span>
-                            <a href={formatExternalUrl(linkedin)} target="_blank" rel="noopener noreferrer">LinkedIn</a>
+                            <a href={linkedin.startsWith('http') ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer">LinkedIn</a>
                         </>
                     )}
                     {website && (
                         <>
                             <span>|</span>
-                            <a href={formatExternalUrl(website)} target="_blank" rel="noopener noreferrer">Website</a>
+                            <a href={website.startsWith('http') ? website : `https://${website}`} target="_blank" rel="noopener noreferrer">Website</a>
                         </>
                     )}
-                    {visibleExtraLinks.map((link, index) => (
-                        <React.Fragment key={`${link.label}-${index}`}>
+                    {github && (
+                        <>
                             <span>|</span>
-                            <a href={formatExternalUrl(link.url)} target="_blank" rel="noopener noreferrer">{link.label}</a>
-                        </React.Fragment>
+                            <a href={github.startsWith('http') ? github : `https://${github}`} target="_blank" rel="noopener noreferrer">GitHub</a>
+                        </>
+                    )}
+                    {extraLinks?.map((link, index) => (
+                        link.label && link.url && (
+                            <span key={index}>
+                                <span>|</span>
+                                <a href={link.url.startsWith('http') ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer">{link.label}</a>
+                            </span>
+                        )
                     ))}
                 </div>
             </div>

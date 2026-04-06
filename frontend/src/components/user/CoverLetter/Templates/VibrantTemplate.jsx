@@ -3,7 +3,7 @@ import { formatExternalUrl, formatMailto, formatTel } from "../../Templates/soci
 
 const VibrantTemplate = ({ formData }) => {
   const {
-    fullName, email, phone, address, linkedin,
+    fullName, email, phone, address, linkedin, website, github, extraLinks,
     recipientName, recipientTitle, companyName, companyAddress,
     jobTitle, jobReference, jobSummary, jobDescription,
     openingParagraph, bodyParagraph1, bodyParagraph2, closingParagraph,
@@ -27,9 +27,12 @@ const VibrantTemplate = ({ formData }) => {
             {fullName || "Hello World"}
           </h1>
           <div className="flex flex-wrap gap-x-8 gap-y-2 mt-8 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-             <div className="bg-slate-900 text-white px-3 py-1 rounded-sm"><a href={formatMailto(email)} className="hover:underline">{email}</a></div>
-             <div className="py-1 border-b-2 border-slate-100"><a href={formatTel(phone)} className="hover:underline">{phone}</a></div>
-             <div className="py-1 border-b-2 border-slate-100 italic"><a href={formatExternalUrl(linkedin)} target="_blank" rel="noopener noreferrer" className="hover:underline">{linkedin}</a></div>
+             <div className="bg-slate-900 text-white px-3 py-1 rounded-sm">{email}</div>
+             <div className="py-1 border-b-2 border-slate-100">{phone}</div>
+             {linkedin && <div className="py-1 border-b-2 border-slate-100 italic"><a href={linkedin.startsWith('http') ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">LinkedIn</a></div>}
+             {website && <div className="py-1 border-b-2 border-slate-100 italic"><a href={website.startsWith('http') ? website : `https://${website}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Website</a></div>}
+             {github && <div className="py-1 border-b-2 border-slate-100 italic"><a href={github.startsWith('http') ? github : `https://${github}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">GitHub</a></div>}
+             {extraLinks?.map((link, index) => (link.label && link.url && <div key={index} className="py-1 border-b-2 border-slate-100 italic"><a href={link.url.startsWith('http') ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{link.label}</a></div>))}
           </div>
         </header>
 

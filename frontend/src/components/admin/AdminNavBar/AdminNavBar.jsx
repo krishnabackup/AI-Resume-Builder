@@ -123,7 +123,7 @@ export default function AdminNavbar({ isCollapsed, setIsCollapsed, isMobileOpen,
             <img
               src={UptoSkillsLogo}
               alt="UptoSkills"
-              className="w-44 h-11 object-contain transition-all duration-300 pl-6"
+              className="w-44 h-11 object-contain transition-all duration-300 pl-11"
             />
           </div>
         </div>

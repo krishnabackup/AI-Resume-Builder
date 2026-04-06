@@ -3,7 +3,7 @@ import { formatExternalUrl, formatMailto, formatTel } from "../../Templates/soci
 
 const CleanTemplate = ({ formData }) => {
   const {
-    fullName, email, phone, address, linkedin,
+    fullName, email, phone, address, linkedin, website, github, extraLinks,
     recipientName, recipientTitle, companyName, companyAddress,
     jobTitle, jobReference, jobSummary, jobDescription,
     openingParagraph, bodyParagraph1, bodyParagraph2, closingParagraph,
@@ -20,12 +20,24 @@ const CleanTemplate = ({ formData }) => {
       {/* Ultra Minimalist Header */}
       <div className="w-full max-w-2xl mb-24 border-b border-stone-200 pb-12 flex flex-col items-center text-center">
         <h1 className="text-4xl font-extralight text-stone-900 uppercase tracking-[0.2em] mb-6">{fullName || "Your Name"}</h1>
-        <div className="flex gap-8 text-[9px] font-bold uppercase tracking-[0.3em] text-stone-400">
-            <span><a href={formatMailto(email)} className="hover:underline">{email}</a></span>
+        <div className="flex gap-8 text-[9px] font-bold uppercase tracking-[0.3em] text-stone-400 flex-wrap justify-center">
+           <span>{email}</span>
            <span className="text-stone-200">•</span>
-            <span><a href={formatTel(phone)} className="hover:underline">{phone}</a></span>
-           <span className="text-stone-200">•</span>
-            <span><a href={formatExternalUrl(linkedin)} target="_blank" rel="noopener noreferrer" className="hover:underline">{linkedin}</a></span>
+           <span>{phone}</span>
+           {(linkedin || website || github || extraLinks?.length > 0) && <span className="text-stone-200">•</span>}
+           {linkedin && <span><a href={linkedin.startsWith('http') ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">LinkedIn</a></span>}
+           {website && <span className="text-stone-200">•</span>}
+           {website && <span><a href={website.startsWith('http') ? website : `https://${website}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Website</a></span>}
+           {github && <span className="text-stone-200">•</span>}
+           {github && <span><a href={github.startsWith('http') ? github : `https://${github}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">GitHub</a></span>}
+           {extraLinks?.map((link, index) => (
+             link.label && link.url && (
+               <span key={index}>
+                 <span className="text-stone-200">•</span>
+                 <a href={link.url.startsWith('http') ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{link.label}</a>
+               </span>
+             )
+           ))}
         </div>
       </div>
 

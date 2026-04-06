@@ -2,19 +2,16 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   Bell,
   UserCog,
-  Shield,
   LogOut,
   Repeat,
   HelpCircle,
   CreditCard,
   Info,
-  User,
   Key,
   X,
   Clock,
   CheckCircle,
   AlertCircle,
-  Menu,
   ChevronDown,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -22,6 +19,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import UptoSkillsLogo from "../../../assets/logo6.png";
 import { useUserNotifications } from "../../../context/UserNotificationContext";
 import axiosInstance from "../../../api/axios";
+import formatTimeAgo from "../../../utils/formatTimeAgo";
 
 const API = "/api";
 
@@ -33,7 +31,6 @@ export default function UserNavbar() {
 
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   // Use UserNotificationContext
   const { notifications, unreadCount, markAllAsRead } = useUserNotifications();
@@ -100,19 +97,6 @@ export default function UserNavbar() {
     setShowNotifications((prev) => !prev);
   };
 
-  // =================== TIME FORMAT HELPER ===================
-  const formatTimeAgo = (time) => {
-    const diff = Date.now() - new Date(time).getTime();
-    const min = Math.floor(diff / 60000);
-    const hr = Math.floor(diff / 3600000);
-    const day = Math.floor(diff / 86400000);
-
-    if (min < 1) return "Just now";
-    if (min < 60) return `${min}m ago`;
-    if (hr < 24) return `${hr}h ago`;
-    return `${day}d ago`;
-  };
-
   // =================== CLOSE DROPDOWN ON OUTSIDE CLICK ===================
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -139,39 +123,39 @@ export default function UserNavbar() {
   }, []);
 
   // =================== LOGOUT ===================
- const logout = async () => {
-  try {
-    // Call backend logout endpoint
-    await axiosInstance.post("/api/auth/logout");
-  } catch (err) {
-    console.error("Logout API error:", err);
-    // Continue with local cleanup even if API call fails
-  } finally {
-    // Clear local storage tokens
-    localStorage.removeItem("token");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("resumeFormData");
-    localStorage.removeItem("currentTemplate");
-    sessionStorage.clear();
-    
-    // Clear any axios default auth headers
-    axiosInstance.defaults.headers.common["Authorization"] = "";
-    
-    // Reset user state
-    setUser({
-      name: "User",
-      email: "",
-      isAdmin: false,
-    });
-    
-    // Close any open menus
-    setShowUserMenu(false);
-    setShowNotifications(false);
-    
-    // Navigate to login
-    navigate("/login", { replace: true });
-  }
-};
+  const logout = async () => {
+    try {
+      // Call backend logout endpoint
+      await axiosInstance.post("/api/auth/logout");
+    } catch (err) {
+      console.error("Logout API error:", err);
+      // Continue with local cleanup even if API call fails
+    } finally {
+      // Clear local storage tokens
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("resumeFormData");
+      localStorage.removeItem("currentTemplate");
+      sessionStorage.clear();
+
+      // Clear any axios default auth headers
+      axiosInstance.defaults.headers.common["Authorization"] = "";
+
+      // Reset user state
+      setUser({
+        name: "User",
+        email: "",
+        isAdmin: false,
+      });
+
+      // Close any open menus
+      setShowUserMenu(false);
+      setShowNotifications(false);
+
+      // Navigate to login
+      navigate("/login", { replace: true });
+    }
+  };
 
   return (
     <>
@@ -305,10 +289,10 @@ export default function UserNavbar() {
                   <div className="px-2 pb-2 space-y-0.5">
                     <DropdownItem
                       icon={UserCog}
-                      label="Edit Profile"
+                      label="Profile"
                       onClick={() => {
                         setShowUserMenu(false);
-                        navigate("/user/edit-profile");
+                        navigate("/user/profile");
                       }}
                     />
                     <DropdownItem
@@ -395,7 +379,7 @@ export default function UserNavbar() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 bottom-0 w-[420px] bg-white shadow-2xl z-[9999] flex flex-col overflow-hidden"
+              className="fixed top-0 right-0 bottom-0 sm:w-[420px] w-[340px] bg-white shadow-2xl z-[9999] flex flex-col overflow-hidden"
             >
               <div className="flex-shrink-0 px-6 py-5 bg-white flex items-center justify-between border-b border-gray-50">
                 <div className="flex items-center gap-3">
@@ -430,54 +414,54 @@ export default function UserNavbar() {
                   <>
                     {notifications.filter((n) => n.category === "today")
                       .length > 0 && (
-                      <div className="mb-4">
-                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
-                          Today
-                        </h3>
-                        <div className="space-y-4">
-                          {notifications
-                            .filter((n) => n.category === "today")
-                            .map((n, i) => (
-                              <NotificationItemDropdown
-                                key={n.id}
-                                notif={n}
-                                index={i}
-                                getTypeIcon={getTypeIcon}
-                                getAvatarColor={getAvatarColor}
-                                onClick={() => {
-                                  setShowNotifications(false);
-                                  navigate("/user/notifications");
-                                }}
-                              />
-                            ))}
+                        <div className="mb-4">
+                          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
+                            Today
+                          </h3>
+                          <div className="space-y-4">
+                            {notifications
+                              .filter((n) => n.category === "today")
+                              .map((n, i) => (
+                                <NotificationItemDropdown
+                                  key={n.id}
+                                  notif={n}
+                                  index={i}
+                                  getTypeIcon={getTypeIcon}
+                                  getAvatarColor={getAvatarColor}
+                                  onClick={() => {
+                                    setShowNotifications(false);
+                                    navigate("/user/notifications");
+                                  }}
+                                />
+                              ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
                     {notifications.filter((n) => n.category === "older")
                       .length > 0 && (
-                      <div className="mt-6">
-                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
-                          Earlier
-                        </h3>
-                        <div className="space-y-4">
-                          {notifications
-                            .filter((n) => n.category === "older")
-                            .map((n, i) => (
-                              <NotificationItemDropdown
-                                key={n.id}
-                                notif={n}
-                                index={i}
-                                getTypeIcon={getTypeIcon}
-                                getAvatarColor={getAvatarColor}
-                                onClick={() => {
-                                  setShowNotifications(false);
-                                  navigate("/user/notifications");
-                                }}
-                              />
-                            ))}
+                        <div className="mt-6">
+                          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
+                            Earlier
+                          </h3>
+                          <div className="space-y-4">
+                            {notifications
+                              .filter((n) => n.category === "older")
+                              .map((n, i) => (
+                                <NotificationItemDropdown
+                                  key={n.id}
+                                  notif={n}
+                                  index={i}
+                                  getTypeIcon={getTypeIcon}
+                                  getAvatarColor={getAvatarColor}
+                                  onClick={() => {
+                                    setShowNotifications(false);
+                                    navigate("/user/notifications");
+                                  }}
+                                />
+                              ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
                   </>
                 )}
               </div>
@@ -550,7 +534,7 @@ const NotificationItemDropdown = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs text-gray-500 font-medium">
             <Clock className="w-3.5 h-3.5 opacity-80" />
-            <span>{notif.time}</span>
+            <span>{formatTimeAgo(notif.createdAt)}</span>
           </div>
           <div
             className={`w-6 h-6 ${getAvatarColor(notif.user)} rounded-full flex items-center justify-center text-xs font-bold shadow-lg ring-1 ring-white flex-shrink-0`}

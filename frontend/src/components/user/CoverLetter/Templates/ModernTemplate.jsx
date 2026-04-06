@@ -3,7 +3,7 @@ import { formatExternalUrl, formatMailto, formatTel } from "../../Templates/soci
 
 const ModernTemplate = ({ formData }) => {
   const {
-    fullName, email, phone, address, linkedin,
+    fullName, email, phone, address, linkedin, website, github, extraLinks,
     recipientName, recipientTitle, companyName, companyAddress,
     jobTitle, jobReference, jobSummary, jobDescription,
     openingParagraph, bodyParagraph1, bodyParagraph2, closingParagraph,
@@ -35,7 +35,7 @@ const ModernTemplate = ({ formData }) => {
             <p className="break-all font-medium text-slate-200"><a href={formatMailto(email)} className="hover:underline">{email}</a></p>
             <p className="font-medium text-slate-200"><a href={formatTel(phone)} className="hover:underline">{phone}</a></p>
             <p className="whitespace-pre-line leading-relaxed">{address}</p>
-            <p className="text-blue-400 font-bold mt-2"><a href={formatExternalUrl(linkedin)} target="_blank" rel="noopener noreferrer" className="hover:underline">{linkedin}</a></p>
+            <p className="text-blue-400 font-bold mt-2">{linkedin && <a href={linkedin.startsWith('http') ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">LinkedIn</a>}{website && <span> | <a href={website.startsWith('http') ? website : `https://${website}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">Website</a></span>}{github && <span> | <a href={github.startsWith('http') ? github : `https://${github}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">GitHub</a></span>}{extraLinks?.map((link, index) => (link.label && link.url && <span key={index}> | <a href={link.url.startsWith('http') ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">{link.label}</a></span>))}</p>
           </div>
         </div>
 

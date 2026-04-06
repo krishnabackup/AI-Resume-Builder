@@ -12,6 +12,7 @@ const JessicaClaire6 = ({ data }) => {
         location = "San Francisco, CA",
         linkedin = "",
         website = "",
+        github = "",
         extraLinks = [],
         experience = [],
         education = [],
@@ -52,13 +53,12 @@ const JessicaClaire6 = ({ data }) => {
                             <span>{location}</span>
                         </div>
                         <div className="email-box">
-                            <span><a href={formatMailto(email)} target="_blank" rel="noopener noreferrer">{email}</a></span>
-                            {linkedin && <div style={{ marginTop: '2px' }}><a href={formatExternalUrl(linkedin)} target="_blank" rel="noopener noreferrer">LinkedIn</a></div>}
-                            {website && <div style={{ marginTop: '2px' }}><a href={formatExternalUrl(website)} target="_blank" rel="noopener noreferrer">Website</a></div>}
-                            {visibleExtraLinks.map((link, index) => (
-                                <div key={`${link.label}-${index}`} style={{ marginTop: '2px' }}>
-                                    <a href={formatExternalUrl(link.url)} target="_blank" rel="noopener noreferrer">{link.label}</a>
-                                </div>
+                            <span>{email}</span>
+                            {linkedin && <div style={{ marginTop: '2px' }}><a href={linkedin.startsWith('http') ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer">LinkedIn</a></div>}
+                            {website && <div style={{ marginTop: '2px' }}><a href={website.startsWith('http') ? website : `https://${website}`} target="_blank" rel="noopener noreferrer">Website</a></div>}
+                            {github && <div style={{ marginTop: '2px' }}><a href={github.startsWith('http') ? github : `https://${github}`} target="_blank" rel="noopener noreferrer">GitHub</a></div>}
+                            {extraLinks?.map((link, index) => (
+                                link.label && link.url && <div key={index} style={{ marginTop: '2px' }}><a href={link.url.startsWith('http') ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer">{link.label}</a></div>
                             ))}
                         </div>
                     </div>

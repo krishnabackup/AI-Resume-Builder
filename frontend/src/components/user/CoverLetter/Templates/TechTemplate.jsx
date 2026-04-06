@@ -3,7 +3,7 @@ import { formatExternalUrl, formatMailto, formatTel } from "../../Templates/soci
 
 const TechTemplate = ({ formData }) => {
   const {
-    fullName, email, phone, address, linkedin,
+    fullName, email, phone, address, linkedin, website, github, extraLinks,
     recipientName, recipientTitle, companyName, companyAddress,
     jobTitle, jobReference, jobSummary, jobDescription,
     openingParagraph, bodyParagraph1, bodyParagraph2, closingParagraph,
@@ -29,9 +29,9 @@ const TechTemplate = ({ formData }) => {
           {fullName || "DEV_NAME"}
         </h1>
         <div className="grid grid-cols-2 gap-4 text-[10px] opacity-60 max-w-md">
-          <div className="flex items-center gap-2"><span className="code-style">email:</span> <a href={formatMailto(email)} className="underline decoration-blue-500/20">{email}</a></div>
-          <div className="flex items-center gap-2"><span className="code-style">phone:</span> <a href={formatTel(phone)} className="underline decoration-blue-500/20">{phone}</a></div>
-          <div className="flex items-center gap-2 underline decoration-blue-500/20"><span className="code-style">link:</span> <a href={formatExternalUrl(linkedin)} target="_blank" rel="noopener noreferrer">{linkedin}</a></div>
+          <div className="flex items-center gap-2"><span className="code-style">email:</span> {email}</div>
+          <div className="flex items-center gap-2"><span className="code-style">phone:</span> {phone}</div>
+          <div className="flex items-center gap-2 underline decoration-blue-500/20"><span className="code-style">link:</span> {linkedin && <a href={linkedin.startsWith('http') ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">LinkedIn</a>}{website && <span> | <a href={website.startsWith('http') ? website : `https://${website}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Website</a></span>}{github && <span> | <a href={github.startsWith('http') ? github : `https://${github}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">GitHub</a></span>}{extraLinks?.map((link, index) => (link.label && link.url && <span key={index}> | <a href={link.url.startsWith('http') ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{link.label}</a></span>))}</div>
           <div className="flex items-center gap-2 italic"><span className="code-style">addr:</span> {address}</div>
         </div>
       </div>

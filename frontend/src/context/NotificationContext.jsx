@@ -29,12 +29,30 @@ export const NotificationProvider = ({ children }) => {
             if (response.data.success && response.data.data) {
                 // Transform backend data to UI format
                 const transformedNotifications = response.data.data.map((notif) => {
-                    const createdAt = new Date(notif.createdAt);
-                    const now = new Date();
-                    const diffMs = now - createdAt;
-                    const diffMins = Math.floor(diffMs / 60000);
-                    const diffHours = Math.floor(diffMs / 3600000);
-                    const diffDays = Math.floor(diffMs / 86400000);
+                    const parseCreatedAt = (value) => {
+                        if (!value) return null;
+                        if (value instanceof Date) return value;
+                        if (typeof value !== 'string') return new Date(value);
+
+                        // PostgreSQL timestamp without timezone often arrives like "YYYY-MM-DD HH:mm:ss".
+                        // Normalize to UTC to prevent timezone drift in "x ago" labels.
+                        if (!value.includes('T') && !value.endsWith('Z')) {
+                            return new Date(value.replace(' ', 'T') + 'Z');
+                        }
+
+                        return new Date(value);
+                    };
+
+                    const createdAt = parseCreatedAt(notif.createdAt);
+                    const diffFromBackend = Number.isFinite(notif.ageSeconds)
+                        ? notif.ageSeconds
+                        : null;
+                    const diffSeconds = diffFromBackend !== null
+                        ? Math.max(0, diffFromBackend)
+                        : Math.max(0, Math.floor((Date.now() - (createdAt?.getTime?.() || Date.now())) / 1000));
+                    const diffMins = Math.floor(diffSeconds / 60);
+                    const diffHours = Math.floor(diffSeconds / 3600);
+                    const diffDays = Math.floor(diffSeconds / 86400);
 
                     let timeString = 'Just now';
                     if (diffMins > 0 && diffMins < 60) {
@@ -68,12 +86,10 @@ export const NotificationProvider = ({ children }) => {
                     };
 
                     // Get username from userId object
-                    const username = typeof notif.userId === 'object'
-                        ? notif.userId?.username
-                        : notif.userId;
+                    const username =  notif.user ?? notif.userId;
 
                     return {
-                        id: notif._id,
+                        id: notif.id,
                         type: typeMap[notif.type] || 'system_alert',
                         title: notif.type ? notif.type.replace(/_/g, ' ') : 'Notification',
                         description: notif.message,
@@ -103,6 +119,7 @@ export const NotificationProvider = ({ children }) => {
 
     // Mark single notification as read
     const markAsRead = useCallback((id) => {
+
         setNotifications((prev) =>
             prev.map((n) =>
                 n.id === id ? { ...n, isUnread: false } : n

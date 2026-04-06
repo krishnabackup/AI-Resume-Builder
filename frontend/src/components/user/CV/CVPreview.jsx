@@ -221,6 +221,15 @@ const CVPreview = ({
   const displayData = useMemo(() => {
     const merged = mergeWithSampleData(formData);
 
+    merged.linkedin = formData.linkedin || "";
+    merged.website = formData.website || "";
+    merged.github = formData.github || "";
+
+    merged.extraLinks = (formData.extraLinks || []).filter(
+      (link) =>
+        link?.url?.trim() !== "" && link?.label?.trim() !== ""
+    );
+
     // Clear sections if user didn't enter data (remove sample data)
     if (!hasUserEnteredExperience && Array.isArray(merged.experience)) {
       merged.experience = [];
