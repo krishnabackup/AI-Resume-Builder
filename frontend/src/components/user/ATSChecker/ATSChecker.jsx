@@ -20,7 +20,8 @@ import { pdfjs } from "react-pdf";
 import "../../../styles/react-pdf/TextLayer.css";
 import "../../../styles/react-pdf/AnnotationLayer.css";
 
-import mammoth from "mammoth";
+import DocumentParser from "../../../services/DocumentParser.service.js";
+import useDocumentParser from "../../../hooks/useDocumentParser.js";
 import ATSDocPreview from "./ATSDocPreview";
 import { saveFile, getFile } from "../../../utils/fileDB";
 
@@ -363,6 +364,7 @@ const PREVIEW_HEIGHT = "1122px";
 
 const ATSChecker = ({ onSidebarToggle }) => {
   const fileInputRef = useRef(null);
+  const { parseDocument, loading: parseLoading, error: parseError } = useDocumentParser();
   const [isMobilePreviewExpanded, setIsMobilePreviewExpanded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
@@ -495,8 +497,8 @@ const ATSChecker = ({ onSidebarToggle }) => {
 
             try {
               const arrayBuffer = await storedFile.arrayBuffer();
-              const result = await mammoth.extractRawText({ arrayBuffer });
-              setResumeText(result.value);
+              const text = await DocumentParser.extractTextFromDocument(null, arrayBuffer);
+              setResumeText(text);
             } catch (err) {
               console.error("DOCX restore failed:", err);
             }
@@ -718,8 +720,7 @@ const ATSChecker = ({ onSidebarToggle }) => {
 
       try {
         const arrayBuffer = await file.arrayBuffer();
-        const result = await mammoth.extractRawText({ arrayBuffer });
-        let extractedText = result.value;
+        let extractedText = await DocumentParser.extractTextFromDocument(null, arrayBuffer);
 
         // Validate resume content
         const validation = validateResume(extractedText, file.name);

@@ -1,4 +1,4 @@
-import mammoth from "mammoth";
+import DocumentParser from "../services/DocumentParser.service.js";
 import fs from "fs";
 import { createRequire } from "module";
 
@@ -27,11 +27,11 @@ export const parsePDF = async (filePath) => {
 
 export const parseDOCX = async (filePath) => {
   try {
-    const result = await mammoth.extractRawText({ path: filePath });
+    const text = await DocumentParser.extractTextFromDocument(filePath);
 
     return {
       success: true,
-      text: result.value
+      text: text
     };
   } catch (err) {
     console.error("DOCX parse error:", err);

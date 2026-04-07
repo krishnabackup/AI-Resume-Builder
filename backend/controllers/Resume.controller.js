@@ -1,5 +1,5 @@
 import { pool } from "../config/postgresdb.js";
-import mammoth from "mammoth";
+import DocumentParser from "../services/DocumentParser.service.js";
 // AI Service
 import {
   generateResumeAI,
@@ -431,17 +431,12 @@ export const getResumeById = async (req, res) => {
 ===================================================== */
 const extractTextFromDoc = async (filePath) => {
   try {
-    const result = await mammoth.extractRawText({ path: filePath });
-    return result.value;
+    return await DocumentParser.extractTextFromDocument(filePath);
   } catch (error) {
     console.error("Error extracting text from DOC:", error);
     return null;
   }
 };
-
-
-
-
 export const uploadAndAnalyzeResume = async (req, res) => {
   console.log("🔥 uploadAndAnalyzeResume HIT");
   try {

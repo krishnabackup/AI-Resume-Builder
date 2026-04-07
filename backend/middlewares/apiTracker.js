@@ -21,8 +21,8 @@ const apiTracker = async (req, res, next) => {
       await pool.query(
         `
         INSERT INTO api_metrics
-        (endpoint, method, status_code, response_time, user_id, ip, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+        (endpoint, method, status_code, response_time, user_id, ip_address, user_agent, request_size, response_size, error_message, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
         `,
         [
           req.originalUrl || req.url,
@@ -30,7 +30,11 @@ const apiTracker = async (req, res, next) => {
           res.statusCode,
           duration,
           pgUserId,
-          req.ip,
+          req.ip || req.connection.remoteAddress,
+          req.get('User-Agent') || null,
+          req.get('Content-Length') ? parseInt(req.get('Content-Length')) : null,
+          res.get('Content-Length') ? parseInt(res.get('Content-Length')) : null,
+          res.statusCode >= 400 ? (res.statusMessage || 'HTTP Error') : null
         ]
       );
     } catch (error) {
