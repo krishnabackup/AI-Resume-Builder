@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 
 import Home from "./pages/Home";
@@ -60,7 +60,7 @@ import Faq from "./pages/Faq";
 
 function App() {
   return (
-    <BrowserRouter>
+    <>
       <ScrollToTop />
       <div className="flex flex-col min-h-screen">
         <Routes>
@@ -179,7 +179,7 @@ function App() {
           }
         }}
       />
-    </BrowserRouter>
+    </>
   );
 }
 

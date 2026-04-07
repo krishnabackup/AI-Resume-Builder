@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useMemo, useState, useCallback, useEffect } from "react";
 import {
-  TrendingUp, Users, UserCheck, UserMinus, Activity,
+  TrendingUp, Users, UserCheck, UserMinus, Activity, Target,
   Zap, Shield, Crown, Award, Gem, RefreshCw
 } from "lucide-react";
 import {
@@ -9,6 +9,7 @@ import {
 } from "recharts";
 import axiosInstance from "../../../api/axios";
 import AdminTopPagesAnalytics from "../AdminTopPagesAnalytics";
+import { useQuery } from "@tanstack/react-query";
 
 // ─── Constants (stable refs, never re-created) ────────────────────────────────
 
@@ -75,6 +76,12 @@ function mergeAnalytics(prev, data) {
     summary: data.summary ?? prev.summary,
   };
 }
+
+const sampleData = (data, threshold = 30) => {
+  if (!data || data.length <= threshold) return data;
+  const step = Math.ceil(data.length / threshold);
+  return data.filter((_, index) => index % step === 0);
+};
 
 // ─── Sub-components (memoised) ────────────────────────────────────────────────
 
@@ -143,48 +150,39 @@ const SubscriptionCard = React.memo(({ item, totalUsers }) => {
   );
 });
 
-// ─── Main Component ───────────────────────────────────────────────────────────
-
 export default function AdminAnalytics() {
-  const [analyticsData, setAnalyticsData] = useState(INITIAL_ANALYTICS);
   const [templateView, setTemplateView] = useState("resume");
-  const [refreshingTemplates, setRefreshingTemplates] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [lastUpdated, setLastUpdated] = useState(null);
-
-  // Stable ref so fetchAnalyticsData never needs to be in a dep array for the interval
-  const isMountedRef = useRef(true);
-
-  const fetchAnalyticsData = useCallback(async (showLoader = false, signal = null) => {
-    if (showLoader) setLoading(true);
-    try {
-      const { data } = await axiosInstance.get("/api/admin/analytics-stat", { signal });
-      if (!isMountedRef.current) return;
-      setAnalyticsData(prev => mergeAnalytics(prev, data));
-      setLastUpdated(new Date().toLocaleTimeString());
-    } catch (err) {
-      if (err.name !== "CanceledError") console.error("Error fetching analytics:", err);
-    } finally {
-      if (isMountedRef.current) {
-        if (showLoader) setLoading(false);
-        setRefreshingTemplates(false);
-      }
-    }
-  }, []); // no deps — helper fns are stable module-level refs
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    isMountedRef.current = true;
-    const controller = new AbortController();
-    fetchAnalyticsData(true, controller.signal);
-    const id = setInterval(() => fetchAnalyticsData(false, controller.signal), POLL_INTERVAL_MS);
-    return () => {
-      isMountedRef.current = false;
-      controller.abort();
-      clearInterval(id);
-    };
-  }, [fetchAnalyticsData]);
+    setIsMounted(true);
+  }, []);
+
+  const {
+    data: analyticsData = INITIAL_ANALYTICS,
+    isLoading: loading,
+    refetch: fetchAnalyticsData,
+    isFetching: refreshingTemplates,
+    dataUpdatedAt,
+  } = useQuery({
+    queryKey: ['adminAnalytics'],
+    queryFn: async () => {
+      console.log('Fetching admin analytics stats');
+      const { data } = await axiosInstance.get("/api/admin/analytics-stat");
+      return mergeAnalytics(INITIAL_ANALYTICS, data);
+    },
+    refetchInterval: POLL_INTERVAL_MS,
+    staleTime: 300000, // 5 minutes fresh
+  });
+
+  const lastUpdated = useMemo(() => 
+    dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString() : null, 
+    [dataUpdatedAt]
+  );
 
   // ── Derived data ────────────────────────────────────────────────────────────
+
+  const sampledChartData = useMemo(() => sampleData(analyticsData.chartData), [analyticsData.chartData]);
 
   const displaySubscriptionBreakdown = useMemo(
     () => [...analyticsData.subscriptionBreakdown].sort((a, b) => b.count - a.count),
@@ -210,41 +208,40 @@ export default function AdminAnalytics() {
   const stats = useMemo(() => [
     {
       title: "User Growth",
-      value: loading ? "..." : `${analyticsData.userGrowth.count} Users`,
-      note: analyticsData.userGrowth.note,
-      icon: <TrendingUp className="text-green-600" />,
-      iconBg: "bg-green-50",
-      valueColor: "text-slate-900",
+      value: (loading && analyticsData.userGrowth.count === 0) ? "..." : `${analyticsData.userGrowth.count} Users`,
+      note: `${analyticsData.userGrowth.change > 0 ? "+" : ""}${analyticsData.userGrowth.change}% this month`,
+      icon: <TrendingUp className="text-blue-600" />,
+      iconBg: "bg-blue-50",
+      valueColor: "text-blue-600",
     },
     {
       title: "Paid Conversions",
-      value: loading ? "..." : `${analyticsData.conversions.count} Users`,
-      note: analyticsData.conversions.note,
-      icon: <Users className="text-blue-600" />,
-      iconBg: "bg-blue-50",
-      valueColor: "text-slate-900",
+      value: (loading && analyticsData.conversions.count === 0) ? "..." : `${analyticsData.conversions.count}%`,
+      note: `${analyticsData.conversions.change > 0 ? "+" : ""}${analyticsData.conversions.change}% from last month`,
+      icon: <Target className="text-emerald-600" />,
+      iconBg: "bg-emerald-50",
+      valueColor: "text-emerald-600",
     },
     {
       title: "Active Users",
-      value: loading ? "..." : `${analyticsData.activeUsers.count} Users`,
-      note: analyticsData.activeUsers.note,
-      icon: <UserCheck className="text-purple-600" />,
-      iconBg: "bg-purple-50",
-      valueColor: "text-slate-900",
+      value: (loading && analyticsData.activeUsers.count === 0) ? "..." : analyticsData.activeUsers.count.toLocaleString(),
+      note: `${analyticsData.activeUsers.change > 0 ? "+" : ""}${analyticsData.activeUsers.change}% vs last week`,
+      icon: <Activity className="text-amber-600" />,
+      iconBg: "bg-amber-50",
+      valueColor: "text-amber-600",
     },
     {
       title: "Deleted Users",
-      value: loading ? "..." : `${analyticsData.deletedUsers.count} Users`,
-      note: analyticsData.deletedUsers.note,
-      icon: <UserMinus className="text-red-600" />,
-      iconBg: "bg-red-50",
-      valueColor: "text-slate-900",
+      value: (loading && analyticsData.deletedUsers.count === 0) ? "..." : analyticsData.deletedUsers.count.toLocaleString(),
+      note: "Users who left recently",
+      icon: <UserMinus className="text-rose-600" />,
+      iconBg: "bg-rose-50",
+      valueColor: "text-rose-600",
     },
   ], [loading, analyticsData.userGrowth, analyticsData.conversions, analyticsData.activeUsers, analyticsData.deletedUsers]);
 
   const handleRefreshTemplates = useCallback(() => {
-    setRefreshingTemplates(true);
-    fetchAnalyticsData(false);
+    fetchAnalyticsData();
   }, [fetchAnalyticsData]);
 
   const handleTemplateViewResume = useCallback(() => setTemplateView("resume"), []);
@@ -277,7 +274,7 @@ export default function AdminAnalytics() {
       {/* System Performance */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* Platform Health */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col min-w-0">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold">Platform Health</h3>
             <div className="bg-green-50 p-2 rounded-full">
@@ -299,7 +296,7 @@ export default function AdminAnalytics() {
         </div>
 
         {/* User Retention */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col min-w-0">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold">User Retention Rate</h3>
             <div className="bg-indigo-50 p-2 rounded-full">
@@ -323,7 +320,7 @@ export default function AdminAnalytics() {
         </div>
 
         {/* Response Time */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col min-w-0">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold">Avg Response Time</h3>
             <div className="bg-blue-50 p-2 rounded-full">
@@ -348,7 +345,7 @@ export default function AdminAnalytics() {
           { label: "API Success Rate", value: analyticsData.summary.apiSuccessRate, note: "Real-time health", noteColor: "text-green-600", icon: <Zap className="text-blue-600" size={16} />, iconBg: "bg-blue-50" },
           { label: "API Failure Rate", value: analyticsData.summary.apiFailureRate, note: "Real-time error monitoring", noteColor: "text-red-600", icon: <Activity className="text-red-600" size={16} />, iconBg: "bg-red-50" },
         ].map(({ label, value, note, noteColor, icon, iconBg }) => (
-          <div key={label} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+          <div key={label} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col min-w-0">
             <div className="flex items-center justify-between mb-3">
               <p className="text-sm text-slate-500">{label}</p>
               <div className={`${iconBg} p-2 rounded-full`}>{icon}</div>
@@ -360,34 +357,36 @@ export default function AdminAnalytics() {
       </div>
 
       {/* Growth & Revenue Chart */}
-      <div className="mb-8 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+      <div className="mb-8 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm min-h-[400px] flex flex-col min-w-0">
         <h2 className="text-lg font-semibold mb-1">Platform Growth &amp; Revenue</h2>
         <p className="text-sm text-slate-500 mb-6">User acquisition vs Revenue generated</p>
-        {loading ? (
-          <div className="h-64 flex items-center justify-center text-slate-400">Loading chart data...</div>
-        ) : analyticsData.chartData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={analyticsData.chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
-              <YAxis yAxisId="left" stroke="#64748b" fontSize={12} />
-              <YAxis yAxisId="right" orientation="right" stroke="#64748b" fontSize={12} />
-              <Tooltip contentStyle={{ backgroundColor: "#fff", border: "1px solid #e2e8f0", borderRadius: "8px" }} />
-              <Legend />
-              <Line yAxisId="right" type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={2} name="Revenue (₹)" dot={{ fill: "#10b981", r: 4 }} activeDot={{ r: 6 }} />
-              <Line yAxisId="left" type="monotone" dataKey="users" stroke="#3b82f6" strokeWidth={2} name="New Users" dot={{ fill: "#3b82f6", r: 4 }} activeDot={{ r: 6 }} />
-            </LineChart>
-          </ResponsiveContainer>
-        ) : (
-          <div className="h-64 flex items-center justify-center text-slate-400 border border-dashed border-slate-300 rounded-xl">
-            No trend data available yet
-          </div>
-        )}
+        <div className="flex-1 w-full min-h-[300px]">
+          {loading ? (
+            <div className="h-full flex items-center justify-center text-slate-400">Loading chart data...</div>
+          ) : isMounted && sampledChartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={sampledChartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
+                <YAxis yAxisId="left" stroke="#64748b" fontSize={12} />
+                <YAxis yAxisId="right" orientation="right" stroke="#64748b" fontSize={12} />
+                <Tooltip contentStyle={{ backgroundColor: "#fff", border: "1px solid #e2e8f0", borderRadius: "8px" }} />
+                <Legend />
+                <Line yAxisId="right" type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={2} name="Revenue (₹)" dot={{ fill: "#10b981", r: 4 }} activeDot={{ r: 6 }} />
+                <Line yAxisId="left" type="monotone" dataKey="users" stroke="#3b82f6" strokeWidth={2} name="New Users" dot={{ fill: "#3b82f6", r: 4 }} activeDot={{ r: 6 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-full flex items-center justify-center text-slate-400 border border-dashed border-slate-300 rounded-xl">
+              No trend data available yet
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Templates + Top Pages */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col min-w-0">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Most Used Templates</h2>
             <button
@@ -401,7 +400,7 @@ export default function AdminAnalytics() {
             </button>
           </div>
 
-          <div className="inline-flex bg-slate-100 rounded-lg p-1 mb-4">
+          <div className="inline-flex bg-slate-100 rounded-lg p-1 mb-4 w-fit">
             {[{ key: "resume", label: "Resume" }, { key: "cv", label: "CV" }].map(({ key, label }) => (
               <button
                 key={key}
@@ -416,21 +415,23 @@ export default function AdminAnalytics() {
             ))}
           </div>
 
-          {loading ? (
-            <div className="text-center text-slate-400 py-8">Loading...</div>
-          ) : (
-            <TemplateList
-              templates={templateView === "resume" ? analyticsData.mostUsedResumeTemplates : analyticsData.mostUsedCvTemplates}
-              type={templateView}
-            />
-          )}
+          <div className="flex-1">
+            {loading ? (
+              <div className="text-center text-slate-400 py-8">Loading stats...</div>
+            ) : (
+              <TemplateList
+                templates={templateView === "resume" ? analyticsData.mostUsedResumeTemplates : analyticsData.mostUsedCvTemplates}
+                type={templateView}
+              />
+            )}
+          </div>
         </div>
 
         <AdminTopPagesAnalytics />
       </div>
 
       {/* Subscription Breakdown */}
-      <div className="mt-8 bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm">
+      <div className="mt-8 bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm flex flex-col min-w-0">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <div>
             <h2 className="text-xl font-bold text-slate-900">Subscription Distribution</h2>
@@ -438,35 +439,37 @@ export default function AdminAnalytics() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-center">
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-center min-w-0">
           {/* Donut Chart */}
-          <div className="xl:col-span-4 flex justify-center">
+          <div className="xl:col-span-4 flex justify-center min-w-0 h-[280px]">
             {loading ? (
               <div className="w-64 h-64 rounded-full bg-slate-50 animate-pulse border-4 border-slate-100 flex items-center justify-center text-slate-300">
                 Charting...
               </div>
             ) : (
-              <div className="relative w-full max-w-[280px]">
-                <ResponsiveContainer width="100%" height={280}>
-                  <PieChart>
-                    <Pie data={displaySubscriptionBreakdown} cx="50%" cy="50%" innerRadius={75} outerRadius={100} paddingAngle={5} dataKey="count">
-                      {displaySubscriptionBreakdown.map((_, index) => (
-                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+              <div className="relative w-full max-w-[280px] h-[280px]">
+                {isMounted && (
+                  <ResponsiveContainer width="100%" height={280}>
+                    <PieChart>
+                      <Pie data={displaySubscriptionBreakdown} cx="50%" cy="50%" innerRadius={75} outerRadius={100} paddingAngle={5} dataKey="count">
+                        {displaySubscriptionBreakdown.map((_, index) => (
+                          <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                   <span className="text-3xl font-bold text-slate-900">{totalSubscriptionUsers}</span>
-                  <span className="text-xs text-slate-500 font-medium uppercase tracking-widest">Total Users</span>
+                  <span className="text-xs text-slate-500 font-medium uppercase tracking-widest text-center">Total<br/>Users</span>
                 </div>
               </div>
             )}
           </div>
 
           {/* Subscription Cards */}
-          <div className="xl:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="xl:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-4 min-w-0">
             {loading ? (
               Array.from({ length: 4 }, (_, i) => (
                 <div key={i} className="h-28 bg-slate-50 rounded-2xl animate-pulse" />
@@ -476,7 +479,7 @@ export default function AdminAnalytics() {
                 <SubscriptionCard key={item.plan} item={item} totalUsers={totalSubscriptionUsers} />
               ))
             ) : (
-              <div className="col-span-2 text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+              <div className="md:col-span-2 text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
                 <Users size={32} className="mx-auto text-slate-300 mb-3" />
                 <p className="text-slate-400 font-medium">No subscription data discovered yet</p>
               </div>
