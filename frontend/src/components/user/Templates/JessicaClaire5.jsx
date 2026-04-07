@@ -61,18 +61,6 @@ const JessicaClaire5 = ({ data }) => {
                                 ))}
                             </span>
                         )}
-                        {website && (
-                            <span>
-                                <span className="sprtr">|</span>
-                                <a href={formatExternalUrl(website)} target="_blank" rel="noopener noreferrer">Website</a>
-                            </span>
-                        )}
-                        {visibleExtraLinks.map((link, index) => (
-                            <span key={`${link.label}-${index}`}>
-                                <span className="sprtr">|</span>
-                                <a href={formatExternalUrl(link.url)} target="_blank" rel="noopener noreferrer">{link.label}</a>
-                            </span>
-                        ))}
                     </div>
                 </div>
             </div>

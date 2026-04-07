@@ -17,7 +17,8 @@ const JessicaClaire3 = ({ data }) => {
         education = [],
         skills = { technical: [], soft: [] },
         projects = [],
-        certifications = []
+        certifications = [],
+        extraLinks = [],
     } = data;
 
     const firstName = fullName.split(' ')[0] || "J";
