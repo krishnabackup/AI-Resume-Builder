@@ -3,12 +3,31 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.jsx";
 import React from "react";
-import { PricingProvider } from "./context/Pricingcontext"; // ⭐ ADD THIS IMPORT
+import { BrowserRouter } from "react-router-dom";
+import { PricingProvider } from "./context/Pricingcontext";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000,    // 10 minutes (garbage collection)
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <PricingProvider> {/* ⭐ ADD THIS WRAPPER */}
-      <App />
-    </PricingProvider> {/* ⭐ CLOSE THE WRAPPER */}
+    <QueryClientProvider client={queryClient}>
+      <PricingProvider>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </PricingProvider>
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
   </StrictMode>
 );

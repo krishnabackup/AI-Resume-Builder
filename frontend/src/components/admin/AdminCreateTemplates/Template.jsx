@@ -1,4 +1,5 @@
 import React from "react";
+import { useQuery } from "@tanstack/react-query";
 import { createPortal } from "react-dom";
 import { Filter, Plus, Eye, X, Power, PowerOff, Search, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
@@ -55,86 +56,74 @@ export default function AdminTemplates() {
   }, [isPreviewModalOpen, type]);
 
   const [pendingTemplates, setPendingTemplates] = React.useState([]);
-  const [approvedTemplates, setApprovedTemplates] = React.useState({});
-  const [statuses, setStatuses] = React.useState({});
+  
+  // Fetch template visibility with React Query
+  const { 
+    data: statuses = {}, 
+    isLoading: visibilityLoading,
+    refetch: refetchVisibility
+  } = useQuery({
+    queryKey: ['templateVisibility'],
+    queryFn: async () => {
+      const response = await axiosInstance.get('/api/template-visibility');
+      return response.data || {};
+    },
+    staleTime: 300000,
+  });
 
   const isTemplateActive = (id) => statuses[id] !== false;
 
-  const refreshData = async (currentType = type) => {
-    try {
-
-      const statusRes = await axiosInstance.get('/api/template-visibility');
-      setStatuses(statusRes.data || {});
-
-      let SOURCE;
-      if (currentType === "resume") {
-        SOURCE = TEMPLATES;
-      } else if (currentType === "cv") {
-        SOURCE = CV_LIST;
-      } else if (currentType === "cover-letter") {
-        SOURCE = COVER_LETTER_TEMPLATES;
-      }
-
-      const modern = SOURCE.filter((t) =>
-        ["modern", "Modern", "Modern Templates", "Contemporary"].includes(t.category),
-      );
-
-      const creative = SOURCE.filter((t) =>
-        ["creative", "Creative", "Creative Templates"].includes(t.category),
-      );
-
-      const professional = SOURCE.filter((t) =>
-        ["professional", "Professional", "Professional Templates", "Traditional", "Academic", "Elegant", "Minimal"].includes(
-          t.category,
-        ),
-      );
-
-      const mapToAdminFormat = (list) =>
-        list.map((tpl) => ({
-          _id: tpl.id,
-          name: tpl.name,
-          used: 0,
-          previewText: tpl.description || tpl.category,
-          image: tpl.thumbnail || CV_PLACEHOLDER,
-          isStatic: !!tpl.thumbnail,
-          templateId: tpl.id,
-        }));
-
-      setApprovedTemplates({
-        "Contemporary Templates": mapToAdminFormat(modern),
-        "Creative Templates": mapToAdminFormat(creative),
-        "Traditional Templates": mapToAdminFormat(professional),
-      });
-
-      setPendingTemplates([]);
-
-    } catch (err) {
-      console.error("Failed to fetch templates or statuses", err);
+  const approvedTemplates = React.useMemo(() => {
+    let SOURCE;
+    if (type === "resume") {
+      SOURCE = TEMPLATES;
+    } else if (type === "cv") {
+      SOURCE = CV_LIST;
+    } else if (type === "cover-letter") {
+      SOURCE = COVER_LETTER_TEMPLATES;
+    } else {
+      SOURCE = [];
     }
-  };
 
-  React.useEffect(() => {
-    refreshData(type);
+    const modern = SOURCE.filter((t) =>
+      ["modern", "Modern", "Modern Templates", "Contemporary"].includes(t.category),
+    );
+
+    const creative = SOURCE.filter((t) =>
+      ["creative", "Creative", "Creative Templates"].includes(t.category),
+    );
+
+    const professional = SOURCE.filter((t) =>
+      ["professional", "Professional", "Professional Templates", "Traditional", "Academic", "Elegant", "Minimal"].includes(
+        t.category,
+      ),
+    );
+
+    const mapToAdminFormat = (list) =>
+      list.map((tpl) => ({
+        _id: tpl.id,
+        name: tpl.name,
+        used: 0,
+        previewText: tpl.description || tpl.category,
+        image: tpl.thumbnail || CV_PLACEHOLDER,
+        isStatic: !!tpl.thumbnail,
+        templateId: tpl.id,
+      }));
+
+    return {
+      "Contemporary Templates": mapToAdminFormat(modern),
+      "Creative Templates": mapToAdminFormat(creative),
+      "Traditional Templates": mapToAdminFormat(professional),
+    };
   }, [type]);
 
   const handleToggleStatus = async (id) => {
     try {
-
-      setStatuses(prev => {
-        const isActive = prev[id] !== false;
-        return { ...prev, [id]: !isActive };
-      });
-
       await axiosInstance.post('/api/template-visibility/toggle', { templateId: id });
-
+      refetchVisibility();
     } catch (error) {
-
       console.error("Failed to toggle status", error);
-
-      setStatuses(prev => ({ ...prev, [id]: prev[id] !== false }));
       toast.error("Failed to update status");
-
-      refreshData(type);
     }
   };
 

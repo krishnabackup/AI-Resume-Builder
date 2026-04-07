@@ -1,8 +1,16 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Pencil, Trash2, Check, X, AlertCircle, Search, Filter, UserCheck, Users, Crown, RefreshCw } from "lucide-react";
+import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { 
+  Pencil, Trash2, Check, X, AlertCircle, Search, 
+  Filter, UserCheck, Users, Crown, RefreshCw,
+  MoreVertical, Edit2, Shield, User as UserIcon,
+  ChevronLeft, ChevronRight, Download, Save, Clock,
+  Calendar, CreditCard, Target, ArrowUpRight, ArrowDownRight,
+  CheckCircle
+} from "lucide-react";
 import AdminNavbar from "../AdminNavBar/AdminNavBar";
 import axiosInstance from "../../../api/axios";
 import toast, { Toaster } from "react-hot-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 
 function CustomDropdown({ icon, options, value, onChange }) {
@@ -62,16 +70,101 @@ function CustomDropdown({ icon, options, value, onChange }) {
 }
 
 export default function AdminUsers({ head = "Manage Users" }) {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [search, setSearch] = useState("");
+  const queryClient = useQueryClient();
 
-  // Filter States
+  // Queries
+  const { 
+    data: users = [], 
+    isLoading: usersLoading,
+    error: usersError,
+  } = useQuery({
+    queryKey: ['adminUsers'],
+    queryFn: async () => {
+      console.log('Fetching users for admin management');
+      const response = await axiosInstance.get("/api/user");
+      return response.data;
+    },
+    staleTime: 300000, // 5 minutes
+  });
+
+  const { data: plansData = [] } = useQuery({
+    queryKey: ['plans'],
+    queryFn: async () => {
+      const response = await axiosInstance.get("/api/plans");
+      return response.data;
+    },
+    staleTime: 300000,
+  });
+
+  const planOptions = useMemo(() => {
+    const dynamicPlanNames = (plansData || [])
+      .map((plan) => plan?.name)
+      .filter(Boolean);
+    return Array.from(new Set(["Free", ...dynamicPlanNames]));
+  }, [plansData]);
+
+  const loading = usersLoading;
+  const error = usersError ? "Failed to fetch users" : null;
+
+  // Mutations
+  const updateUserMutation = useMutation({
+    mutationFn: ({ id, data }) => axiosInstance.put(`/api/user/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
+      queryClient.invalidateQueries({ queryKey: ['adminDashboardStats'] });
+      toast.success("User updated successfully");
+      setIsEditModalOpen(false);
+      setEditingUser(null);
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || "Failed to update user");
+    }
+  });
+
+  const approveAdminMutation = useMutation({
+    mutationFn: (id) => axiosInstance.put(`/api/user/approve-admin/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
+      toast.success("Admin request approved");
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || "Failed to approve admin");
+    }
+  });
+
+  const rejectAdminMutation = useMutation({
+    mutationFn: (id) => axiosInstance.put(`/api/user/reject-admin/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
+      toast.success("Admin request rejected");
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || "Failed to reject admin");
+    }
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: (id) => axiosInstance.delete(`/api/user/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
+      queryClient.invalidateQueries({ queryKey: ['adminDashboardStats'] });
+      queryClient.invalidateQueries({ queryKey: ['adminAnalytics'] });
+      toast.success("User deleted successfully");
+      setDeleteConfirmId(null);
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || "Failed to delete user");
+    }
+  });
+
+  const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [planFilter, setPlanFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [planOptions, setPlanOptions] = useState([]);
+  
+  // Pagination State
+  const ITEMS_PER_PAGE = 20;
+  const [page, setPage] = useState(1);
 
   // Edit Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -83,40 +176,11 @@ export default function AdminUsers({ head = "Manage Users" }) {
     createdAt: "",
     plan: "Free",
   });
-
-  // Delete Confirmation State
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
-
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
-    try {
-      const [usersResponse, plansResponse] = await Promise.all([
-        axiosInstance.get("/api/user"),
-        axiosInstance.get("/api/plans"),
-      ]);
-
-      setUsers(usersResponse.data);
-
-      const dynamicPlanNames = (plansResponse.data || [])
-        .map((plan) => plan?.name)
-        .filter(Boolean);
-
-      setPlanOptions(Array.from(new Set(["Free", ...dynamicPlanNames])));
-      setLoading(false);
-    } catch (err) {
-      setError("Failed to fetch users");
-      setLoading(false);
-      console.error(err);
-      toast.error("Failed to load users");
-    }
-  };
 
   /* ================= HANDLERS ================= */
 
-  const handleEditClick = (user) => {
+  const handleEditClick = useCallback((user) => {
     setEditingUser(user);
     // Format date to YYYY-MM-DD for input[type="date"]
     // Handle cases where createdAt might be missing or invalid
@@ -137,46 +201,40 @@ export default function AdminUsers({ head = "Manage Users" }) {
       plan: user.plan || "Free",
     });
     setIsEditModalOpen(true);
-  };
+  }, []);
 
-  const handleEditChange = (e) => {
+  const handleEditChange = useCallback((e) => {
     const { name, value, type, checked } = e.target;
     setEditFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
-  };
+  }, []);
 
-  const handleRoleChange = (e) => {
+  const handleRoleChange = useCallback((e) => {
     setEditFormData((prev) => ({
       ...prev,
       isAdmin: e.target.value === "true"
     }))
-  }
+  }, []);
 
-  const handleUpdateUser = async (e) => {
+  const handleUpdateUser = useCallback((e) => {
     e.preventDefault();
     if (!editingUser) return;
+    updateUserMutation.mutate({ 
+      id: editingUser._id || editingUser.id, 
+      data: editFormData 
+    });
+  }, [editingUser, editFormData, updateUserMutation]);
 
-    try {
-      const response = await axiosInstance.put(
-        `/api/user/${editingUser._id}`,
-        editFormData
-      );
+  const executeToggleActive = useCallback((user, newStatus) => {
+    updateUserMutation.mutate({ 
+      id: user._id || user.id, 
+      data: { isActive: newStatus } 
+    });
+  }, [updateUserMutation]);
 
-      setUsers((prev) =>
-        prev.map((u) => (u._id === editingUser._id ? response.data.user : u))
-      );
-      setIsEditModalOpen(false);
-      setEditingUser(null);
-      toast.success("User updated successfully");
-    } catch (err) {
-      console.error(err);
-      toast.error(err.response?.data?.message || "Failed to update user");
-    }
-  };
-
-  const handleToggleActive = (user) => {
+  const handleToggleActive = useCallback((user) => {
     const newStatus = !user.isActive;
 
     toast((t) => (
@@ -227,93 +285,37 @@ export default function AdminUsers({ head = "Manage Users" }) {
         boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
       },
     });
-  };
+  }, [executeToggleActive]);
 
-  const executeToggleActive = async (user, newStatus) => {
-    try {
-      // Optimistic update
-      setUsers(prev => prev.map(u => u._id === user._id ? { ...u, isActive: newStatus } : u));
+  const handleToggleRole = useCallback((user) => {
+    updateUserMutation.mutate({ 
+      id: user._id || user.id, 
+      data: { isAdmin: !user.isAdmin } 
+    });
+  }, [updateUserMutation]);
 
-      await axiosInstance.put(`/api/user/${user._id}`,
-        { isActive: newStatus }
-      );
+  const handleApproveAdmin = useCallback((user) => {
+    approveAdminMutation.mutate(user._id || user.id);
+  }, [approveAdminMutation]);
 
-      toast.success(`${user.username || user.email} ${newStatus ? 'activated' : 'deactivated'} successfully`);
-    } catch (err) {
-      console.error(err);
-      // Revert optimistic update
-      setUsers(prev => prev.map(u => u._id === user._id ? { ...u, isActive: user.isActive } : u));
-      toast.error(`Failed to update ${user.username || user.email}'s status`);
-    }
-  }
+  const handleRejectAdmin = useCallback((user) => {
+    rejectAdminMutation.mutate(user._id || user.id);
+  }, [rejectAdminMutation]);
 
-  const handleToggleRole = async (user) => {
-    const newIsAdmin = !user.isAdmin;
-    try {
-      // Optimistic update
-      setUsers(prev => prev.map(u => u._id === user._id ? { ...u, isAdmin: newIsAdmin } : u));
-
-      await axiosInstance.put(`/api/user/${user._id}`, {
-        isAdmin: newIsAdmin
-      });
-
-      toast.success(`${user.username || user.email} is now an ${newIsAdmin ? 'Admin' : 'User'}`);
-    } catch (err) {
-      console.error(err);
-      // Revert optimistic update
-      setUsers(prev => prev.map(u => u._id === user._id ? { ...u, isAdmin: user.isAdmin } : u));
-      toast.error(`Failed to update ${user.username || user.email}'s role`);
-    }
-  }
-
-  const handleApproveAdmin = async (user) => {
-    try {
-      setUsers(prev => prev.map(u => u._id === user._id ? { ...u, isAdmin: true, adminRequestStatus: 'approved' } : u));
-      await axiosInstance.put(`/api/user/approve-admin/${user._id}`);
-      toast.success(`${user.username || user.email} admin request approved`);
-    } catch (err) {
-      console.error(err);
-      fetchUsers(); // revert optimistic update
-      toast.error(`Failed to approve admin request for ${user.username || user.email}`);
-    }
-  };
-
-  const handleRejectAdmin = async (user) => {
-    try {
-      setUsers(prev => prev.map(u => u._id === user._id ? { ...u, adminRequestStatus: 'rejected' } : u));
-      await axiosInstance.put(`/api/user/reject-admin/${user._id}`);
-      toast.success(`${user.username || user.email} admin request rejected`);
-    } catch (err) {
-      console.error(err);
-      fetchUsers(); // revert optimistic update
-      toast.error(`Failed to reject admin request for ${user.username || user.email}`);
-    }
-  };
-
-  const handleDeleteClick = (id) => {
+  const handleDeleteClick = useCallback((id) => {
     setDeleteConfirmId(id);
-  };
+  }, []);
 
-  const confirmDelete = async () => {
+  const confirmDelete = useCallback(() => {
     if (!deleteConfirmId) return;
-    const userToDelete = users.find(u => u._id === deleteConfirmId);
-    const userName = userToDelete?.username || userToDelete?.email || "User";
-
-    try {
-      await axiosInstance.delete(`/api/user/${deleteConfirmId}`);
-      setUsers((prev) => prev.filter((u) => u._id !== deleteConfirmId));
-      setDeleteConfirmId(null);
-      toast.success(`${userName} deleted successfully`);
-    } catch (err) {
-      console.error(err);
-      toast.error(err.response?.data?.message || `Failed to delete ${userName}`);
-    }
-  };
+    deleteUserMutation.mutate(deleteConfirmId);
+  }, [deleteConfirmId, deleteUserMutation]);
 
   if (loading) return <div className="p-6">Loading users...</div>;
   if (error) return <div className="p-6 text-red-500">{error}</div>;
 
-  const filteredUsers = users.filter((u) => {
+  const filteredUsers = useMemo(() => {
+    return users.filter((u) => {
     // Search filter
     const matchesSearch = u.username?.toLowerCase().includes(search.toLowerCase()) ||
       u.email?.toLowerCase().includes(search.toLowerCase());
@@ -344,6 +346,17 @@ export default function AdminUsers({ head = "Manage Users" }) {
     // 2. Secondary sort: Most recently created first
     return new Date(b.createdAt) - new Date(a.createdAt);
   });
+  }, [users, search, roleFilter, planFilter, statusFilter]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [search, roleFilter, planFilter, statusFilter]);
+
+  const paginatedUsers = useMemo(() => {
+    const start = (page - 1) * ITEMS_PER_PAGE;
+    return filteredUsers.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredUsers, page]);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -362,7 +375,7 @@ export default function AdminUsers({ head = "Manage Users" }) {
                 <input
                   type="text"
                   placeholder="Search users..."
-                  value={search}
+                  value={search ?? ""}
                   onChange={e => setSearch(e.target.value)}
                   className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3.5 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 text-sm text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-300 transition-all placeholder:text-gray-400"
                 />
@@ -478,7 +491,7 @@ export default function AdminUsers({ head = "Manage Users" }) {
             </thead>
 
             <tbody className="divide-y">
-              {filteredUsers.map((u) => (
+              {paginatedUsers.map((u) => (
                 <tr key={u._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-lg uppercase shrink-0">
@@ -601,13 +614,45 @@ export default function AdminUsers({ head = "Manage Users" }) {
           </table>
         </div>
 
+        {/* Pagination Controls */}
+        {filteredUsers.length > ITEMS_PER_PAGE && (
+          <div className="flex flex-col sm:flex-row justify-between items-center mt-6 p-4 bg-white border border-gray-200 rounded-xl shadow-sm gap-4">
+            <span className="text-sm text-gray-500 font-medium">
+              Showing {(page - 1) * ITEMS_PER_PAGE + 1} to {Math.min(page * ITEMS_PER_PAGE, filteredUsers.length)} of {filteredUsers.length} users
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                disabled={page === 1}
+                onClick={() => setPage(p => p - 1)}
+                className="flex items-center gap-1 px-3 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                aria-label="Previous Page"
+              >
+                <ChevronLeft className="w-4 h-4 text-gray-600" />
+                <span className="text-sm font-medium text-gray-700 hidden sm:inline">Prev</span>
+              </button>
+              <div className="px-4 py-2 bg-indigo-50 border border-indigo-100 rounded-lg text-sm font-bold text-indigo-700">
+                Page {page} of {Math.ceil(filteredUsers.length / ITEMS_PER_PAGE)}
+              </div>
+              <button
+                disabled={page === Math.ceil(filteredUsers.length / ITEMS_PER_PAGE)}
+                onClick={() => setPage(p => p + 1)}
+                className="flex items-center gap-1 px-3 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                aria-label="Next Page"
+              >
+                <span className="text-sm font-medium text-gray-700 hidden sm:inline">Next</span>
+                <ChevronRight className="w-4 h-4 text-gray-600" />
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Mobile Card Grid */}
         <div className="md:hidden p-4">
           {filteredUsers.length === 0 ? (
             <div className="text-center text-gray-500 py-4">No users found.</div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {filteredUsers.map((u) => (
+              {paginatedUsers.map((u) => (
                 <div key={u._id} className="bg-slate-50 border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col gap-3">
                   {/* Row 1: User Info + Active Toggle */}
                   <div className="flex justify-between items-start">

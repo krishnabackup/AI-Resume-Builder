@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import {
   Search,
   Calendar,
@@ -9,17 +9,16 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import axiosInstance from "../../../api/axios";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function AdminBlog() {
+  const queryClient = useQueryClient();
   const [activeCategory, setActiveCategory] = useState("All Articles");
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedPosts, setExpandedPosts] = useState({});
-  const [blogs, setBlogs] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [error, setError] = useState("");
 
   const [formData, setFormData] = useState({
     title: "",
@@ -32,29 +31,56 @@ export default function AdminBlog() {
     isPublished: true,
   });
 
-  const fetchBlogs = async () => {
-    try {
-      setIsLoading(true);
-      setError("");
-      const response = await axiosInstance.get(
-        "/api/blog?includeUnpublished=true"
-      );
-      setBlogs(response.data?.data || []);
-    } catch (apiError) {
-      setError(apiError.response?.data?.message || "Failed to load blogs");
-    } finally {
-      setIsLoading(false);
+  // Fetch blogs with React Query
+  const {
+    data: blogs = [],
+    isLoading,
+    isError,
+    error: apiError
+  } = useQuery({
+    queryKey: ['adminBlogs'],
+    queryFn: async () => {
+      const response = await axiosInstance.get("/api/blog?includeUnpublished=true");
+      return response.data?.data || [];
+    },
+    staleTime: 300000, // 5 minutes
+  });
+
+  // Mutations
+  const saveMutation = useMutation({
+    mutationFn: async (data) => {
+      if (editingId) {
+        return axiosInstance.put(`/api/blog/${editingId}`, data);
+      } else {
+        return axiosInstance.post("/api/blog", data);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminBlogs'] });
+      setShowForm(false);
+      resetForm();
+    },
+    onError: (err) => {
+      setError(err.response?.data?.message || "Failed to save blog");
     }
-  };
+  });
 
-  useEffect(() => {
-    fetchBlogs();
-  }, []);
+  const deleteMutation = useMutation({
+    mutationFn: async (id) => {
+      return axiosInstance.delete(`/api/blog/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminBlogs'] });
+    },
+    onError: (err) => {
+      setError(err.response?.data?.message || "Failed to delete blog");
+    }
+  });
 
-  const categories = [
+  const categories = useMemo(() => [
     "All Articles",
     ...Array.from(new Set(blogs.map((post) => post.category).filter(Boolean))),
-  ];
+  ], [blogs]);
 
   const togglePost = (id) => {
     setExpandedPosts((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -87,6 +113,7 @@ export default function AdminBlog() {
       isPublished: true,
     });
     setEditingId(null);
+    setError("");
   };
 
   const handleAddNew = () => {
@@ -121,36 +148,12 @@ export default function AdminBlog() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
-    try {
-      setIsSaving(true);
-      setError("");
-
-      if (editingId) {
-        await axiosInstance.put(`/api/blog/${editingId}`, formData);
-      } else {
-        await axiosInstance.post("/api/blog", formData);
-      }
-
-      await fetchBlogs();
-      setShowForm(false);
-      resetForm();
-    } catch (apiError) {
-      setError(apiError.response?.data?.message || "Failed to save blog");
-    } finally {
-      setIsSaving(false);
-    }
+    saveMutation.mutate(formData);
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this blog?")) return;
-    try {
-      setError("");
-      await axiosInstance.delete(`/api/blog/${id}`);
-      await fetchBlogs();
-    } catch (apiError) {
-      setError(apiError.response?.data?.message || "Failed to delete blog");
-    }
+    deleteMutation.mutate(id);
   };
 
   return (

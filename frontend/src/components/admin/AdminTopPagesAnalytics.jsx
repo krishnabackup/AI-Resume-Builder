@@ -1,30 +1,22 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useMemo, useCallback } from "react";
 import { FileText, BarChart3, RefreshCw } from "lucide-react";
 import { fetchTopPages } from "../../services/analyticsService";
+import { useQuery } from "@tanstack/react-query";
 
 export default function AdminTopPagesAnalytics() {
-  const [topPages, setTopPages] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const loadTopPages = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
-    else setLoading(true);
-    try {
+  const {
+    data: topPages = [],
+    isLoading: loading,
+    refetch: fetchAnalytics,
+    isFetching: refreshing
+  } = useQuery({
+    queryKey: ['adminTopPages'],
+    queryFn: async () => {
       const data = await fetchTopPages();
-      setTopPages(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error("Failed to fetch top viewed pages:", error);
-      setTopPages([]);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadTopPages();
-  }, [loadTopPages]);
+      return Array.isArray(data) ? data : [];
+    },
+    staleTime: 300000, // 5 minutes
+  });
 
   const totalViews = useMemo(() => {
     return topPages.reduce((sum, item) => sum + (item.views || 0), 0);
@@ -34,13 +26,17 @@ export default function AdminTopPagesAnalytics() {
     return topPages.length > 0 ? Math.max(...topPages.map((item) => item.views || 0)) : 1;
   }, [topPages]);
 
+  const handleRefresh = useCallback(() => {
+    fetchAnalytics();
+  }, [fetchAnalytics]);
+
   return (
     <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-slate-900">Most Viewed Pages</h2>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => loadTopPages(true)}
+            onClick={handleRefresh}
             disabled={refreshing}
             className="p-2 rounded-full hover:bg-slate-100 transition-colors disabled:opacity-50"
             title="Refresh"

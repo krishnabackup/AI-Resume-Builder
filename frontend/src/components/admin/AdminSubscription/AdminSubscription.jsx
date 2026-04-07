@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Check, ToggleLeft, ToggleRight, Pencil, Plus, Trash2, GripVertical, GripHorizontal } from "lucide-react";
 import axiosInstance from "../../../api/axios";
 import { usePricing } from "../../../context/Pricingcontext";
 import toast, { Toaster } from 'react-hot-toast';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   DndContext,
   closestCenter,
@@ -72,12 +73,10 @@ const SortableFeatureItem = ({ id, feature, onChange, onRemove }) => {
 };
 
 const AdminSubscription = () => {
-  const { plans, savePlans, fetchPlans } = usePricing();
+  const { plans, savePlans, fetchPlans, loading: plansLoading } = usePricing();
+  const queryClient = useQueryClient();
+  
   const [localPlans, setLocalPlans] = useState([]);
-  const [paidUsers, setPaidUsers] = useState([]);
-  const [freeUsersCount, setFreeUsersCount] = useState(0);
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingPricePlanId, setEditingPricePlanId] = useState(null);
 
@@ -88,8 +87,29 @@ const AdminSubscription = () => {
     })
   );
 
+  // Fetch users and stats with React Query
+  const { data: allUsers = [], isLoading: usersLoading } = useQuery({
+    queryKey: ['adminUsers'],
+    queryFn: async () => {
+      const response = await axiosInstance.get("/api/user");
+      return response.data;
+    },
+    staleTime: 300000, 
+  });
+
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: ['adminDashboardStats'],
+    queryFn: async () => {
+      const response = await axiosInstance.get("/api/admin/dashboard-stat");
+      return response.data;
+    },
+    staleTime: 300000,
+  });
+
+  const loading = (usersLoading && allUsers.length === 0) || (statsLoading && !stats?.revenue) || plansLoading;
+  const isRefetching = usersLoading || statsLoading || plansLoading;
+
   useEffect(() => {
-    fetchData();
     fetchPlans();
   }, []);
 
@@ -105,51 +125,23 @@ const AdminSubscription = () => {
     }
   }, [plans]);
 
-  const fetchData = async (forceRefetch = false) => {
-    try {
-      setLoading(true);
+  // Derive paid/free users from allUsers
+  const { paidUsers, freeUsersCount } = useMemo(() => {
+    if (!allUsers.length || !plans.length) return { paidUsers: [], freeUsersCount: 0 };
 
-      const now = Date.now();
-      if (!forceRefetch && cachedSubscriptionData && (now - lastFetchTime) < CACHE_DURATION) {
-        setPaidUsers(cachedSubscriptionData.paidUsers);
-        setFreeUsersCount(cachedSubscriptionData.freeUsersCount);
-        setStats(cachedSubscriptionData.stats);
-        setLoading(false);
-        return;
-      }
+    const paidPlanNames = plans
+      .filter(p => p.price > 0 && p.name !== "Free")
+      .map(p => p.name.toLowerCase());
 
-      // Fetch users, plans and stats concurrently
-      const [usersResponse, plansResponse, statsResponse] = await Promise.all([
-        axiosInstance.get("/api/user"),
-        axiosInstance.get("/api/plans"),
-        axiosInstance.get("/api/admin/dashboard-stat"),
-      ]);
+    const pro = allUsers.filter(user => 
+      user.plan && paidPlanNames.includes(user.plan.toLowerCase())
+    );
+    const free = allUsers.filter(user => 
+      user.plan === "Free" && user.isAdmin === false
+    );
 
-      const allUsers = usersResponse.data;
-      const allPlans = plansResponse.data;
-
-      const paidPlanNames = allPlans.filter(p => p.price > 0 && p.name !== "Free").map(p => p.name.toLowerCase());
-
-      const pro = allUsers.filter(user => user.plan && paidPlanNames.includes(user.plan.toLowerCase()));
-      const free = allUsers.filter(user => user.plan === "Free" && user.isAdmin === false);
-
-      setPaidUsers(pro);
-      setFreeUsersCount(free.length);
-      setStats(statsResponse.data);
-
-      cachedSubscriptionData = {
-        paidUsers: pro,
-        freeUsersCount: free.length,
-        stats: statsResponse.data,
-      };
-      lastFetchTime = Date.now();
-
-      setLoading(false);
-    } catch (err) {
-      console.error("Failed to fetch data", err);
-      setLoading(false);
-    }
-  };
+    return { paidUsers: pro, freeUsersCount: free.length };
+  }, [allUsers, plans]);
 
   const togglePlan = (id) => {
     setLocalPlans((prev) =>

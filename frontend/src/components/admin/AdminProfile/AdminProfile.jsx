@@ -163,7 +163,7 @@ const AdminProfile = () => {
                                     <input
                                         type="text"
                                         name="github"
-                                        value={formData.github}
+                                        value={formData.github ?? ""}
                                         onChange={handleChange}
                                     />
 
@@ -171,7 +171,7 @@ const AdminProfile = () => {
                                     <input
                                         type="text"
                                         name="linkedin"
-                                        value={formData.linkedin}
+                                        value={formData.linkedin ?? ""}
                                         onChange={handleChange}
                                     />
 
@@ -190,7 +190,7 @@ const AdminProfile = () => {
                                             <input
                                                 type="text"
                                                 placeholder="Enter link"
-                                                value={link.url}
+                                                value={link.url ?? ""}
                                                 onChange={(e) =>
                                                     updateExtraLink(index, "url", e.target.value)
                                                 }
@@ -275,7 +275,7 @@ const AdminProfile = () => {
                                                 <input
                                                     type="text"
                                                     name="username"
-                                                    value={formData.username}
+                                                    value={formData.username ?? ""}
                                                     onChange={handleChange}
                                                     placeholder="Your unique username"
                                                 />
@@ -286,7 +286,7 @@ const AdminProfile = () => {
                                                 <input
                                                     type="text"
                                                     name="fullName"
-                                                    value={formData.fullName}
+                                                    value={formData.fullName ?? ""}
                                                     onChange={handleChange}
                                                 />
                                             </div>
@@ -298,7 +298,7 @@ const AdminProfile = () => {
                                                 <input
                                                     type="email"
                                                     name="email"
-                                                    value={formData.email}
+                                                    value={formData.email ?? ""}
                                                     onChange={handleChange}
                                                 />
                                             </div>
@@ -308,7 +308,7 @@ const AdminProfile = () => {
                                                 <input
                                                     type="tel"
                                                     name="phone"
-                                                    value={formData.phone}
+                                                    value={formData.phone ?? ""}
                                                     onChange={handleChange}
                                                 />
                                             </div>
@@ -320,7 +320,7 @@ const AdminProfile = () => {
                                                 <input
                                                     type="text"
                                                     name="location"
-                                                    value={formData.location}
+                                                    value={formData.location ?? ""}
                                                     onChange={handleChange}
                                                 />
                                             </div>
@@ -333,7 +333,7 @@ const AdminProfile = () => {
                                             <div className="field-group full-width">
                                                 <textarea
                                                     name="bio"
-                                                    value={formData.bio}
+                                                    value={formData.bio ?? ""}
                                                     onChange={handleChange}
                                                     placeholder="Tell us about yourself..."
                                                     style={{
