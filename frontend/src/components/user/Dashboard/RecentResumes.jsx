@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from "react";
-import axiosInstance from "../../../api/axios";
+import React from "react";
 import {
   FiFileText,
   FiFile,
@@ -9,212 +8,23 @@ import {
   FiClock,
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRecentDocuments } from "../../../hooks/useRecentDocuments";
+import { formatDate, getActionText } from "../../../utils/dashboardUtils";
 
 
 const RecentDocuments = () => {
-  const [recentDocs, setRecentDocs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    recentDocs,
+    loading,
+    previewDoc,
+    previewLoading,
+    handlePreview,
+    handleDownload,
+    setPreviewDoc,
+    refetch
+  } = useRecentDocuments();
 
 
-  const [previewDoc, setPreviewDoc] = useState(null);
-  const [previewLoading, setPreviewLoading] = useState(false);
-
-
-  useEffect(() => {
-    fetchRecent();
-
-
-    // Faster refresh for better responsiveness
-    const interval = setInterval(() => {
-      fetchRecent();
-    }, 5000); // refresh every 1 sec
-
-
-    return () => clearInterval(interval);
-  }, []);
-
-
-  useEffect(() => {
-    const handleFocus = () => {
-      fetchRecent();
-    };
-
-
-    // Also refresh when user becomes active
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        fetchRecent();
-      }
-    };
-
-
-    window.addEventListener("focus", handleFocus);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-
-    return () => {
-      window.removeEventListener("focus", handleFocus);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, []);
-
-
-  /* ---------------- FETCH RECENT ---------------- */
-
-
-  const fetchRecent = async () => {
-    try {
-     const res = await axiosInstance.get("/api/downloads/recent?limit=50&page=1");
-
-
-      console.log("All downloads data:", res.data.downloads);
-      console.log("Download types:", res.data.downloads.map((d) => ({ type: d.type, action: d.action, name: d.name })));
-
-
-      // TEMPORARILY DISABLE FILTERING TO SEE ALL DATA
-      // Filter only downloaded files (action: 'download')
-      // const downloadedDocs = res.data.downloads.filter((d) =>
-      //   d.action === 'download' || d.action === undefined
-      // );
-
-
-      // Use all data for now to debug
-      const downloadedDocs = res.data.downloads;
-
-
-      console.log("TEMP - All docs (no filtering):", downloadedDocs.map((d) => ({ type: d.type, action: d.action, name: d.name })));
-
-
-      const docs = downloadedDocs.map((d) => ({
-        id: d._id?.toString?.() || d.id,
-        name: d.name,
-        type: d.type,
-        action: d.action || "download", // ⭐ activity
-        format: (d.format || (d.type === "cover-letter" ? "DOCX" : "PDF")).toUpperCase(),
-        template: d.template,
-        size: d.size || "200 KB",
-        downloadDate: d.downloadDate,
-      }));
-
-
-      console.log("Mapped docs:", docs);
-
-
-    docs.sort((a, b) => new Date(b.downloadDate) - new Date(a.downloadDate));
-
-// Always keep the newest activity per type
-const latest = {};
-
-docs.forEach((doc) => {
-  if (
-    !latest[doc.type] ||
-    new Date(doc.downloadDate) > new Date(latest[doc.type].downloadDate)
-  ) {
-    latest[doc.type] = doc;
-  }
-});
-
-console.log("Latest docs by type:", latest);
-
-setRecentDocs(Object.values(latest));  
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-
-  /* ---------------- PREVIEW ---------------- */
-
-
-  const handlePreview = async (doc) => {
-    try {
-      setPreviewLoading(true);
-
-
-      const res = await axiosInstance.get(`/api/downloads/${doc.id}`);
-
-
-      setPreviewDoc({
-        ...doc,
-        html: res.data.html,
-      });
-
-
-      // Don't create preview activity records - just preview the existing document
-      // This prevents cluttering the recent documents with preview actions
-    } catch (err) {
-      console.error("Preview failed:", err);
-    } finally {
-      setPreviewLoading(false);
-    }
-  };
-
-
-  /* ---------------- DOWNLOAD ---------------- */
-
-
-  const handleDownload = async (doc) => {
-    try {
-      const url =
-        doc.format === "DOCX"
-          ? `/api/downloads/${doc.id}/word`
-          : `/api/downloads/${doc.id}/pdf`;
-
-
-      const res = await axiosInstance.get(url, { responseType: "blob" });
-
-
-      const blob = new Blob([res.data], {
-        type:
-          doc.format === "PDF"
-            ? "application/pdf"
-            : "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      });
-
-
-      const link = document.createElement("a");
-      link.href = window.URL.createObjectURL(blob);
-      link.download = `${doc.name}.${doc.format.toLowerCase()}`;
-      link.click();
-
-
-      // Immediate refresh after download
-      setTimeout(() => fetchRecent(), 500);
-    } catch {
-      alert("Download failed");
-    }
-  };
-
-
-  /* ---------------- HELPERS ---------------- */
-
-
-  const formatDate = (dateStr) => {
-    const date = new Date(dateStr);
-    const diff = Date.now() - date;
-
-
-    const m = Math.floor(diff / 60000);
-    const h = Math.floor(diff / 3600000);
-    const d = Math.floor(diff / 86400000);
-
-
-    if (m < 60) return `${m}m ago`;
-    if (h < 24) return `${h}h ago`;
-    if (d < 7) return `${d}d ago`;
-
-
-    return date.toLocaleDateString();
-  };
-
-
-  const getActionText = (action) => {
-    if (action === "visited") return "Viewed";
-    if (action === "preview") return "Previewed";
-    return "Downloaded";
-  };
 
 
   const getTypeIcon = (type) => {

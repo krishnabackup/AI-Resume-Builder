@@ -1,16 +1,10 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
 import UserNavBar from "../UserNavBar/UserNavBar";
-import axiosInstance from "../../../api/axios";
 import {
-  FaFileAlt,
   FaShieldAlt,
   FaCheckCircle,
-  FaArrowRight,
-  FaHistory,
 } from "react-icons/fa";
-import { HiLightningBolt, HiSparkles, HiClock } from "react-icons/hi";
-import toast from "react-hot-toast";
+import { HiSparkles, HiClock } from "react-icons/hi";
 import {
   FileText,
   PenLine,
@@ -20,7 +14,6 @@ import {
   Clock,
   Activity,
 } from "lucide-react";
-
 import {
   Tooltip,
   ResponsiveContainer,
@@ -29,120 +22,20 @@ import {
   Pie,
 } from "recharts";
 
+import { useDashboardData, useAdminRequest } from "../../../hooks/useDashboardData";
+import HorizontalStatCard from "./components/HorizontalStatCard";
+import ActivityItem from "./components/ActivityItem";
+import HealthScoreCard from "./components/HealthScoreCard";
+import { timeAgo } from "../../../utils/dashboardUtils";
 import "./Dashboard.css";
 
-const timeAgo = (dateStr) => {
-  if (!dateStr) return "";
-  const date = new Date(dateStr);
-  if (isNaN(date.getTime())) return "";
-  const seconds = Math.floor((new Date() - date) / 1000);
-  let interval = seconds / 31536000;
-  if (interval > 1) return Math.floor(interval) + " years ago";
-  interval = seconds / 2592000;
-  if (interval > 1) return Math.floor(interval) + " months ago";
-  interval = seconds / 86400;
-  if (interval > 1) return Math.floor(interval) + " days ago";
-  interval = seconds / 3600;
-  if (interval > 1) return Math.floor(interval) + " hours ago";
-  interval = seconds / 60;
-  if (interval > 1) return Math.floor(interval) + " mins ago";
-  return "just now";
-};
 
-const HorizontalStatCard = ({ icon: Icon, label, value, subtext, iconColor, iconBg }) => (
-  <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all flex flex-col items-center justify-center text-center group">
-    <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-3 ${iconBg} ${iconColor} group-hover:scale-110 transition-transform`}>
-      <Icon className="w-5 h-5" />
-    </div>
-    <span className="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1 line-clamp-1">{label}</span>
-    <h4 className="text-xl sm:text-2xl font-bold text-slate-800 mb-1">{value}</h4>
-    <span className="text-[10px] sm:text-[11px] text-slate-400 font-medium truncate w-full px-1 flex-shrink-0" title={String(subtext)}>{subtext}</span>
-  </div>
-);
 
-const ActivityItem = ({ activity }) => {
-  const getIconConfig = (type) => {
-    switch (type) {
-      case 'created': return { icon: FileText, color: 'text-blue-500', bg: 'bg-blue-50' };
-      case 'edited': return { icon: PenLine, color: 'text-orange-500', bg: 'bg-orange-50' };
-      case 'download': return { icon: Download, color: 'text-emerald-500', bg: 'bg-emerald-50' };
-      case 'scan': return { icon: CheckCircle, color: 'text-indigo-500', bg: 'bg-indigo-50' };
-      case 'improved': return { icon: Sparkles, color: 'text-purple-500', bg: 'bg-purple-50' };
-      default: return { icon: FileText, color: 'text-slate-500', bg: 'bg-slate-50' };
-    }
-  };
-
-  const { icon: Icon, color, bg } = getIconConfig(activity.type);
-
-  return (
-    <div className="relative pl-6">
-      <div className={`absolute -left-[17px] top-1 w-8 h-8 rounded-full border-4 border-white flex items-center justify-center ${bg} shadow-sm z-10`}>
-        <Icon className={`w-3.5 h-3.5 ${color}`} />
-      </div>
-      <div className="pr-2 pb-1 relative top-0.5">
-        <p className="text-sm font-semibold text-slate-700">{activity.label}</p>
-        {activity.docTitle && (
-          <p className="text-[13px] text-slate-500 mt-0.5 max-w-full truncate">
-            {activity.docTitle}
-          </p>
-        )}
-        <p className="text-[11px] text-slate-400 mt-1 font-medium">{timeAgo(activity.time)}</p>
-      </div>
-    </div>
-  );
-};
 
 const Dashboard = ({ setActivePage }) => {
   const navigate = useNavigate();
-
-  const [dashboardData, setDashboardData] = useState(null);
-  const [summaryData, setSummaryData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [requestLoading, setRequestLoading] = useState(false);
-
-  const handleRequestAdmin = async () => {
-    try {
-      setRequestLoading(true);
-      const res = await axiosInstance.post("/api/user/request-admin");
-      toast.success(res.data?.message || "Admin request submitted");
-      setDashboardData((prev) => ({
-        ...prev,
-        user: { ...prev.user, adminRequestStatus: "pending" },
-      }));
-    } catch (err) {
-      console.error(err);
-      toast.error(err?.response?.data?.message || "Failed to submit request");
-    } finally {
-      setRequestLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    const fetchDashboard = async () => {
-      try {
-        setLoading(true);
-        const [userRes, summaryRes] = await Promise.all([
-          axiosInstance.get("/api/user/dashboard"),
-          axiosInstance.get("/api/dashboard/summary", {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`
-            }
-          })
-        ]);
-        setDashboardData(userRes.data);
-        setSummaryData(summaryRes.data);
-        setError(null);
-      } catch (err) {
-        console.error("Dashboard fetch failed", err);
-        setError("Failed to load dashboard data. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDashboard();
-  }, []);
+  const { dashboardData, summaryData, loading, error, refetch } = useDashboardData();
+  const { requestLoading, handleRequestAdmin } = useAdminRequest();
 
   if (loading) {
     return (
@@ -272,75 +165,19 @@ const Dashboard = ({ setActivePage }) => {
             className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-md transition-all sm:w-auto w-full"
             onClick={() => navigate("/user/resume-builder")}
           >
-            <FaFileAlt /> Create New Resume
+            <FileText /> Create New Resume
           </button>
         </div>
 
         {/* --- HERO SECTION: Resume Health Focus --- */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Main Health Card (Takes 2/3 width on large screens) */}
-          <div className="lg:col-span-2 bg-gradient-to-br from-[#0f172a] to-[#1e293b] rounded-2xl p-6 sm:p-8 shadow-xl relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-8 border border-slate-700">
-            {/* Background decoration */}
-            <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
-            <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-emerald-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
-
-            <div className="flex-1 z-10 w-full text-center sm:text-left">
-              <span className="inline-block px-3 py-1 bg-slate-800/80 border border-slate-700 text-blue-300 text-xs font-bold tracking-wider rounded-full mb-4 uppercase">
-                Overall Resume Health
-              </span>
-              <h2
-                className={`text-3xl sm:text-4xl font-extrabold mb-2 ${healthStatusColor}`}
-              >
-                {healthStatusLabel}
-              </h2>
-              <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-md">
-                {feedbackMessage}
-              </p>
-
-              <div className="mt-8">
-                <button
-                  onClick={() => navigate("/user/ats-checker")}
-                  className="px-6 py-3 bg-white text-slate-900 font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 sm:w-auto w-full mx-auto sm:mx-0"
-                >
-                  Improve Resume <FaArrowRight className="text-sm" />
-                </button>
-              </div>
-            </div>
-
-            {/* Circular Progress Indicator */}
-            <div className="relative flex items-center justify-center z-10 shrink-0">
-              <svg className="w-40 h-40 transform -rotate-90">
-                <circle
-                  cx="80"
-                  cy="80"
-                  r={circleRadius}
-                  stroke="rgba(255,255,255,0.1)"
-                  strokeWidth="12"
-                  fill="transparent"
-                />
-                <circle
-                  cx="80"
-                  cy="80"
-                  r={circleRadius}
-                  stroke={healthStrokeColor}
-                  strokeWidth="12"
-                  fill="transparent"
-                  strokeDasharray={circleCircumference}
-                  strokeDashoffset={strokeDashoffset}
-                  strokeLinecap="round"
-                  className="transition-all duration-1000 ease-out"
-                />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-4xl font-black text-white">
-                  {avgAtsScore}
-                </span>
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
-                  Score
-                </span>
-              </div>
-            </div>
-          </div>
+          <HealthScoreCard
+            avgAtsScore={avgAtsScore}
+            healthStatusLabel={healthStatusLabel}
+            healthStatusColor={healthStatusColor}
+            healthStrokeColor={healthStrokeColor}
+            feedbackMessage={feedbackMessage}
+          />
 
           {/* Quick Stats / Next Goal Card */}
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col">
@@ -436,7 +273,7 @@ const Dashboard = ({ setActivePage }) => {
                     {summaryData.recentActivity.map((activity) => (
                       <ActivityItem key={activity.id} activity={{
                         ...activity,
-                        time: activity.timestamp
+                        timeAgo: timeAgo(activity.timestamp)
                       }} />
                     ))}
                   </div>
@@ -528,7 +365,11 @@ const Dashboard = ({ setActivePage }) => {
               </div>
 
               <button
-                onClick={handleRequestAdmin}
+                onClick={() => {
+                  handleRequestAdmin(() => {
+                    refetch();
+                  });
+                }}
                 disabled={adminRequestStatus === "pending" || requestLoading}
                 className={`px-4 py-2 text-sm rounded-lg font-medium transition-all shrink-0 whitespace-nowrap w-full sm:w-auto ${adminRequestStatus === "pending"
                   ? "bg-amber-100 text-amber-700 cursor-not-allowed"

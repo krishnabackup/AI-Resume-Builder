@@ -2,6 +2,8 @@ import express from "express";
 import puppeteer from "puppeteer";
 
 import {
+  saveResume,
+  getAllUserResumes,
   uploadAndAnalyzeResume,
   getUserScans,
   getScanById,
@@ -26,6 +28,16 @@ import {
 } from "../middlewares/upload.middleware.js";
 
 const resumeRouter = express.Router();
+
+/* =====================================================
+  SAVE CURRENT BUILDER RESUME
+===================================================== */
+resumeRouter.post("/save", isAuth, saveResume);
+
+/* =====================================================
+  GET ALL SAVED BUILDER RESUMES
+===================================================== */
+resumeRouter.get("/all", isAuth, getAllUserResumes);
 
 /* =====================================================
    GET LATEST SAVED RESUME FOR CV BUILDER
@@ -84,7 +96,7 @@ resumeRouter.get("/latest", isAuth, getLatestScan);
 /* =====================================================
    GENERATE AI RESUME SUMMARY
 ===================================================== */
-resumeRouter.post("/generate-summary", generateAIResume);
+resumeRouter.post("/generate-summary", isAuth, generateAIResume);
 
 
 /* =====================================================

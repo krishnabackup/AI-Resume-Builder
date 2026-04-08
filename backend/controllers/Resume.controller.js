@@ -187,6 +187,13 @@ export const saveResume = async (req, res) => {
     const data = req.body;
     let userId = req.userId;
     if (!userId && data.user) userId = data.user;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: "Unauthorized: user id missing",
+      });
+    }
     
     const dataWithoutUser = { ...data };
     delete dataWithoutUser.user;
@@ -304,6 +311,13 @@ export const getUserResume = async (req, res) => {
 export const generateAIResume = async (req, res) => {
   try {
     console.log("📥 AI Resume request received");
+
+    if (!req.userId) {
+      return res.status(401).json({
+        success: false,
+        error: "Unauthorized: user id missing",
+      });
+    }
 
     // Generate AI summary
     const aiText = await generateResumeAI(req.body);
