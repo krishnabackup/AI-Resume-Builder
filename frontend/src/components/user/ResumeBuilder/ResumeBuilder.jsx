@@ -11,7 +11,6 @@ import {
   User,
   Zap,
   Search,
-  FileText,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../../api/axios";
@@ -343,7 +342,70 @@ const ResumeBuilder = () => {
   // PDF Generation
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [isSavingResume, setIsSavingResume] = useState(false);
   const previewRef = useRef(null);
+
+  const saveResumeToDatabase = async () => {
+    if (isSavingResume) return;
+
+    try {
+      setIsSavingResume(true);
+
+      const payload = {
+        ...formData,
+        title: documentTitle || "Untitled Resume",
+        templateId: selectedTemplate,
+      };
+
+      const response = await axiosInstance.post("/api/resume/save", payload);
+
+      if (!response?.data?.success) {
+        throw new Error(response?.data?.error || "Failed to save resume");
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Failed to save resume:", error);
+      alert(error?.response?.data?.error || "Failed to save resume to account");
+      return false;
+    } finally {
+      setIsSavingResume(false);
+    }
+  };
+
+  const handleFinish = async () => {
+    const saved = await saveResumeToDatabase();
+    if (saved) {
+      setShowCompletionPopup(true);
+    }
+  };
+
+  useEffect(() => {
+    const hydrateFromSavedResume = async () => {
+      try {
+        const hasLocalDraft =
+          JSON.stringify(formData) !== JSON.stringify(emptyData);
+
+        if (hasLocalDraft) return;
+
+        const response = await axiosInstance.get("/api/resume/");
+        const saved = response?.data?.data;
+        if (!saved) return;
+
+        const { _id, user, createdAt, updatedAt, title, ...resumeData } = saved;
+        setFormData((prev) => ({ ...prev, ...resumeData }));
+        if (title) setDocumentTitle(title);
+      } catch (error) {
+        if (error?.response?.status !== 404) {
+          console.error("Failed to load saved resume:", error);
+        }
+      }
+    };
+
+    hydrateFromSavedResume();
+    // Intentionally run once on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /* Measure sticky navbar height for float offset (same as CV) */
   useEffect(() => {
@@ -724,9 +786,9 @@ const ResumeBuilder = () => {
                       <span className="hidden sm:inline">Previous</span>
                     </button>
                     <button
-                      onClick={() => {
+                      onClick={async () => {
                         if (completion?.isComplete) {
-                          setShowCompletionPopup(true);
+                          await handleFinish();
                         } else {
                           if (!isSectionValid()) {
                             setWarning(true);
@@ -742,13 +804,18 @@ const ResumeBuilder = () => {
                         }
                       }}
                       disabled={
+                        isSavingResume ||
                         !completion?.isComplete &&
                         currentIdx === tabs.length - 1
                       }
                       className="flex gap-2 items-center text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg select-none disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm"
                     >
                       <span className="hidden sm:inline">
-                        {currentIdx === tabs.length - 1 ? "Finish" : "Next"}
+                        {currentIdx === tabs.length - 1
+                          ? isSavingResume
+                            ? "Saving..."
+                            : "Finish"
+                          : "Next"}
                       </span>
                       <ArrowRight size={16} />
                     </button>
@@ -792,9 +859,9 @@ const ResumeBuilder = () => {
                   <span>Previous</span>
                 </button>
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     if (completion?.isComplete) {
-                      setShowCompletionPopup(true);
+                      await handleFinish();
                     } else {
                       if (!isSectionValid()) {
                         setWarning(true);
@@ -813,12 +880,17 @@ const ResumeBuilder = () => {
                     }
                   }}
                   disabled={
+                    isSavingResume ||
                     !completion?.isComplete && currentIdx === tabs.length - 1
                   }
                   className="flex gap-2 items-center text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg select-none disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm"
                 >
                   <span>
-                    {currentIdx === tabs.length - 1 ? "Finish" : "Next"}
+                    {currentIdx === tabs.length - 1
+                      ? isSavingResume
+                        ? "Saving..."
+                        : "Finish"
+                      : "Next"}
                   </span>
                   <ArrowRight size={16} />
                 </button>
