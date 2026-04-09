@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -33,6 +33,8 @@ import { emptyData } from "./dummyData";
 
 import UserNavbar from "../UserNavBar/UserNavBar";
 import CVBuilderTopBar from "../CV/Cvbuildernavbar";
+import CompletionPopup from "./components/CompletionPopup";
+import MobilePreview from "./components/MobilePreview";
 
 /* ─────────────────────────────────────────────────────────
    FLOATING FORM PANEL (mirrors CVBuilder behavior)
@@ -995,48 +997,13 @@ const ResumeBuilder = () => {
         {renderMainContent()}
 
         {/* Mobile slide-up preview overlay (mirrors CV & Cover Letter) */}
-        {showMobilePreview && !isPreviewExpanded && (
-          <div className="lg:hidden fixed inset-0 z-50 flex flex-col">
-            <div
-              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-              onClick={() => setShowMobilePreview(false)}
-            />
-            <div
-              className="relative mt-auto bg-white rounded-t-2xl shadow-2xl flex flex-col"
-              style={{
-                height: "92dvh",
-                animation:
-                  "resumePreviewSlideUp 0.3s cubic-bezier(0.32,0.72,0,1)",
-              }}
-            >
-              <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-                <div className="w-10 h-1 rounded-full bg-slate-300" />
-              </div>
-              <div className="flex items-center justify-between px-4 pb-2 flex-shrink-0">
-                <span className="text-sm font-semibold text-slate-700">
-                  Resume Preview
-                </span>
-                <button
-                  onClick={() => setShowMobilePreview(false)}
-                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors"
-                >
-                  <span className="text-base leading-none">×</span>
-                </button>
-              </div>
-              <div className="flex-1 min-h-0 overflow-hidden">
-                <LivePreview
-                  ref={previewRef}
-                  formData={formData}
-                  currentTemplate={currentTemplate}
-                  isExpanded={false}
-                  onExpand={() => {}}
-                  onCollapse={() => {}}
-                  onMinimize={() => setShowMobilePreview(false)}
-                />
-              </div>
-            </div>
-          </div>
-        )}
+        <MobilePreview
+          show={showMobilePreview && !isPreviewExpanded}
+          onClose={() => setShowMobilePreview(false)}
+          previewRef={previewRef}
+          formData={formData}
+          currentTemplate={currentTemplate}
+        />
 
         <footer className="mt-auto text-center py-4 bg-white border-t text-sm text-gray-600">
           © {new Date().getFullYear()} ResumeAI Inc. All rights reserved.
@@ -1051,54 +1018,14 @@ const ResumeBuilder = () => {
       `}</style>
 
       {/* Completion Popup */}
-      {showCompletionPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-8 max-w-md mx-4 shadow-2xl">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg
-                  className="w-8 h-8 text-green-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                Resume Complete!
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Your resume has been successfully completed with all required
-                information. You can now download or preview your resume.
-              </p>
-              <div className="flex gap-3 justify-center">
-                <button
-                  onClick={() => setShowCompletionPopup(false)}
-                  className="px-6 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
-                >
-                  Continue Editing
-                </button>
-                <button
-                  onClick={() => {
-                    setShowCompletionPopup(false);
-                    // Navigate to templates or download
-                    setActiveTab("templates");
-                  }}
-                  className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                >
-                  View Templates
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <CompletionPopup 
+        show={showCompletionPopup}
+        onClose={() => setShowCompletionPopup(false)}
+        onViewTemplates={() => {
+          setShowCompletionPopup(false);
+          setActiveTab("templates");
+        }}
+      />
     </div>
   );
 };
