@@ -1,0 +1,218 @@
+import { useNavigate } from "react-router-dom";
+import NavBar from "../components/NavBar";
+import Footer from "./Footer";
+import { Check } from "lucide-react";
+import { useEffect, useState } from "react";
+import axiosInstance from "../api/axios";
+import { motion } from "framer-motion";
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 50 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.7,
+      ease: "easeOut",
+    },
+  },
+};
+
+const staggerContainer = {
+  hidden: {},
+  show: {
+    transition: {
+      staggerChildren: 0.2,
+    },
+  },
+};
+const Pricing = () => {
+  const navigate = useNavigate();
+  const isLoggedIn = typeof window !== "undefined" && !!localStorage.getItem("token");
+  const [backendPlans, setBackendPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        const res = await axiosInstance.get("/api/plans");
+        const activePlans = res.data.filter((item) => item.active === true);
+        setBackendPlans(activePlans);
+      } catch (err) {
+        console.error("Error fetching plans:", err);
+      }finally{
+        setLoading(false);
+      }
+    };
+    fetchPlans();
+  }, []);
+
+
+  const plans = {
+    1: {
+      badgeColor: "bg-green-500",
+      priceColor: "text-green-500",
+      buttonColor: "bg-green-500 hover:bg-green-600",
+      checkColor: "text-green-500",
+      period: "",
+      description: "For getting started",
+      buttonText: "Get Started",
+      buttonAction: () => navigate(`${isLoggedIn ? "/user/dashboard" : "/login"}`),
+      gradient: false,
+    },
+    2: {
+      badgeColor: "bg-orange-500",
+      priceColor: "text-orange-500",
+      buttonColor: "bg-orange-500 hover:bg-orange-600",
+      checkColor: "text-orange-500",
+      period: " / month",
+      description: "Best for job seekers",
+      buttonText: "Upgrade to Pro",
+      buttonAction: () => { },
+      gradient: true,
+    },
+    3: {
+      badgeColor: "bg-blue-500",
+      priceColor: "text-blue-500",
+      buttonColor: "bg-blue-500 hover:bg-blue-600",
+      checkColor: "text-blue-500",
+      period: " / year",
+      description: "For career acceleration",
+      buttonText: "Unlock Premium",
+      buttonAction: () => { },
+      gradient: false,
+    },
+      4: {
+      badgeColor: "bg-yellow-500",
+      priceColor: "text-yellow-500",
+      buttonColor: "bg-yellow-500 hover:bg-blue-600",
+      checkColor: "text-blue-500",
+      period: " / year",
+      description: "For career acceleration",
+      buttonText: "Unlock Premium",
+      buttonAction: () => { },
+      gradient: false,
+    },
+    defaultTheme: {
+      badgeColor: "bg-indigo-500",
+      priceColor: "text-indigo-600",
+      buttonColor: "bg-indigo-600 hover:bg-indigo-700",
+      checkColor: "text-indigo-500",
+      period: "/ month",
+      description: "New plan",
+      buttonText: "Get Started",
+      buttonAction: () => { },
+      gradient: false
+    }
+  };
+
+  return (
+    <>
+      <NavBar />
+      <section className="page-enter-fade bg-white px-6 md:px-16 pt-24 md:pt-32 lg:pt-28 xl:pt-48 2xl:pt-56 3xl:pt-64 pb-12">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            animate="show"
+            className="text-center mb-14 select-none"
+          >
+            <h2 className="text-4xl font-extrabold">
+              <span className="text-blue-600">Plans & </span>{" "}
+              <span className="text-blue-600">Pricing</span>
+            </h2>
+            <p className="mt-4 text-gray-600 max-w-2xl mx-auto">
+              Choose a plan that fits your career goals. Upgrade anytime to
+              unlock premium resume features.
+            </p>
+          </motion.div>
+
+          {/* Pricing Cards */}
+          { !loading && ( 
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            animate="show"
+            viewport={{ once: true, amount: 0.2 }}
+            className="
+              flex overflow-x-auto gap-6 pt-6 pb-6
+              md:grid md:grid-cols-3 md:gap-8 md:overflow-visible md:pt-0
+              snap-x snap-mandatory
+              scrollbar-hide
+            "
+          >
+            {backendPlans.map((plan,index) => {
+              const ui = plans[index + 1] || plans.defaultTheme;
+              return (
+                <motion.div
+                  key={plan._id}
+                  variants={fadeUp}
+                  whileHover={{ y: -8 }}
+                  transition={{ type: "spring", stiffness: 200 }}
+                  className={`snap-center min-w-[85%] md:min-w-0 rounded-2xl shadow-md p-8 relative ${ui.gradient
+                    ? "bg-gradient-to-b from-orange-50 to-white shadow-xl"
+                    : "bg-white"
+                    }`}
+                >
+                  {plan.badge && (
+                    <span
+                      className={`absolute -top-4 left-1/2 -translate-x-1/2 ${ui.badgeColor} text-white text-xs font-semibold px-4 py-1 rounded-full select-none shadow`}
+                    >
+                      {plan.badge}
+                    </span>
+                  )}
+
+                  <div className="text-center mb-6">
+                    <h3
+                      className={`text-xl font-semibold ${ui.priceColor} mb-2`}
+                    >
+                      {plan.name}
+                    </h3>
+                    <p className="text-gray-500 text-sm">{plan.description}</p>
+
+                    <div className="mt-4">
+                      <span
+                        className={`text-4xl font-extrabold ${ui.priceColor}`}
+                      >
+                        ₹ {plan.price}
+                      </span>
+                      <span className="text-gray-500">{ui.period}</span>
+                    </div>
+                  </div>
+
+                  <div className="mb-6">
+                    {plan.features && plan.features.length > 0 ? (
+                      plan.features.map((feature, i) => (
+                        <div key={i} className="flex items-center gap-3 mb-4">
+                          <Check
+                            className={`${ui.checkColor} w-5 h-5 flex-shrink-0`}
+                          />
+                          <span className="text-sm text-gray-700">{feature}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-400 text-center">
+                        No features listed
+                      </p>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={ui.buttonAction}
+                    className={`w-full ${ui.buttonColor} text-white font-semibold py-3 rounded-lg select-none transition`}
+                  >
+                    {ui.buttonText}
+                  </button>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+          )}
+        </div>
+      </section>
+      <Footer />
+    </>
+  );
+};
+
+export default Pricing;
