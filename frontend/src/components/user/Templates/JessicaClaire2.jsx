@@ -13,6 +13,7 @@ const JessicaClaire2 = ({ data }) => {
         linkedin = "",
         website = "",
         github = "",
+        extraLinks = [],
         experience = [],
         education = [],
         skills = { technical: [], soft: [] },

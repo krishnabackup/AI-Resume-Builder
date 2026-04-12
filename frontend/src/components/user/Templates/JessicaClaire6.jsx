@@ -141,7 +141,7 @@ const JessicaClaire6 = ({ data }) => {
                     </div>
                 )}
 
-                {education.length > 0 && (
+                {education && education.length > 0 && (
                     <div className="section">
                         <div className="heading">
                             <div className="sectiontitle">Education</div>
