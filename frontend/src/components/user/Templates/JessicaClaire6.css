@@ -5,16 +5,24 @@
     font-family: 'Roboto', sans-serif;
     background-color: white;
     width: 100%;
-    /* Standard A4 aspect ratio helper */
-    aspect-ratio: 210/297;
+    min-height: 297mm;
     max-width: 800px;
     margin: 0 auto;
     color: #333;
     line-height: 1.6;
     font-size: 14px;
-    /* Base font size */
-    overflow: hidden;
-    /* Ensure no spillover */
+    overflow: visible;
+}
+
+@media print {
+    .jessica-claire-6 {
+        height: auto !important;
+        overflow: visible !important;
+    }
+    .jessica-claire-6 .section,
+    .jessica-claire-6 .paragraph {
+        page-break-inside: avoid;
+    }
 }
 
 /* --- Top Section (Header) --- */

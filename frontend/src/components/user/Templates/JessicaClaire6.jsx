@@ -163,7 +163,7 @@ const JessicaClaire6 = ({ data }) => {
                     </div>
                 )}
 
-                {certifications.length > 0 && (
+                {certifications && certifications.length > 0 && (
                     <div className="section">
                         <div className="heading">
                             <div className="sectiontitle">Certifications</div>
