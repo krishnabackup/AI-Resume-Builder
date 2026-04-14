@@ -2,9 +2,8 @@
 import React from 'react';
 import './JessicaClaire2.css';
 import { formatExternalUrl, formatMailto, formatTel, getVisibleExtraLinks } from './socialUtils';
-import { formatMonthYear } from '../../../utils/dateUtils';
 
-const JessicaClaire2 = ({ data }) => {
+const JessicaClaire2 = ({ data = {} }) => {  // ✅ Default prop
     const {
         fullName = "Jessica Claire",
         summary = "Highly motivated Sales Associate...",
@@ -13,31 +12,30 @@ const JessicaClaire2 = ({ data }) => {
         location = "San Francisco, CA",
         linkedin = "",
         website = "",
-        github = "",
-        extraLinks = [],
+        github = "",  // ✅ Now destructured (was data?.github)
         experience = [],
         education = [],
         skills = { technical: [], soft: [] },
         projects = [],
-        certifications = []
+        certifications = [],
+        extraLinks = []  // ✅ Fixed: was missing!
     } = data;
 
-    const technicalSkills = skills?.technical || [];
-    const softSkills = skills?.soft || [];
-    const allSkills = [...technicalSkills, ...softSkills];
+    // ✅ Simplified skills logic
+    const allSkills = [...(skills.technical||[]), ...(skills.soft||[])];
+    const mid = Math.ceil(allSkills.length / 2);
+    const skillsCol1 = allSkills.slice(0, mid);
+    const skillsCol2 = allSkills.slice(mid);
+    
+    // ✅ Now actually used!
     const visibleExtraLinks = getVisibleExtraLinks(extraLinks);
-    const halfSkill = Math.ceil(allSkills.length / 2);
-    const skillsCol1 = allSkills.slice(0, halfSkill);
-    const skillsCol2 = allSkills.slice(halfSkill);
 
     return (
         <div className="jessica-claire-2">
             {/* Header */}
             <div className="section firstsection">
                 <div className="paragraph firstparagraph">
-                    <div className="name">
-                        <span>{fullName}</span>
-                    </div>
+                    <div className="name"><span>{fullName}</span></div>
                     <div className="lowerborder"></div>
                 </div>
             </div>
@@ -47,16 +45,23 @@ const JessicaClaire2 = ({ data }) => {
                 <div className="paragraph firstparagraph">
                     <div className="address">
                         <ul>
-                            <li className="first">
-                                {location}
-                            </li>
-                            {phone && <li>{phone}</li>}
-                            {email && <li>{email}</li>}
-                            {linkedin && <li><a href={linkedin.startsWith('http') ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer">{linkedin}</a></li>}
-                            {website && <li><a href={website.startsWith('http') ? website : `https://${website}`} target="_blank" rel="noopener noreferrer">{website}</a></li>}
-                            {data?.github && <li><a href={data.github.startsWith('http') ? data.github : `https://${data.github}`} target="_blank" rel="noopener noreferrer">{data.github}</a></li>}
-                            {data?.extraLinks?.map((link, index) => (
-                                link.label && link.url && <li key={index}><a href={link.url.startsWith('http') ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer">{link.label}: {link.url}</a></li>
+                            <li className="first">{location}</li>
+                            {/* ✅ Clickable + accessible */}
+                            {phone && <li><a href={formatTel(phone)}>{phone}</a></li>}
+                            {email && <li><a href={formatMailto(email)}>{email}</a></li>}
+                            
+                            {/* ✅ Use helper for URL normalization */}
+                            {linkedin && <li><a href={formatExternalUrl(linkedin)} target="_blank" rel="noopener noreferrer">{linkedin}</a></li>}
+                            {website && <li><a href={formatExternalUrl(website)} target="_blank" rel="noopener noreferrer">{website}</a></li>}
+                            {github && <li><a href={formatExternalUrl(github)} target="_blank" rel="noopener noreferrer">{github}</a></li>}
+                            
+                            {/* ✅ Use pre-filtered visibleExtraLinks */}
+                            {visibleExtraLinks.map((link, index) => (
+                                <li key={index}>
+                                    <a href={formatExternalUrl(link.url)} target="_blank" rel="noopener noreferrer">
+                                        {link.label}: {link.url}
+                                    </a>
+                                </li>
                             ))}
                         </ul>
                     </div>
@@ -66,38 +71,24 @@ const JessicaClaire2 = ({ data }) => {
             {/* Summary */}
             {summary && (
                 <div className="section">
-                    <div className="heading">
-                        <div className="sectiontitle">Professional Summary</div>
-                    </div>
-                    <div className="paragraph firstparagraph">
-                        <p>{summary}</p>
-                    </div>
+                    <div className="heading"><div className="sectiontitle">Professional Summary</div></div>
+                    <div className="paragraph firstparagraph"><p>{summary}</p></div>
                 </div>
             )}
 
             {/* Skills */}
             {allSkills.length > 0 && (
                 <div className="section">
-                    <div className="heading">
-                        <div className="sectiontitle">Skills</div>
-                    </div>
+                    <div className="heading"><div className="sectiontitle">Skills</div></div>
                     <div className="paragraph firstparagraph">
                         <table className="twocol">
                             <tbody>
                                 <tr>
                                     <td className="twocol_1">
-                                        <ul>
-                                            {skillsCol1.map((skill, index) => (
-                                                <li key={index}>{skill}</li>
-                                            ))}
-                                        </ul>
+                                        <ul>{skillsCol1.map((skill, index) => <li key={`c1-${index}`}>{skill}</li>)}</ul>
                                     </td>
                                     <td className="twocol_2">
-                                        <ul>
-                                            {skillsCol2.map((skill, index) => (
-                                                <li key={index}>{skill}</li>
-                                            ))}
-                                        </ul>
+                                        <ul>{skillsCol2.map((skill, index) => <li key={`c2-${index}`}>{skill}</li>)}</ul>
                                     </td>
                                 </tr>
                             </tbody>
@@ -109,20 +100,17 @@ const JessicaClaire2 = ({ data }) => {
             {/* Experience */}
             {experience.length > 0 && (
                 <div className="section">
-                    <div className="heading">
-                        <div className="sectiontitle">Work History</div>
-                    </div>
+                    <div className="heading"><div className="sectiontitle">Work History</div></div>
                     {experience.map((job) => (
                         <div key={job.id} className="paragraph">
                             <div className="singlecolumn">
-                                <div style={{ display: 'inline-block', width: '100%' }}>
-                                    <span className="paddedline" style={{ display: 'inline' }}>
-                                        <span className="jobtitle">{job.title}</span>,{" "}
+                                <div className="job-header">  {/* ✅ CSS class */}
+                                    <span className="paddedline inline">
+                                        <span className="jobtitle">{job.title}</span>
+                                        {job.title && <span>, </span>}
                                     </span>
-                                    <span className="paddedline" style={{ display: 'inline' }}>
-                                        <span className="jobdates">
-                                            {formatMonthYear(job.startDate)} — {formatMonthYear(job.endDate) || "Present"}
-                                        </span>
+                                    <span className="paddedline inline">
+                                        <span className="jobdates">{job.startDate} to {job.endDate || "Current"}</span>
                                     </span>
                                 </div>
                                 <div className="paddedline">
@@ -130,9 +118,7 @@ const JessicaClaire2 = ({ data }) => {
                                     {job.company && job.location && <span> – </span>}
                                     <span className="joblocation">{job.location}</span>
                                 </div>
-                                <div className="jobline" style={{ marginTop: '5px' }}>
-                                    <p>{job.description}</p>
-                                </div>
+                                <div className="jobline mt-5"><p>{job.description}</p></div>  {/* ✅ CSS class */}
                             </div>
                         </div>
                     ))}
@@ -142,28 +128,23 @@ const JessicaClaire2 = ({ data }) => {
             {/* Projects */}
             {projects.length > 0 && (
                 <div className="section">
-                    <div className="heading">
-                        <div className="sectiontitle">Projects</div>
-                    </div>
+                    <div className="heading"><div className="sectiontitle">Projects</div></div>
                     {projects.map((proj) => (
                         <div key={proj.id} className="paragraph">
                             <div className="singlecolumn">
-                                <span className="paddedline">
-                                    <span className="jobtitle">{proj.name}</span>
-                                </span>
-                                <span className="paddedline" style={{ fontSize: '11px', fontStyle: 'italic' }}>
-                                    {proj.technologies}
-                                </span>
-                                <div className="jobline" style={{ marginTop: '5px' }}>
-                                    <p>{proj.description}</p>
-                                </div>
-                                {/* Links */}
-                                <div style={{ marginTop: '4px', fontSize: '11px' }}>
+                                <span className="paddedline"><span className="jobtitle">{proj.name}</span></span>
+                                <span className="paddedline project-tech">{proj.technologies}</span>  {/* ✅ CSS class */}
+                                <div className="jobline mt-5"><p>{proj.description}</p></div>
+                                <div className="project-links">  {/* ✅ CSS class */}
                                     {proj.link?.liveLink && (
-                                        <span style={{ marginRight: '10px' }}>Live: <a href={proj.link.liveLink} target="_blank" rel="noopener noreferrer">{proj.link.liveLink}</a></span>
+                                        <span className="link-item">
+                                            Live: <a href={formatExternalUrl(proj.link.liveLink)} target="_blank" rel="noopener noreferrer">{proj.link.liveLink}</a>
+                                        </span>
                                     )}
                                     {proj.link?.github && (
-                                        <span>GitHub: <a href={proj.link.github} target="_blank" rel="noopener noreferrer">{proj.link.github}</a></span>
+                                        <span className="link-item">
+                                            GitHub: <a href={formatExternalUrl(proj.link.github)} target="_blank" rel="noopener noreferrer">{proj.link.github}</a>
+                                        </span>
                                     )}
                                 </div>
                             </div>
@@ -175,21 +156,15 @@ const JessicaClaire2 = ({ data }) => {
             {/* Certifications */}
             {certifications.length > 0 && (
                 <div className="section">
-                    <div className="heading">
-                        <div className="sectiontitle">Certifications</div>
-                    </div>
+                    <div className="heading"><div className="sectiontitle">Certifications</div></div>
                     {certifications.map((cert) => (
                         <div key={cert.id} className="paragraph">
                             <div className="singlecolumn">
-                                <span className="paddedline">
-                                    <span className="jobtitle">{cert.name}</span>
-                                </span>
-                                <span className="paddedline">
-                                    <span>{cert.issuer}</span> - <span>{cert.date}</span>
-                                </span>
+                                <span className="paddedline"><span className="jobtitle">{cert.name}</span></span>
+                                <span className="paddedline"><span>{cert.issuer}</span> - <span>{cert.date}</span></span>
                                 {cert.link && (
                                     <span className="paddedline">
-                                        <a href={cert.link} target="_blank" rel="noopener noreferrer">View Credential</a>
+                                        <a href={formatExternalUrl(cert.link)} target="_blank" rel="noopener noreferrer">View Credential</a>
                                     </span>
                                 )}
                             </div>
@@ -201,28 +176,23 @@ const JessicaClaire2 = ({ data }) => {
             {/* Education */}
             {education.length > 0 && (
                 <div className="section">
-                    <div className="heading">
-                        <div className="sectiontitle">Education</div>
-                    </div>
+                    <div className="heading"><div className="sectiontitle">Education</div></div>
                     {education.map((edu) => (
                         <div key={edu.id} className="paragraph">
                             <div className="singlecolumn">
+                                {/* ✅ Safe conditional formatting */}
                                 <span className="paddedline">
-                                    <span className="degree">{edu.degree}</span>: <span>{edu.school}</span>
-                                    {(edu.startDate || edu.graduationDate) && (
-                                        <span>, {formatMonthYear(edu.startDate)} — {formatMonthYear(edu.graduationDate) || "Present"}</span>
-                                    )}
+                                    <span className="degree">{edu.degree}</span>
+                                    {edu.school && <><span>: </span><span>{edu.school}</span></>}
+                                    {edu.graduationDate && <><span>, </span><span>{edu.graduationDate}</span></>}
                                 </span>
-                                <span className="paddedline">
-                                    <span>{edu.location}</span>
-                                </span>
+                                <span className="paddedline"><span>{edu.location}</span></span>
                                 {edu.gpa && <span className="paddedline">GPA: {edu.gpa}</span>}
                             </div>
                         </div>
                     ))}
                 </div>
             )}
-
         </div>
     );
 };

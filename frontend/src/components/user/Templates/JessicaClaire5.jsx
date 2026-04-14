@@ -2,9 +2,8 @@
 import React from 'react';
 import './JessicaClaire5.css';
 import { formatExternalUrl, formatMailto, formatTel, getVisibleExtraLinks } from './socialUtils';
-import { formatMonthYear } from '../../../utils/dateUtils';
 
-const JessicaClaire5 = ({ data }) => {
+const JessicaClaire5 = ({ data = {} }) => {  // ✅ Default prop
     const {
         fullName = "Jessica Claire",
         summary = "Highly motivated Sales Associate...",
@@ -22,43 +21,51 @@ const JessicaClaire5 = ({ data }) => {
         certifications = []
     } = data;
 
-    const technicalSkills = skills?.technical || [];
-    const softSkills = skills?.soft || [];
-    const allSkills = [...technicalSkills, ...softSkills];
+    // ✅ Simplified skills logic
+    const allSkills = [...(skills.technical||[]), ...(skills.soft||[])];
+    const mid = Math.ceil(allSkills.length / 2);
+    const skillsCol1 = allSkills.slice(0, mid);
+    const skillsCol2 = allSkills.slice(mid);
+    
+    // ✅ Now actually used!
     const visibleExtraLinks = getVisibleExtraLinks(extraLinks);
-    // 2 columns implementation
-    const halfSkill = Math.ceil(allSkills.length / 2);
-    const skillsCol1 = allSkills.slice(0, halfSkill);
-    const skillsCol2 = allSkills.slice(halfSkill);
 
     return (
         <div className="jessica-claire-5">
             <div className="topSection">
                 <div className="cntcSec">
                     <div className="address">
-                        <span>
-                            {location} {location && <span>{/*Zip handled in loc*/}</span>}
-                        </span>
+                        <span>{location}</span>  {/* ✅ Removed empty span */}
+                        
                         {phone && (
                             <span>
                                 <span className="sprtr">|</span>
-                                <a href={formatTel(phone)} target="_blank" rel="noopener noreferrer">{phone}</a>
+                                <a href={formatTel(phone)}>{phone}</a>
                             </span>
                         )}
                         {email && (
                             <span>
                                 <span className="sprtr">|</span>
-                                <a href={formatMailto(email)} target="_blank" rel="noopener noreferrer">{email}</a>
+                                <a href={formatMailto(email)}>{email}</a>
                             </span>
                         )}
-                        {(linkedin || website || github || extraLinks?.length > 0) && (
+                        
+                        {(linkedin || website || github || visibleExtraLinks.length > 0) && (
                             <span>
                                 <span className="sprtr">|</span>
-                                {linkedin && <a href={linkedin.startsWith('http') ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer">LinkedIn</a>}
-                                {website && (<><span className="sprtr">|</span><a href={website.startsWith('http') ? website : `https://${website}`} target="_blank" rel="noopener noreferrer">Website</a></>)}
-                                {github && (<><span className="sprtr">|</span><a href={github.startsWith('http') ? github : `https://${github}`} target="_blank" rel="noopener noreferrer">GitHub</a></>)}
-                                {extraLinks?.map((link, index) => (
-                                    link.label && link.url && <span key={index}><span className="sprtr">|</span><a href={link.url.startsWith('http') ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer">{link.label}</a></span>
+                                {/* ✅ Use formatExternalUrl helper */}
+                                {linkedin && <a href={formatExternalUrl(linkedin)} target="_blank" rel="noopener noreferrer">LinkedIn</a>}
+                                {website && (<><span className="sprtr">|</span><a href={formatExternalUrl(website)} target="_blank" rel="noopener noreferrer">Website</a></>)}
+                                {github && (<><span className="sprtr">|</span><a href={formatExternalUrl(github)} target="_blank" rel="noopener noreferrer">GitHub</a></>)}
+                                
+                                {/* ✅ Use pre-filtered visibleExtraLinks */}
+                                {visibleExtraLinks.map((link, index) => (
+                                    <span key={`ext-${index}`}>
+                                        <span className="sprtr">|</span>
+                                        <a href={formatExternalUrl(link.url)} target="_blank" rel="noopener noreferrer">
+                                            {link.label}
+                                        </a>
+                                    </span>
                                 ))}
                             </span>
                         )}
@@ -68,38 +75,26 @@ const JessicaClaire5 = ({ data }) => {
 
             <div className="parentContainer">
                 <div className="section nameSec">
-                    <div className="name">
-                        <span>{fullName}</span>
-                    </div>
+                    <div className="name"><span>{fullName}</span></div>
                 </div>
 
                 {summary && (
                     <div className="section">
-                        <div className="heading">
-                            <div className="sectiontitle">Professional Summary</div>
-                        </div>
-                        <div className="singlecolumn">
-                            <p>{summary}</p>
-                        </div>
+                        <div className="heading"><div className="sectiontitle">Professional Summary</div></div>
+                        <div className="singlecolumn"><p>{summary}</p></div>
                     </div>
                 )}
 
                 {allSkills.length > 0 && (
                     <div className="section">
-                        <div className="heading">
-                            <div className="sectiontitle">Skills</div>
-                        </div>
+                        <div className="heading"><div className="sectiontitle">Skills</div></div>
                         <div className="singlecolumn">
-                            <div style={{ display: 'flex' }}>
-                                <div style={{ width: '50%' }}>
-                                    <ul>
-                                        {skillsCol1.map((skill, i) => <li key={i}>{skill}</li>)}
-                                    </ul>
+                            <div className="skills-grid">  {/* ✅ CSS class */}
+                                <div className="skills-col">
+                                    <ul>{skillsCol1.map((skill, i) => <li key={`s1-${i}`}>{skill}</li>)}</ul>
                                 </div>
-                                <div style={{ width: '50%' }}>
-                                    <ul>
-                                        {skillsCol2.map((skill, i) => <li key={i}>{skill}</li>)}
-                                    </ul>
+                                <div className="skills-col">
+                                    <ul>{skillsCol2.map((skill, i) => <li key={`s2-${i}`}>{skill}</li>)}</ul>
                                 </div>
                             </div>
                         </div>
@@ -108,21 +103,21 @@ const JessicaClaire5 = ({ data }) => {
 
                 {experience.length > 0 && (
                     <div className="section">
-                        <div className="heading">
-                            <div className="sectiontitle">Work History</div>
-                        </div>
+                        <div className="heading"><div className="sectiontitle">Work History</div></div>
                         {experience.map((job, index) => (
-                            <div key={index} className="paragraph">
+                            <div key={`exp-${index}`} className="paragraph">
                                 <div className="singlecolumn">
                                     <span className="dispBlk">
-                                        <span className="txtBold txtCaps">{job.title}</span>, <span>{formatMonthYear(job.startDate)} — {formatMonthYear(job.endDate) || "Present"}</span>
+                                        <span className="txtBold txtCaps">{job.title}</span>
+                                        {job.title && <span>, </span>}
+                                        <span>{job.startDate} to {job.endDate || "Current"}</span>
                                     </span>
                                     <span className="dispBlk">
-                                        <span className="txtBold">{job.company}</span>, <span>{job.location}</span>
+                                        <span className="txtBold">{job.company}</span>
+                                        {job.company && job.location && <span>, </span>}
+                                        <span>{job.location}</span>
                                     </span>
-                                    <div style={{ marginTop: '5px' }}>
-                                        <p>{job.description}</p>
-                                    </div>
+                                    <div className="mt-5"><p>{job.description}</p></div>  {/* ✅ CSS class */}
                                 </div>
                             </div>
                         ))}
@@ -131,20 +126,20 @@ const JessicaClaire5 = ({ data }) => {
 
                 {projects.length > 0 && (
                     <div className="section">
-                        <div className="heading">
-                            <div className="sectiontitle">Projects</div>
-                        </div>
+                        <div className="heading"><div className="sectiontitle">Projects</div></div>
                         {projects.map((proj, index) => (
-                            <div key={index} className="paragraph">
+                            <div key={`proj-${index}`} className="paragraph">
                                 <div className="singlecolumn">
                                     <span className="dispBlk txtBold">{proj.name}</span>
                                     <span className="dispBlk txtItl">{proj.technologies}</span>
-                                    <div style={{ marginTop: '5px' }}>
-                                        <p>{proj.description}</p>
-                                    </div>
-                                    <div style={{ marginTop: '5px', fontSize: '10px' }}>
-                                        {proj.link?.liveLink && <a href={proj.link.liveLink} style={{ marginRight: '10px' }}>Live</a>}
-                                        {proj.link?.github && <a href={proj.link.github}>GitHub</a>}
+                                    <div className="mt-5"><p>{proj.description}</p></div>
+                                    <div className="project-links">  {/* ✅ CSS class */}
+                                        {proj.link?.liveLink && (
+                                            <a href={formatExternalUrl(proj.link.liveLink)} className="link-item" target="_blank" rel="noopener noreferrer">Live</a>
+                                        )}
+                                        {proj.link?.github && (
+                                            <a href={formatExternalUrl(proj.link.github)} className="link-item" target="_blank" rel="noopener noreferrer">GitHub</a>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -154,20 +149,20 @@ const JessicaClaire5 = ({ data }) => {
 
                 {education.length > 0 && (
                     <div className="section">
-                        <div className="heading">
-                            <div className="sectiontitle">Education</div>
-                        </div>
+                        <div className="heading"><div className="sectiontitle">Education</div></div>
                         {education.map((edu, index) => (
-                            <div key={index} className="paragraph">
+                            <div key={`edu-${index}`} className="paragraph">
                                 <div className="singlecolumn">
                                     <span className="dispBlk">
-                                        <span className="txtBold">{edu.school}</span>, <span>{edu.location}</span>
+                                        <span className="txtBold">{edu.school}</span>
+                                        {edu.school && edu.location && <span>, </span>}
+                                        <span>{edu.location}</span>
                                     </span>
                                     <span className="dispBlk">
                                         <span className="txtBold">{edu.degree}</span>
-                                        {(edu.startDate || edu.graduationDate) && (
-                                            <span>, {formatMonthYear(edu.startDate)} — {formatMonthYear(edu.graduationDate) || "Present"}</span>
-                                        )}
+                                        {edu.degree && edu.subject && <span>, </span>}
+                                        <span>{edu.subject}</span>
+                                        {edu.graduationDate && <><span>, </span><span>{edu.graduationDate}</span></>}
                                     </span>
                                     {edu.gpa && <span className="dispBlk">GPA: {edu.gpa}</span>}
                                 </div>
@@ -178,11 +173,9 @@ const JessicaClaire5 = ({ data }) => {
 
                 {certifications.length > 0 && (
                     <div className="section">
-                        <div className="heading">
-                            <div className="sectiontitle">Certifications</div>
-                        </div>
+                        <div className="heading"><div className="sectiontitle">Certifications</div></div>
                         {certifications.map((cert, index) => (
-                            <div key={index} className="paragraph">
+                            <div key={`cert-${index}`} className="paragraph">
                                 <div className="singlecolumn">
                                     <span className="dispBlk txtBold">{cert.name}</span>
                                     <span className="dispBlk">{cert.issuer}, {cert.date}</span>

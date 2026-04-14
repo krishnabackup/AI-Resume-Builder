@@ -2,9 +2,8 @@
 import React from 'react';
 import './JessicaClaire9.css';
 import { formatExternalUrl, formatMailto, formatTel, getVisibleExtraLinks } from './socialUtils';
-import { formatMonthYear } from '../../../utils/dateUtils';
 
-const JessicaClaire9 = ({ data }) => {
+const JessicaClaire9 = ({ data = {} }) => {  // ✅ Default prop
     const {
         fullName = "Jessica Claire",
         summary = "Highly motivated Sales Associate...",
@@ -22,9 +21,10 @@ const JessicaClaire9 = ({ data }) => {
         certifications = []
     } = data;
 
-    const technicalSkills = skills?.technical || [];
-    const softSkills = skills?.soft || [];
-    const allSkills = [...technicalSkills, ...softSkills];
+    // ✅ Simplified skills logic
+    const allSkills = [...(skills.technical||[]), ...(skills.soft||[])];
+    
+    // ✅ Now actually used!
     const visibleExtraLinks = getVisibleExtraLinks(extraLinks);
 
     return (
@@ -33,37 +33,31 @@ const JessicaClaire9 = ({ data }) => {
 
                 {/* Left Box */}
                 <div className="left-box">
-                    <div className="name">
-                        {fullName}
-                    </div>
+                    <div className="name">{fullName}</div>
 
                     {summary && (
                         <div className="section">
-                            <div className="heading">
-                                <div className="sectiontitle">Professional Summary</div>
-                            </div>
-                            <div className="paragraph">
-                                <p>{summary}</p>
-                            </div>
+                            <div className="heading"><div className="sectiontitle">Professional Summary</div></div>
+                            <div className="paragraph"><p>{summary}</p></div>
                         </div>
                     )}
 
                     {experience.length > 0 && (
                         <div className="section">
-                            <div className="heading">
-                                <div className="sectiontitle">Work History</div>
-                            </div>
+                            <div className="heading"><div className="sectiontitle">Work History</div></div>
                             {experience.map((job, index) => (
-                                <div key={index} className="paragraph">
+                                <div key={`exp-${index}`} className="paragraph">
                                     <span className="dispBlk">
-                                        <span className="jobtitle">{job.title}</span>, <span>{formatMonthYear(job.startDate)} — {formatMonthYear(job.endDate) || "Present"}</span>
+                                        <span className="jobtitle">{job.title}</span>
+                                        {job.title && <span>, </span>}
+                                        <span>{job.startDate} - {job.endDate || "Current"}</span>
                                     </span>
                                     <span className="dispBlk">
-                                        <span className="companyname">{job.company}</span>, <span>{job.location}</span>
+                                        <span className="companyname">{job.company}</span>
+                                        {job.company && job.location && <span>, </span>}
+                                        <span>{job.location}</span>
                                     </span>
-                                    <div style={{ marginTop: '5px' }}>
-                                        <p>{job.description}</p>
-                                    </div>
+                                    <div className="mt-5"><p>{job.description}</p></div>  {/* ✅ CSS class */}
                                 </div>
                             ))}
                         </div>
@@ -71,19 +65,19 @@ const JessicaClaire9 = ({ data }) => {
 
                     {projects.length > 0 && (
                         <div className="section">
-                            <div className="heading">
-                                <div className="sectiontitle">Projects</div>
-                            </div>
+                            <div className="heading"><div className="sectiontitle">Projects</div></div>
                             {projects.map((proj, index) => (
-                                <div key={index} className="paragraph">
+                                <div key={`proj-${index}`} className="paragraph">
                                     <span className="dispBlk jobtitle">{proj.name}</span>
-                                    <span className="dispBlk" style={{ fontStyle: 'italic' }}>{proj.technologies}</span>
-                                    <div style={{ marginTop: '5px' }}>
-                                        <p>{proj.description}</p>
-                                    </div>
-                                    <div style={{ marginTop: '5px', fontSize: '10px' }}>
-                                        {proj.link?.liveLink && <a href={proj.link.liveLink} style={{ marginRight: '10px' }}>Live</a>}
-                                        {proj.link?.github && <a href={proj.link.github}>GitHub</a>}
+                                    <span className="dispBlk txt-italic">{proj.technologies}</span>  {/* ✅ CSS class */}
+                                    <div className="mt-5"><p>{proj.description}</p></div>
+                                    <div className="project-links">  {/* ✅ CSS class */}
+                                        {proj.link?.liveLink && (
+                                            <a href={formatExternalUrl(proj.link.liveLink)} className="link-item" target="_blank" rel="noopener noreferrer">Live</a>
+                                        )}
+                                        {proj.link?.github && (
+                                            <a href={formatExternalUrl(proj.link.github)} className="link-item" target="_blank" rel="noopener noreferrer">GitHub</a>
+                                        )}
                                     </div>
                                 </div>
                             ))}
@@ -92,18 +86,16 @@ const JessicaClaire9 = ({ data }) => {
 
                     {education.length > 0 && (
                         <div className="section">
-                            <div className="heading">
-                                <div className="sectiontitle">Education</div>
-                            </div>
+                            <div className="heading"><div className="sectiontitle">Education</div></div>
                             {education.map((edu, index) => (
-                                <div key={index} className="paragraph">
+                                <div key={`edu-${index}`} className="paragraph">
                                     <span className="dispBlk jobtitle">{edu.degree}</span>
+                                    {edu.subject && <span className="dispBlk">{edu.subject}</span>}
                                     <span className="dispBlk companyname">{edu.school}</span>
                                     <span className="dispBlk">
                                         {edu.location}
-                                        {(edu.startDate || edu.graduationDate) && (
-                                            <span>, {formatMonthYear(edu.startDate)} — {formatMonthYear(edu.graduationDate) || "Present"}</span>
-                                        )}
+                                        {edu.location && edu.graduationDate && <span>, </span>}
+                                        {edu.graduationDate && <span>{edu.graduationDate}</span>}
                                     </span>
                                     {edu.gpa && <span className="dispBlk">GPA: {edu.gpa}</span>}
                                 </div>
@@ -115,12 +107,7 @@ const JessicaClaire9 = ({ data }) => {
                 {/* Right Box containing Contact Info and Skills */}
                 <div className="right-box">
                     <div className="section">
-                        <div className="heading">
-                            {/* Optional: Add Contact Header if needed, though template often just lists it. HTML has no header for contact in right box usually? 
-                        Wait, HTML has no specific header for contact section in right box, just the fields.
-                        Actually, it labels them "Address:", "Phone:", "Email:".
-                    */}
-                        </div>
+                        <div className="heading"></div>
                         <div className="paragraph">
                             <div className="contact-item">
                                 <span className="contact-label">Address</span>
@@ -128,49 +115,53 @@ const JessicaClaire9 = ({ data }) => {
                             </div>
                             <div className="contact-item">
                                 <span className="contact-label">Phone</span>
-                                <span><a href={formatTel(phone)} target="_blank" rel="noopener noreferrer">{phone}</a></span>
+                                {/* ✅ Remove target="_blank" from tel: */}
+                                <span><a href={formatTel(phone)}>{phone}</a></span>
                             </div>
                             <div className="contact-item">
                                 <span className="contact-label">Email</span>
-                                <span><a href={formatMailto(email)} target="_blank" rel="noopener noreferrer">{email}</a></span>
+                                {/* ✅ Remove target="_blank" from mailto: */}
+                                <span><a href={formatMailto(email)}>{email}</a></span>
                             </div>
+                            
+                            {/* ✅ Use formatExternalUrl helper */}
                             {linkedin && (
                                 <div className="contact-item">
                                     <span className="contact-label">LinkedIn</span>
-                                    <a href={linkedin.startsWith('http') ? linkedin : `https://${linkedin}`} target="_blank" rel="noopener noreferrer">Profile</a>
+                                    <a href={formatExternalUrl(linkedin)} target="_blank" rel="noopener noreferrer">Profile</a>
                                 </div>
                             )}
                             {website && (
                                 <div className="contact-item">
                                     <span className="contact-label">Website</span>
-                                    <a href={website.startsWith('http') ? website : `https://${website}`} target="_blank" rel="noopener noreferrer">Portfolio</a>
+                                    <a href={formatExternalUrl(website)} target="_blank" rel="noopener noreferrer">Portfolio</a>
                                 </div>
                             )}
                             {github && (
                                 <div className="contact-item">
                                     <span className="contact-label">GitHub</span>
-                                    <a href={github.startsWith('http') ? github : `https://${github}`} target="_blank" rel="noopener noreferrer">Profile</a>
+                                    <a href={formatExternalUrl(github)} target="_blank" rel="noopener noreferrer">Profile</a>
                                 </div>
                             )}
-                            {extraLinks?.map((link, index) => (
-                                link.label && link.url && (
-                                    <div key={index} className="contact-item">
-                                        <span className="contact-label">{link.label}</span>
-                                        <a href={link.url.startsWith('http') ? link.url : `https://${link.url}`} target="_blank" rel="noopener noreferrer">{link.label}</a>
-                                    </div>
-                                )
+                            
+                            {/* ✅ Use pre-filtered visibleExtraLinks */}
+                            {visibleExtraLinks.map((link, index) => (
+                                <div key={`ext-${index}`} className="contact-item">
+                                    <span className="contact-label">{link.label}</span>
+                                    <a href={formatExternalUrl(link.url)} target="_blank" rel="noopener noreferrer">
+                                        {link.label}
+                                    </a>
+                                </div>
                             ))}
                         </div>
                     </div>
 
                     {allSkills.length > 0 && (
                         <div className="section">
-                            <div className="heading">
-                                <div className="sectiontitle">Skills</div>
-                            </div>
+                            <div className="heading"><div className="sectiontitle">Skills</div></div>
                             <div className="paragraph">
                                 <ul>
-                                    {allSkills.map((skill, i) => <li key={i}>{skill}</li>)}
+                                    {allSkills.map((skill, i) => <li key={`skill-${i}`}>{skill}</li>)}
                                 </ul>
                             </div>
                         </div>
@@ -178,11 +169,9 @@ const JessicaClaire9 = ({ data }) => {
 
                     {certifications.length > 0 && (
                         <div className="section">
-                            <div className="heading">
-                                <div className="sectiontitle">Certifications</div>
-                            </div>
+                            <div className="heading"><div className="sectiontitle">Certifications</div></div>
                             {certifications.map((cert, index) => (
-                                <div key={index} className="paragraph">
+                                <div key={`cert-${index}`} className="paragraph">
                                     <span className="dispBlk txtBold">{cert.name}</span>
                                     <span className="dispBlk">{cert.issuer}</span>
                                     <span className="dispBlk">{cert.date}</span>
