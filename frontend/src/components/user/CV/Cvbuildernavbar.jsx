@@ -87,18 +87,104 @@ const CVBuilderTopBar = ({
           )}
         </div>
 
-        {showTabs && (
-          <div className="bg-gray-100 rounded-xl p-1 flex w-fit" role="tablist">
-            <button type="button" role="tab" aria-selected={activeTab === "builder"} onClick={() => setActiveTab("builder")}
-              className={`rounded-xl px-3 py-1.5 text-sm transition whitespace-nowrap ${activeTab === "builder" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-800"}`}>
-              Builder
-            </button>
-            <button type="button" role="tab" aria-selected={activeTab === "templates"} onClick={() => setActiveTab("templates")}
-              className={`rounded-xl px-3 py-1.5 text-sm transition whitespace-nowrap ${activeTab === "templates" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-800"}`}>
-              Templates
-            </button>
-          </div>
-        )}
+        <div className="flex items-center justify-between w-full">
+
+  {/* Tabs */}
+  {showTabs && (
+    <div className="bg-gray-100 rounded-xl p-1 flex w-fit" role="tablist">
+      <button
+        type="button"
+        onClick={() => setActiveTab("builder")}
+        className={`rounded-xl px-3 py-1.5 text-sm ${
+          activeTab === "builder"
+            ? "bg-white text-slate-900 shadow-sm"
+            : "text-slate-600"
+        }`}
+      >
+        Builder
+      </button>
+
+      <button
+        type="button"
+        onClick={() => setActiveTab("templates")}
+        className={`rounded-xl px-3 py-1.5 text-sm ${
+          activeTab === "templates"
+            ? "bg-white text-slate-900 shadow-sm"
+            : "text-slate-600"
+        }`}
+      >
+        Templates
+      </button>
+    </div>
+  )}
+
+  {/* Actions (Mobile aligned right) */}
+  <div className="md:hidden relative" ref={downloadDropdownMobileRef}>
+    <button
+      onClick={() => setShowDownloadMenu((v) => !v)}
+      className="flex items-center gap-1 bg-black text-white px-3 py-1.5 rounded-lg text-sm"
+    >
+      Actions <ChevronDown size={14} />
+    </button>
+{showDownloadMenu && (
+  <div className="absolute right-0 mt-2 w-52 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden">
+
+    {showReset && (
+      <button
+        onClick={() => {
+          setShowDownloadMenu(false);
+          onReset?.();
+        }}
+        className="w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-gray-50 transition"
+      >
+        <Plus size={16} className="text-emerald-600" />
+        <span className="text-slate-700">{resetLabel}</span>
+      </button>
+    )}
+
+    {showUpload && (
+      <button
+        onClick={() => {
+          setShowDownloadMenu(false);
+          handleUploadClick();
+        }}
+        className="w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-gray-50 transition"
+      >
+        <Upload size={16} className="text-black" />
+        <span className="text-slate-700">Upload Resume</span>
+      </button>
+    )}
+
+    <div className="border-t border-gray-100" />
+
+    <button
+      onClick={() => {
+        setShowDownloadMenu(false);
+        onDownload?.();
+      }}
+      className="w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-gray-50 transition"
+    >
+      <Download size={16} className="text-red-500" />
+      <span className="text-slate-700">Download PDF</span>
+    </button>
+
+    {showDownloadWord && (
+      <button
+        onClick={() => {
+          setShowDownloadMenu(false);
+          onDownloadWord?.();
+        }}
+        className="w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-gray-50 transition"
+      >
+        <Download size={16} className="text-blue-500" />
+        <span className="text-slate-700">Download Word</span>
+      </button>
+    )}
+  </div>
+)}
+  </div>
+
+</div>
 
         {parsingConfidence && (
           <div title={parsingConfidence.includes('AI') ? 'AI assisted in parsing this resume' : `Parsing quality: ${parsingConfidence}`}
@@ -154,6 +240,66 @@ const CVBuilderTopBar = ({
           )}
         </div>
       </div>
+    {/* ── Mobile Actions (Working Dropdown) ── */}
+{/* <div className="md:hidden w-full relative" ref={downloadDropdownMobileRef}>
+  <button
+    onClick={() => setShowDownloadMenu((v) => !v)}
+    className="w-full flex items-center justify-center gap-2 bg-black text-white py-2 rounded-lg text-sm"
+  >
+    Actions <ChevronDown size={16} />
+  </button>
+
+  {showDownloadMenu && (
+    <div className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden">
+      
+      {showReset && (
+        <button
+          onClick={() => {
+            setShowDownloadMenu(false);
+            onReset?.();
+          }}
+          className="w-full px-4 py-3 text-sm text-left hover:bg-gray-50 flex items-center gap-2"
+        >
+          <Plus size={16} /> {resetLabel}
+        </button>
+      )}
+
+      {showUpload && (
+        <button
+          onClick={() => {
+            setShowDownloadMenu(false);
+            handleUploadClick();
+          }}
+          className="w-full px-4 py-3 text-sm text-left hover:bg-gray-50 flex items-center gap-2"
+        >
+          <Upload size={16} /> Upload
+        </button>
+      )}
+
+      <button
+        onClick={() => {
+          setShowDownloadMenu(false);
+          onDownload?.();
+        }}
+        className="w-full px-4 py-3 text-sm text-left hover:bg-gray-50 flex items-center gap-2"
+      >
+        <Download size={16} /> Download PDF
+      </button>
+
+      {showDownloadWord && (
+        <button
+          onClick={() => {
+            setShowDownloadMenu(false);
+            onDownloadWord?.();
+          }}
+          className="w-full px-4 py-3 text-sm text-left hover:bg-gray-50 flex items-center gap-2"
+        >
+          <Download size={16} /> Download Word
+        </button>
+      )}
+    </div>
+  )}
+</div> */}
     </div>
   );
 };
