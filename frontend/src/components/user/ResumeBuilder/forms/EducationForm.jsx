@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import MonthYearPicker from "../../MonthYearPicker";
 import { Check, EditIcon, GraduationCap, Plus, Trash2 } from "lucide-react";
 import { getCompletionStatus } from "../completion";
-import { formatMonthYear } from "../../../../utils/dateUtils";
+import { formatMonthYear, isFutureDate, isDateAfter } from "../../../../utils/dateUtils";
 
 const EducationForm = ({ formData, setFormData, highlightEmpty }) => {
   const [editingId, setEditingId] = useState(null);
 
   // Helper to get border class for required fields
-  const getBorderClass = (value) => {
+  const getBorderClass = (value, isError = false) => {
+    if (isError) return 'border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-500/10';
     if (highlightEmpty && !value?.trim()) return 'border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-500/10';
     return 'border-slate-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10';
   };
@@ -50,7 +51,22 @@ const EducationForm = ({ formData, setFormData, highlightEmpty }) => {
 
   return (
     <div className="flex flex-col gap-4">
-      {(formData?.education ?? []).map((edu, index) => (
+      {(formData?.education ?? []).map((edu, index) => {
+        const errors = {};
+        if (edu.startDate && isFutureDate(edu.startDate)) {
+          errors.startDate = "Cannot be in the future";
+        }
+        if (edu.graduationDate && isFutureDate(edu.graduationDate)) {
+          errors.graduationDate = "Cannot be in the future";
+        }
+        if (edu.startDate && edu.graduationDate && isDateAfter(edu.startDate, edu.graduationDate)) {
+          errors.dateOrder = "Start date must be before graduation date";
+          errors.startDate = errors.startDate || errors.dateOrder;
+          errors.graduationDate = errors.graduationDate || errors.dateOrder;
+        }
+        const hasErrors = Object.keys(errors).length > 0;
+
+        return (
         <div
           key={edu.id}
           className="shadow-sm border border-gray-300 rounded-md p-2"
@@ -158,7 +174,7 @@ const EducationForm = ({ formData, setFormData, highlightEmpty }) => {
                       Start Date <span className="text-red-500">*</span>
                     </label>
                     <MonthYearPicker
-                      className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white ${getBorderClass(edu.startDate)}`}
+                      className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white ${getBorderClass(edu.startDate, !!errors.startDate)}`}
                       value={edu.startDate}
                       onChange={(e) => {
                         const val = e.target.value;
@@ -168,6 +184,7 @@ const EducationForm = ({ formData, setFormData, highlightEmpty }) => {
                         setFormData((prev) => ({ ...prev, education: updated }));
                       }}
                     />
+                    {errors.startDate && <span className="text-xs text-red-500 mt-1">{errors.startDate}</span>}
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="text-sm font-semibold text-slate-700">
@@ -175,7 +192,7 @@ const EducationForm = ({ formData, setFormData, highlightEmpty }) => {
                     </label>
                     <MonthYearPicker
                       alignRight={true}
-                      className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white ${getBorderClass(edu.graduationDate)}`}
+                      className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white ${getBorderClass(edu.graduationDate, !!errors.graduationDate)}`}
                       value={edu.graduationDate}
                       onChange={(e) => {
                         const val = e.target.value;
@@ -187,6 +204,7 @@ const EducationForm = ({ formData, setFormData, highlightEmpty }) => {
                         setFormData((prev) => ({ ...prev, education: updated }));
                       }}
                     />
+                    {errors.graduationDate && <span className="text-xs text-red-500 mt-1">{errors.graduationDate}</span>}
                   </div>
                   <div className="flex flex-col gap-1.5 md:col-span-2">
                     <label className="text-sm font-semibold text-slate-700">
@@ -218,8 +236,9 @@ const EducationForm = ({ formData, setFormData, highlightEmpty }) => {
                   Delete
                 </button>
                 <button
-                  className="text-sm font-medium bg-black py-2 px-4 rounded-lg text-white flex gap-2 items-center hover:bg-black/70"
-                  onClick={() => setEditingId(null)}
+                  className={`text-sm font-medium py-2 px-4 rounded-lg flex gap-2 items-center transition-all ${hasErrors ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-black text-white hover:bg-black/70'}`}
+                  onClick={() => !hasErrors && setEditingId(null)}
+                  disabled={hasErrors}
                 >
                   <Check size={18} />
                   Done
@@ -228,7 +247,7 @@ const EducationForm = ({ formData, setFormData, highlightEmpty }) => {
             </>
           )}
         </div>
-      ))}
+      )})}
       <button className="flex items-center text-left" onClick={addEducation}>
         <Plus size={14} className="mr-1 inline" /> Add Education
       </button>

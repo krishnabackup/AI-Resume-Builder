@@ -11,14 +11,16 @@ import {
 } from "lucide-react";
 import { getCompletionStatus } from "./../completion";
 import axiosInstance from "../../../../api/axios";
-import { formatMonthYear } from "../../../../utils/dateUtils";
+import { formatMonthYear, isFutureDate, isDateAfter } from "../../../../utils/dateUtils";
 
 const ExperienceForm = ({ formData, setFormData, highlightEmpty }) => {
   const [editingId, setEditingId] = useState(null);
   const [generatingId, setGeneratingId] = useState(null);
 
   // Helper to get border class for required fields
-  const getBorderClass = (value) => {
+  const getBorderClass = (value, isError = false) => {
+    if (isError)
+      return "border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-500/10";
     if (highlightEmpty && !value?.trim())
       return "border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-500/10";
     return "border-slate-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10";
@@ -115,7 +117,22 @@ const ExperienceForm = ({ formData, setFormData, highlightEmpty }) => {
   return (
     <>
       <div className="flex flex-col gap-4">
-        {(formData?.experience ?? []).map((exp, index) => (
+        {(formData?.experience ?? []).map((exp, index) => {
+          const errors = {};
+          if (exp.startDate && isFutureDate(exp.startDate)) {
+            errors.startDate = "Cannot be in the future";
+          }
+          if (exp.endDate && exp.endDate !== "Present" && isFutureDate(exp.endDate)) {
+            errors.endDate = "Cannot be in the future";
+          }
+          if (exp.startDate && exp.endDate && exp.endDate !== "Present" && isDateAfter(exp.startDate, exp.endDate)) {
+            errors.dateOrder = "Start date must be before end date";
+            errors.startDate = errors.startDate || errors.dateOrder;
+            errors.endDate = errors.endDate || errors.dateOrder;
+          }
+          const hasErrors = Object.keys(errors).length > 0;
+
+          return (
           <div
             key={exp.id}
             className="shadow-sm border border-gray-300 rounded-lg p-2"
@@ -215,12 +232,13 @@ const ExperienceForm = ({ formData, setFormData, highlightEmpty }) => {
                       Start Date <span className="text-red-500">*</span>
                     </label>
                     <MonthYearPicker
-                      className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white ${getBorderClass(exp.startDate)}`}
+                      className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all bg-white ${getBorderClass(exp.startDate, !!errors.startDate)}`}
                       value={exp.startDate}
                       onChange={(e) =>
                         updateExperience(exp.id, "startDate", e.target.value)
                       }
                     />
+                    {errors.startDate && <span className="text-xs text-red-500 mt-1">{errors.startDate}</span>}
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <div className="flex items-center justify-between">
@@ -243,9 +261,9 @@ const ExperienceForm = ({ formData, setFormData, highlightEmpty }) => {
                         Present
                       </label>
                     </div>
-                    <div className="relative w-full flex justify-end">
+                    <div className="relative w-full flex flex-col justify-end">
                       <MonthYearPicker
-                        className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all ${exp.endDate === "Present" ? "bg-slate-100 text-slate-400 cursor-not-allowed" : "bg-white"} ${getBorderClass(exp.endDate)}`}
+                        className={`w-full px-3.5 py-2.5 border rounded-lg text-sm text-slate-900 focus:outline-none transition-all ${exp.endDate === "Present" ? "bg-slate-100 text-slate-400 cursor-not-allowed" : "bg-white"} ${getBorderClass(exp.endDate, !!errors.endDate)}`}
                         value={exp.endDate === "Present" ? "" : exp.endDate}
                         disabled={exp.endDate === "Present"}
                         alignRight={true}
@@ -253,6 +271,7 @@ const ExperienceForm = ({ formData, setFormData, highlightEmpty }) => {
                           updateExperience(exp.id, "endDate", e.target.value)
                         }
                       />
+                      {errors.endDate && <span className="text-xs text-red-500 mt-1 self-start">{errors.endDate}</span>}
                     </div>
                   </div>
                 </div>
@@ -296,8 +315,9 @@ const ExperienceForm = ({ formData, setFormData, highlightEmpty }) => {
                     Delete
                   </button>
                   <button
-                    className="text-sm font-medium bg-black py-2 px-4 rounded-lg text-white flex gap-2 items-center hover:bg-black/70"
-                    onClick={() => setEditingId(null)}
+                    className={`text-sm font-medium py-2 px-4 rounded-lg flex gap-2 items-center transition-all ${hasErrors ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-black text-white hover:bg-black/70'}`}
+                    onClick={() => !hasErrors && setEditingId(null)}
+                    disabled={hasErrors}
                   >
                     <Check size={18} />
                     Done
@@ -306,7 +326,7 @@ const ExperienceForm = ({ formData, setFormData, highlightEmpty }) => {
               </div>
             )}
           </div>
-        ))}
+        )})}
         <button className="flex items-center text-left" onClick={addExperience}>
           <Plus size={14} className="mr-1 inline" /> Add Experience
         </button>

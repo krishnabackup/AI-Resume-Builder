@@ -37,3 +37,44 @@ export const formatMonthYear = (value, options = {}) => {
   const monthName = short ? shortMonths[monthNum - 1] : months[monthNum - 1];
   return `${monthName} ${year}`;
 };
+
+export const parseToDate = (value) => {
+  if (!value || value.toLowerCase() === "present") return null;
+  const parts = value.split("-");
+  if (parts.length !== 2) return null;
+
+  let year, monthNum;
+  if (parts[0].length === 4) {
+    year = parseInt(parts[0], 10);
+    monthNum = parseInt(parts[1], 10);
+  } else if (parts[1] && parts[1].length === 4) {
+    monthNum = parseInt(parts[0], 10);
+    year = parseInt(parts[1], 10);
+  } else {
+    return null;
+  }
+
+  if (isNaN(year) || isNaN(monthNum)) return null;
+  
+  // Return Date object (first day of the month)
+  return new Date(year, monthNum - 1, 1);
+};
+
+export const isFutureDate = (value) => {
+  const date = parseToDate(value);
+  if (!date) return false;
+  
+  const now = new Date();
+  const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  
+  return date > currentMonth;
+};
+
+export const isDateAfter = (startDateValue, endDateValue) => {
+  const startDate = parseToDate(startDateValue);
+  const endDate = parseToDate(endDateValue);
+  
+  if (!startDate || !endDate) return false;
+  
+  return startDate > endDate;
+};
