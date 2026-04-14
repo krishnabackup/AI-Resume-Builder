@@ -296,12 +296,13 @@ export default function AdminBlog() {
 
               <div className="mt-6 flex gap-3">
 
+                {/* ✅ FIX: replaced undefined `isSaving` with `saveMutation.isPending` */}
                 <button
                   type="submit"
-                  disabled={isSaving}
-                  className="bg-[#1a2e52] text-white px-5 py-2 rounded-lg text-sm"
+                  disabled={saveMutation.isPending}
+                  className="bg-[#1a2e52] text-white px-5 py-2 rounded-lg text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {isSaving ? "Saving..." : editingId ? "Update Blog" : "Create Blog"}
+                  {saveMutation.isPending ? "Saving..." : editingId ? "Update Blog" : "Create Blog"}
                 </button>
 
                 <button
@@ -451,7 +452,7 @@ export default function AdminBlog() {
         </div>
       )}
 
-      {filteredPosts.length === 0 && (
+      {filteredPosts.length === 0 && !isLoading && (
         <div className="text-center mt-20 text-gray-400">
           No blogs created yet.
         </div>
