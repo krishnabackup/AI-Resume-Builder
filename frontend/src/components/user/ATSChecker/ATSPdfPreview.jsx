@@ -125,6 +125,10 @@ const ATSPdfPreview = ({ pdfUrl, onLoadSuccess }) => {
       <div
         ref={containerRef}
         className="flex-1 overflow-auto bg-gray-200 p-6"
+        style={{
+          transform: `scale(${scale})`,
+          transformOrigin: "top center",
+        }}
       >
         {pdfUrl ? (
           <div className="w-fit mx-auto">
@@ -138,7 +142,7 @@ const ATSPdfPreview = ({ pdfUrl, onLoadSuccess }) => {
 
               <Page
                 pageNumber={pageNumber}
-                scale={scale} 
+                // scale={scale} 
                 width={containerWidth ? containerWidth : undefined}
                 renderTextLayer={!isLargeDocument} // Disable text layer for large documents
                 renderAnnotationLayer={!isLargeDocument} // Disable annotations for large documents
