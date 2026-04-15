@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axiosInstance from "../api/axios";
 import { toast, Toaster } from "react-hot-toast";
@@ -15,11 +15,65 @@ export default function Register() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Verification state
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [verificationSent, setVerificationSent] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+
   const navigate = useNavigate();
+
+  useEffect(() => {
+    let interval;
+    if (verificationSent && !isEmailVerified) {
+      interval = setInterval(async () => {
+        try {
+          const res = await axiosInstance.get(`/api/auth/check-verification?email=${encodeURIComponent(emailtext.trim())}`);
+          if (res.data.is_verified) {
+            setIsEmailVerified(true);
+            setVerificationSent(false);
+            toast.success("Email verified successfully!");
+            clearInterval(interval);
+          }
+        } catch (err) {
+          console.error("Polling error", err);
+        }
+      }, 3000);
+    }
+    return () => clearInterval(interval);
+  }, [verificationSent, isEmailVerified, emailtext]);
+
+  const handleSendVerification = async () => {
+    if (!emailtext.trim()) return toast.error("Please enter an email to verify");
+    setVerifying(true);
+    try {
+      await axiosInstance.post("/api/auth/send-verification", { email: emailtext.trim() });
+      setVerificationSent(true);
+      toast.success("Verification email sent! Please check your inbox.");
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to send verification email.");
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const getUsernameError = (username) => {
+    if (!username) return "";
+    if (/^[0-9]/.test(username)) {
+      return "Username should not start with numbers";
+    }
+    if (/[^a-zA-Z0-9]/.test(username)) {
+      return "Username should only contain alphanumeric characters";
+    }
+    return "";
+  };
+
+  const usernameError = getUsernameError(usernametext);
 
   const validate = () => {
     if (!usernametext.trim()) return toast.error("Please enter a username");
+    if (usernameError) return toast.error(usernameError);
     if (!emailtext.trim()) return toast.error("Please enter an email");
+    if (!isEmailVerified) return toast.error("Please verify your email address");
     if (!passwordtext) return toast.error("Please enter a password");
     if (passwordtext.length < 6)
       return toast.error("Password must be at least 6 characters");
@@ -121,9 +175,12 @@ export default function Register() {
                     value={usernametext}
                     onChange={(e) => setUserNameText(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                    className={`w-full pl-11 pr-4 py-3 border ${usernameError ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'} rounded-lg focus:outline-none focus:ring-2 transition`}
                   />
                 </div>
+                {usernameError && (
+                  <p className="text-red-500 text-xs mt-1">{usernameError}</p>
+                )}
               </div>
 
               {/* Email */}
@@ -131,17 +188,41 @@ export default function Register() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Email Address
                 </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="email"
-                    placeholder="Enter your email"
-                    value={emailtext}
-                    onChange={(e) => setEmailText(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-                  />
+                <div className="flex bg-white rounded-lg border border-gray-300 focus-within:ring-2 focus-within:ring-blue-500 transition overflow-hidden">
+                  <div className="relative flex-grow">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="email"
+                      placeholder="Enter your email"
+                      value={emailtext}
+                      onChange={(e) => {
+                        setEmailText(e.target.value);
+                        if (isEmailVerified) setIsEmailVerified(false);
+                        if (verificationSent) setVerificationSent(false);
+                      }}
+                      onKeyPress={handleKeyPress}
+                      disabled={isEmailVerified}
+                      className="w-full pl-11 pr-4 py-3 bg-transparent focus:outline-none disabled:bg-gray-50"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleSendVerification}
+                    disabled={verifying || isEmailVerified || !emailtext.trim()}
+                    className={`px-4 py-3 font-semibold text-sm transition ${
+                      isEmailVerified
+                        ? "bg-green-500 text-white cursor-default"
+                        : verifying || !emailtext.trim()
+                        ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                        : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                    }`}
+                  >
+                    {isEmailVerified ? "Verified ✔" : verifying ? "Sending..." : "Verify"}
+                  </button>
                 </div>
+                {verificationSent && !isEmailVerified && (
+                  <p className="text-orange-500 text-xs mt-1 animate-pulse">Waiting for verification... Please check your email.</p>
+                )}
               </div>
 
               {/* Password */}
@@ -197,9 +278,9 @@ export default function Register() {
               {/* Button */}
               <button
                 onClick={handleRegister}
-                disabled={loading}
+                disabled={loading || !!usernameError || !isEmailVerified}
                 className={`w-full py-3 rounded-lg text-white font-semibold transition transform ${
-                  loading
+                  loading || !!usernameError || !isEmailVerified
                     ? "bg-blue-400 cursor-not-allowed"
                     : "bg-blue-600 hover:bg-blue-700 hover:shadow-lg hover:scale-105"
                 }`}

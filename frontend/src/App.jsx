@@ -8,6 +8,7 @@ import BuilderPage from "./pages/Builder";
 import LoginPage from "./pages/login";
 import RegisterPage from "./pages/Register";
 import ForgotPasswordPage from "./pages/ForgotPassword";
+import VerifyEmail from "./pages/VerifyEmail";
 import TemplateEditor from "./pages/TemplateEditor";
 import Contact from "./pages/Contact";
 import HelpCenter from "./pages/HelpCenter";
@@ -72,6 +73,7 @@ function App() {
 
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
               <Route path="/" element={<Home />} />

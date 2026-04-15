@@ -16,19 +16,19 @@ export default function Login() {
 
   // Auto login (checks both localStorage & sessionStorage)
   // Auto login ONLY for Remember Me users
-useEffect(() => {
-  const token = localStorage.getItem("token");
+  useEffect(() => {
+    const token = localStorage.getItem("token");
 
-  if (token) {
-    const isAdmin = JSON.parse(localStorage.getItem("isAdmin") || "false");
+    if (token) {
+      const isAdmin = JSON.parse(localStorage.getItem("isAdmin") || "false");
 
-    if (isAdmin) {
-      navigate("/admin");
-    } else {
-      navigate("/user/dashboard");
+      if (isAdmin) {
+        navigate("/admin");
+      } else {
+        navigate("/user/dashboard");
+      }
     }
-  }
-}, [navigate]);
+  }, [navigate]);
 
   const validate = () => {
     if (!emailtext) {
@@ -43,55 +43,55 @@ useEffect(() => {
   };
 
   const handleLogin = async () => {
-  if (!validate()) return;
-  setLoading(true);
+    if (!validate()) return;
+    setLoading(true);
 
-  try {
-    const response = await axiosInstance.post("/api/auth/login", {
-      email: emailtext,
-      password: passwordtext,
-      rememberMe: rememberMe,
-    });
+    try {
+      const response = await axiosInstance.post("/api/auth/login", {
+        email: emailtext,
+        password: passwordtext,
+        rememberMe: rememberMe,
+      });
 
-    console.log("Login response:", response.data);
+      console.log("Login response:", response.data);
 
-    const isAdmin = response.data.isAdmin || false;
+      const isAdmin = response.data.isAdmin || false;
 
-    // Storage logic based on Remember Me
-    if (rememberMe) {
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("isAdmin", JSON.stringify(isAdmin));
+      // Storage logic based on Remember Me
+      if (rememberMe) {
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("isAdmin", JSON.stringify(isAdmin));
 
-      sessionStorage.removeItem("token");
-      sessionStorage.removeItem("isAdmin");
-    } else {
-      sessionStorage.setItem("token", response.data.token);
-      sessionStorage.setItem("isAdmin", JSON.stringify(isAdmin));
-
-      localStorage.removeItem("token");
-      localStorage.removeItem("isAdmin");
-    }
-
-    setTimeout(() => {
-      if (isAdmin) {
-        toast.success("Welcome Admin!");
-        navigate("/admin");
+        sessionStorage.removeItem("token");
+        sessionStorage.removeItem("isAdmin");
       } else {
-        const username = emailtext.split("@")[0];
-        toast.success(`Welcome back, ${username}!`);
-        navigate("/user/dashboard");
-      }
-    }, 150);
+        sessionStorage.setItem("token", response.data.token);
+        sessionStorage.setItem("isAdmin", JSON.stringify(isAdmin));
 
-  } catch (error) {
-    console.log(error);
-    toast.error(
-      error?.response?.data?.message || "Login failed. Please try again."
-    );
-  } finally {
-    setLoading(false);
-  }
-};
+        localStorage.removeItem("token");
+        localStorage.removeItem("isAdmin");
+      }
+
+      setTimeout(() => {
+        if (isAdmin) {
+          toast.success("Welcome Admin!");
+          navigate("/admin");
+        } else {
+          const username = emailtext.split("@")[0];
+          toast.success(`Welcome back, ${username}!`);
+          navigate("/user/dashboard");
+        }
+      }, 150);
+
+    } catch (error) {
+      console.log(error);
+      toast.error(
+        error?.response?.data?.message || "Login failed. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   const handleKeyPress = (e) => {
@@ -199,11 +199,10 @@ useEffect(() => {
               <button
                 onClick={handleLogin}
                 disabled={loading}
-                className={`w-full py-3 rounded-lg text-white font-semibold transition transform ${
-                  loading
+                className={`w-full py-3 rounded-lg text-white font-semibold transition transform ${loading
                     ? 'bg-blue-400 cursor-not-allowed'
                     : 'bg-blue-600 hover:bg-blue-700 hover:shadow-lg hover:scale-105'
-                }`}
+                  }`}
               >
                 {loading ? "Signing in..." : "Sign In"}
               </button>
