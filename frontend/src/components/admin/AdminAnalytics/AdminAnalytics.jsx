@@ -10,6 +10,8 @@ import {
 import axiosInstance from "../../../api/axios";
 import AdminTopPagesAnalytics from "../AdminTopPagesAnalytics";
 import { useQuery } from "@tanstack/react-query";
+import CustomDateRange from "./CustomeDatePicker";
+import FilterDropDown from "./FilterDropDown";
 
 // ─── Constants (stable refs, never re-created) ────────────────────────────────
 
@@ -153,7 +155,11 @@ const SubscriptionCard = React.memo(({ item, totalUsers }) => {
 export default function AdminAnalytics() {
   const [templateView, setTemplateView] = useState("resume");
   const [isMounted, setIsMounted] = useState(false);
-
+  const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState({ name: "Last 30days", range: 30 });
+  const [showCustomDate,setCustomDate] = useState(false);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -246,6 +252,21 @@ export default function AdminAnalytics() {
 
   const handleTemplateViewResume = useCallback(() => setTemplateView("resume"), []);
   const handleTemplateViewCv = useCallback(() => setTemplateView("cv"), []);
+  
+  const handleFilter = useCallback((option) => {
+    if(option.custom) return;
+    const range = option.range;
+    fetchAnalyticsData({range});
+  }, [fetchAnalyticsData]);
+
+  const handleDatePick = useCallback(() => {
+    if(!startDate || !endDate) return;
+    fetchAnalyticsData({startDate: startDate.toISOString(), endDate: endDate.toISOString()});
+    setCustomDate(false);
+    setOpen(false);
+  }, [fetchAnalyticsData, startDate, endDate]);
+
+ 
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
@@ -259,11 +280,16 @@ export default function AdminAnalytics() {
             Deep dive into platform performance &amp; user engagement.
           </p>
         </div>
+        <div className="flex items-center gap-4">
         {lastUpdated && (
-          <div className="text-xs text-slate-400 bg-white px-3 py-1.5 rounded-full border border-slate-200 w-fit">
+          <div className="text-sm text-slate-600 bg-white px-3 py-1.5 rounded-full border border-slate-200 w-fit">
             Last updated: <span className="font-medium">{lastUpdated}</span>
           </div>
         )}
+        <div>
+          <FilterDropDown selected={selected} setSelected={setSelected} handleFilter={handleFilter} showCustomDate={showCustomDate} setCustomDate={setCustomDate} startDate={startDate} endDate={endDate} setStartDate={setStartDate} setEndDate={setEndDate} handleDatePick={handleDatePick} open={open} setOpen={setOpen}/>
+        </div>
+        </div>
       </div>
 
       {/* Stats Cards */}
