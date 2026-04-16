@@ -20,6 +20,7 @@ import {
 import {  ZoomIn, ZoomOut, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import UserNavBar from "../UserNavBar/UserNavBar";
+import MobilePreview from "./MobilePreview";
 
 // ═══════════════════════════════════════════════════════════
 // CONSTANTS & CONFIGURATION
@@ -831,28 +832,30 @@ const Downloads = () => {
       {/* ========== PREVIEW MODAL (FLOATING + MOBILE RESPONSIVE) ========== */}
       <AnimatePresence>
         {previewDocument && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[10000] bg-white flex items-center justify-center"
-            onClick={() => {
-              setPreviewDocument(null);
-              setIsFullscreen(false);
-              setZoomLevel(ZOOM_CONFIG.DEFAULT);
-              dispatch({ type: "SET_PAGE", payload: 1 });
-            }}
-            role="dialog"
-            aria-modal="true"
-          >
+          <>
+            {/* Desktop Preview - Only show on large screens */}
             <motion.div
-              initial={{ scale: 0.98, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.98, opacity: 0 }}
-              transition={{ duration: 0.12 }}
-              onClick={(e) => e.stopPropagation()}
-              className="fixed inset-0 w-screen h-screen bg-white flex flex-col overflow-hidden z-[10001]"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="hidden lg:flex fixed inset-0 z-[10000] bg-white items-center justify-center"
+              onClick={() => {
+                setPreviewDocument(null);
+                setIsFullscreen(false);
+                setZoomLevel(ZOOM_CONFIG.DEFAULT);
+                dispatch({ type: "SET_PAGE", payload: 1 });
+              }}
+              role="dialog"
+              aria-modal="true"
             >
+              <motion.div
+                initial={{ scale: 0.98, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.98, opacity: 0 }}
+                transition={{ duration: 0.12 }}
+                onClick={(e) => e.stopPropagation()}
+                className="fixed inset-0 w-screen h-screen bg-white flex flex-col overflow-hidden z-[10001]"
+              >
               <div className="flex items-center justify-between gap-2 px-3 sm:px-4 py-2 bg-white border-b border-gray-200">
                 {/* LEFT SECTION */}
                 <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -1136,7 +1139,21 @@ const Downloads = () => {
                 }}
               />
             </motion.div>
-          </motion.div>
+            </motion.div>
+
+            {/* Mobile Preview - Only show on small screens */}
+            <MobilePreview
+              show={true}
+              document={previewDocument}
+              onClose={() => {
+                setPreviewDocument(null);
+                setIsFullscreen(false);
+                setZoomLevel(ZOOM_CONFIG.DEFAULT);
+                dispatch({ type: "SET_PAGE", payload: 1 });
+              }}
+              onDownload={handleDownload}
+            />
+          </>
         )}
       </AnimatePresence>
     </>
