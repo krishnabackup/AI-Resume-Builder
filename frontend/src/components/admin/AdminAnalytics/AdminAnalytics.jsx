@@ -7,11 +7,10 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell
 } from "recharts";
-import axiosInstance from "../../../api/axios";
 import AdminTopPagesAnalytics from "../AdminTopPagesAnalytics";
 import { useQuery } from "@tanstack/react-query";
-import CustomDateRange from "./CustomeDatePicker";
 import FilterDropDown from "./FilterDropDown";
+import { fetchAdminAnalytics } from "../../../services/analyticsService";
 
 // ─── Constants (stable refs, never re-created) ────────────────────────────────
 
@@ -47,6 +46,27 @@ const TEMPLATE_COLORS = {
 const PIE_COLORS = ["#94a3b8", "#3b82f6", "#8b5cf6", "#f59e0b", "#10b981"];
 
 const POLL_INTERVAL_MS = 30_000;
+
+const formatDateForApi = (date) => {
+  if (!date) return null;
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
+const getFilterLabel = (filter) => {
+  if (filter?.range === "7d") return "Last 7 days";
+  if (filter?.range === "30d") return "Last 30 days";
+  if (filter?.range === "3m") return "Last 3 months";
+  if (filter?.range === "custom" && filter.startDate && filter.endDate) {
+    return `${filter.startDate} to ${filter.endDate}`;
+  }
+
+  return "Selected range";
+};
 
 // ─── Pure helpers (defined once, outside component) ───────────────────────────
 
@@ -156,10 +176,11 @@ export default function AdminAnalytics() {
   const [templateView, setTemplateView] = useState("resume");
   const [isMounted, setIsMounted] = useState(false);
   const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState({ name: "Last 30days", range: 30 });
+  const [selected, setSelected] = useState({ name: "Last 30 days", range: "30d" });
   const [showCustomDate,setCustomDate] = useState(false);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
+  const [appliedFilter, setAppliedFilter] = useState({ range: "30d", startDate: null, endDate: null });
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -167,14 +188,19 @@ export default function AdminAnalytics() {
   const {
     data: analyticsData = INITIAL_ANALYTICS,
     isLoading: loading,
-    refetch: fetchAnalyticsData,
+    refetch: refetchAnalytics,
     isFetching: refreshingTemplates,
     dataUpdatedAt,
   } = useQuery({
-    queryKey: ['adminAnalytics'],
+    queryKey: [
+      "adminAnalytics",
+      appliedFilter.range,
+      appliedFilter.startDate,
+      appliedFilter.endDate,
+    ],
     queryFn: async () => {
       console.log('Fetching admin analytics stats');
-      const { data } = await axiosInstance.get("/api/admin/analytics-stat");
+      const data = await fetchAdminAnalytics(appliedFilter);
       return mergeAnalytics(INITIAL_ANALYTICS, data);
     },
     refetchInterval: POLL_INTERVAL_MS,
@@ -210,6 +236,8 @@ export default function AdminAnalytics() {
     if (retentionRate >= 60) return { color: "text-amber-500", bar: "bg-amber-500", label: "Moderate retention" };
     return { color: "text-red-500", bar: "bg-red-500", label: "Needs attention" };
   }, [retentionRate]);
+
+  const activeRangeLabel = useMemo(() => getFilterLabel(appliedFilter), [appliedFilter]);
 
   const stats = useMemo(() => [
     {
@@ -247,24 +275,39 @@ export default function AdminAnalytics() {
   ], [loading, analyticsData.userGrowth, analyticsData.conversions, analyticsData.activeUsers, analyticsData.deletedUsers]);
 
   const handleRefreshTemplates = useCallback(() => {
-    fetchAnalyticsData();
-  }, [fetchAnalyticsData]);
+    refetchAnalytics();
+  }, [refetchAnalytics]);
 
   const handleTemplateViewResume = useCallback(() => setTemplateView("resume"), []);
   const handleTemplateViewCv = useCallback(() => setTemplateView("cv"), []);
   
   const handleFilter = useCallback((option) => {
-    if(option.custom) return;
-    const range = option.range;
-    fetchAnalyticsData({range});
-  }, [fetchAnalyticsData]);
+    if (option.custom) {
+      setCustomDate(true);
+      return;
+    }
 
-  const handleDatePick = useCallback(() => {
-    if(!startDate || !endDate) return;
-    fetchAnalyticsData({startDate: startDate.toISOString(), endDate: endDate.toISOString()});
+    setSelected(option);
     setCustomDate(false);
     setOpen(false);
-  }, [fetchAnalyticsData, startDate, endDate]);
+    setStartDate(null);
+    setEndDate(null);
+    setAppliedFilter({ range: option.range, startDate: null, endDate: null });
+  }, []);
+
+  const handleDatePick = useCallback(() => {
+    if (!startDate || !endDate) return;
+
+    const nextStartDate = formatDateForApi(startDate);
+    const nextEndDate = formatDateForApi(endDate);
+
+    if (!nextStartDate || !nextEndDate) return;
+
+    setSelected({ name: "Custom date", range: "custom" });
+    setAppliedFilter({ range: "custom", startDate: nextStartDate, endDate: nextEndDate });
+    setCustomDate(false);
+    setOpen(false);
+  }, [endDate, startDate]);
 
  
 
@@ -366,8 +409,8 @@ export default function AdminAnalytics() {
       {/* Small metric cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6">
         {[
-          { label: "System Uptime", value: analyticsData.summary.systemUptime, note: "Last 30 days", noteColor: "text-slate-500", icon: <Shield className="text-green-600" size={16} />, iconBg: "bg-green-50" },
-          { label: "Total API Calls", value: analyticsData.summary.totalApiCalls, note: "Last 30 days", noteColor: "text-slate-500", icon: <Activity className="text-purple-600" size={16} />, iconBg: "bg-purple-50" },
+          { label: "System Uptime", value: analyticsData.summary.systemUptime, note: activeRangeLabel, noteColor: "text-slate-500", icon: <Shield className="text-green-600" size={16} />, iconBg: "bg-green-50" },
+          { label: "Total API Calls", value: analyticsData.summary.totalApiCalls, note: activeRangeLabel, noteColor: "text-slate-500", icon: <Activity className="text-purple-600" size={16} />, iconBg: "bg-purple-50" },
           { label: "API Success Rate", value: analyticsData.summary.apiSuccessRate, note: "Real-time health", noteColor: "text-green-600", icon: <Zap className="text-blue-600" size={16} />, iconBg: "bg-blue-50" },
           { label: "API Failure Rate", value: analyticsData.summary.apiFailureRate, note: "Real-time error monitoring", noteColor: "text-red-600", icon: <Activity className="text-red-600" size={16} />, iconBg: "bg-red-50" },
         ].map(({ label, value, note, noteColor, icon, iconBg }) => (
@@ -382,7 +425,6 @@ export default function AdminAnalytics() {
         ))}
       </div>
 
-      {/* Growth & Revenue Chart */}
       <div className="mb-8 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm min-h-[400px] flex flex-col min-w-0">
         <h2 className="text-lg font-semibold mb-1">Platform Growth &amp; Revenue</h2>
         <p className="text-sm text-slate-500 mb-6">User acquisition vs Revenue generated</p>
@@ -453,7 +495,7 @@ export default function AdminAnalytics() {
           </div>
         </div>
 
-        <AdminTopPagesAnalytics />
+        <AdminTopPagesAnalytics filters={appliedFilter} />
       </div>
 
       {/* Subscription Breakdown */}

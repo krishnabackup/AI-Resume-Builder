@@ -3,16 +3,21 @@ import { FileText, BarChart3, RefreshCw } from "lucide-react";
 import { fetchTopPages } from "../../services/analyticsService";
 import { useQuery } from "@tanstack/react-query";
 
-export default function AdminTopPagesAnalytics() {
+export default function AdminTopPagesAnalytics({ filters = {} }) {
   const {
     data: topPages = [],
     isLoading: loading,
     refetch: fetchAnalytics,
     isFetching: refreshing
   } = useQuery({
-    queryKey: ['adminTopPages'],
+    queryKey: [
+      "adminTopPages",
+      filters.range,
+      filters.startDate,
+      filters.endDate,
+    ],
     queryFn: async () => {
-      const data = await fetchTopPages();
+      const data = await fetchTopPages(filters);
       return Array.isArray(data) ? data : [];
     },
     staleTime: 300000, // 5 minutes

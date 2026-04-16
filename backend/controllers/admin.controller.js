@@ -5,6 +5,105 @@ let dashboardStatsCache = {
   expiresAt: 0,
   payload: null,
 };
+
+const MILLIS_PER_DAY = 24 * 60 * 60 * 1000;
+const PRESET_RANGE_DAYS = {
+  "7d": 7,
+  "30d": 30,
+  "3m": 90,
+};
+
+const formatLocalDate = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const formatBoundary = (date, endOfDay = false) => {
+  return `${formatLocalDate(date)} ${endOfDay ? "23:59:59.999" : "00:00:00.000"}`;
+};
+
+const startOfDay = (date) => {
+  const next = new Date(date);
+  next.setHours(0, 0, 0, 0);
+  return next;
+};
+
+const endOfDay = (date) => {
+  const next = new Date(date);
+  next.setHours(23, 59, 59, 999);
+  return next;
+};
+
+const parseDateOnly = (value) => {
+  if (!value) return null;
+
+  const raw = String(value).trim();
+  if (!raw) return null;
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    const parsed = new Date(`${raw}T00:00:00`);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  const parsed = new Date(raw);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const resolveAnalyticsWindow = (query = {}) => {
+  const rangeKey = String(query.range ?? query.filterDate ?? query.filterdate ?? "30d").trim().toLowerCase();
+  const customStart = parseDateOnly(query.startDate);
+  const customEnd = parseDateOnly(query.endDate);
+
+  if (customStart && customEnd) {
+    const start = customStart <= customEnd ? customStart : customEnd;
+    const end = customStart <= customEnd ? customEnd : customStart;
+    return {
+      mode: "custom",
+      range: "custom",
+      startDate: startOfDay(start),
+      endDate: endOfDay(end),
+    };
+  }
+
+  const rangeDays = PRESET_RANGE_DAYS[rangeKey] || PRESET_RANGE_DAYS["30d"];
+  const endDate = endOfDay(new Date());
+  const startDate = startOfDay(new Date(Date.now() - ((rangeDays - 1) * MILLIS_PER_DAY)));
+
+  return {
+    mode: "preset",
+    range: rangeKey in PRESET_RANGE_DAYS ? rangeKey : "30d",
+    startDate,
+    endDate,
+  };
+};
+
+const buildMonthlyTimeline = (startDate, endDate) => {
+  const timeline = [];
+  const cursor = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+  const finalMonth = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+
+  while (cursor <= finalMonth) {
+    timeline.push({
+      year: cursor.getFullYear(),
+      month: cursor.getMonth() + 1,
+      monthLabel: cursor.toLocaleString("default", { month: "short" }),
+      users: 0,
+      revenue: 0,
+    });
+
+    cursor.setMonth(cursor.getMonth() + 1);
+  }
+
+  return timeline;
+};
+
+const formatRangeLabel = (startDate, endDate) => {
+  const startLabel = startDate.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const endLabel = endDate.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return `${startLabel} - ${endLabel}`;
+};
 /* ================== ADMIN DASHBOARD ================== */
 export const getAdminDashboardStats = async (req, res) => {
   try {
@@ -254,22 +353,11 @@ export const getAdminDashboardStats = async (req, res) => {
 
 export const getAnalyticsStats = async (req, res) => {
   try {
-    const last30Days = new Date();
-    last30Days.setDate(last30Days.getDate() - 30);
-
-    const last7Days = new Date();
-    last7Days.setDate(last7Days.getDate() - 7);
-
-    const previous30Days = new Date();
-    previous30Days.setDate(previous30Days.getDate() - 60);
-
-    const previous7Days = new Date();
-    previous7Days.setDate(previous7Days.getDate() - 14);
-
-    const lastSixMonths = new Date();
-    lastSixMonths.setMonth(lastSixMonths.getMonth() - 5);
-    lastSixMonths.setDate(1);
-    lastSixMonths.setHours(0, 0, 0, 0);
+    const analyticsWindow = resolveAnalyticsWindow(req.query);
+    const previousWindowLength = analyticsWindow.endDate.getTime() - analyticsWindow.startDate.getTime() + 1;
+    const previousWindowEnd = new Date(analyticsWindow.startDate.getTime() - 1);
+    const previousWindowStart = new Date(analyticsWindow.startDate.getTime() - previousWindowLength);
+    const rangeLabel = formatRangeLabel(analyticsWindow.startDate, analyticsWindow.endDate);
 
     const [
       newUsersResult,
@@ -286,91 +374,147 @@ export const getAnalyticsStats = async (req, res) => {
       previousNewUsersResult,
       previousActiveUsersResult,
       previousPaidUsersResult,
-      paidUsersResult
+      paidUsersResult,
     ] = await Promise.all([
-      pool.query("SELECT COUNT(*)::int AS count FROM users WHERE created_at >= $1", [last30Days]),
-      pool.query("SELECT COUNT(*)::int AS count FROM users WHERE last_login >= $1 AND is_admin = false", [last7Days]),
+      pool.query(
+        "SELECT COUNT(*)::int AS count FROM users WHERE created_at >= $1 AND created_at <= $2",
+        [formatBoundary(analyticsWindow.startDate), formatBoundary(analyticsWindow.endDate, true)]
+      ),
+      pool.query(
+        "SELECT COUNT(*)::int AS count FROM users WHERE last_login >= $1 AND last_login <= $2 AND is_admin = false",
+        [formatBoundary(analyticsWindow.startDate), formatBoundary(analyticsWindow.endDate, true)]
+      ),
       pool.query(`
         WITH inactive_users AS (
           SELECT COUNT(*)::int AS count
           FROM users
           WHERE is_admin = false
             AND is_active = false
+            AND updated_at >= $1
+            AND updated_at <= $2
         ),
         deleted_events AS (
           SELECT COUNT(*)::int AS count
           FROM user_deletion_events
+          WHERE created_at >= $1
+            AND created_at <= $2
         )
         SELECT (
           (SELECT count FROM inactive_users)
           +
           (SELECT count FROM deleted_events)
         )::int AS count
-      `),
+      `, [formatBoundary(analyticsWindow.startDate), formatBoundary(analyticsWindow.endDate, true)]),
       pool.query("SELECT name FROM plans"),
       pool.query("SELECT plan AS id, COUNT(*)::int AS count FROM users WHERE is_admin = false GROUP BY 1"),
-      pool.query(`
+      pool.query(
+        `
         SELECT 
           CASE WHEN status_code < 400 THEN 'success' ELSE 'failure' END AS metric,
           COUNT(*)::int AS count,
           AVG(response_time)::float AS avg_response
         FROM api_metrics
         WHERE created_at >= $1
+          AND created_at <= $2
         GROUP BY 1
-      `, [last30Days]),
-      pool.query(`
+      `,
+        [formatBoundary(analyticsWindow.startDate), formatBoundary(analyticsWindow.endDate, true)]
+      ),
+      pool.query(
+        `
         SELECT 
-          EXTRACT(YEAR FROM created_at)::int AS year,
-          EXTRACT(MONTH FROM created_at)::int AS month,
+          DATE_TRUNC('month', created_at)::date AS month_start,
           COUNT(*)::int AS count
         FROM users
         WHERE created_at >= $1
-        GROUP BY 1, 2
-      `, [lastSixMonths]),
-      pool.query(`
+          AND created_at <= $2
+        GROUP BY 1
+        ORDER BY 1
+      `,
+        [formatBoundary(analyticsWindow.startDate), formatBoundary(analyticsWindow.endDate, true)]
+      ),
+      pool.query(
+        `
         SELECT 
-          EXTRACT(YEAR FROM created_at)::int AS year,
-          EXTRACT(MONTH FROM created_at)::int AS month,
-          SUM(amount)::float AS revenue
+          DATE_TRUNC('month', created_at)::date AS month_start,
+          COALESCE(SUM(amount), 0)::float AS revenue
         FROM payments
-        WHERE status = 'success' AND created_at >= $1
-        GROUP BY 1, 2
-      `, [lastSixMonths]),
-      pool.query(`
+        WHERE status = 'success'
+          AND created_at >= $1
+          AND created_at <= $2
+        GROUP BY 1
+        ORDER BY 1
+      `,
+        [formatBoundary(analyticsWindow.startDate), formatBoundary(analyticsWindow.endDate, true)]
+      ),
+      pool.query(
+        `
         SELECT 
           data->>'templateId' AS id,
           COUNT(*)::int AS count
         FROM resumes
         WHERE data->>'templateId' IS NOT NULL
+          AND created_at >= $1
+          AND created_at <= $2
         GROUP BY 1
         ORDER BY count DESC
-      `),
-      pool.query(`
+      `,
+        [formatBoundary(analyticsWindow.startDate), formatBoundary(analyticsWindow.endDate, true)]
+      ),
+      pool.query(
+        `
         SELECT 
           template AS id,
           COUNT(*)::int AS count
         FROM downloads
-        WHERE type = 'resume' AND action = 'download' AND template IS NOT NULL AND template != ''
+        WHERE type = 'resume'
+          AND action = 'download'
+          AND template IS NOT NULL
+          AND template != ''
+          AND created_at >= $1
+          AND created_at <= $2
         GROUP BY 1
         ORDER BY count DESC
-      `),
-      pool.query(`
+      `,
+        [formatBoundary(analyticsWindow.startDate), formatBoundary(analyticsWindow.endDate, true)]
+      ),
+      pool.query(
+        `
         SELECT 
           template AS id,
           COUNT(*)::int AS count
         FROM downloads
-        WHERE type = 'cv' AND action = 'download' AND template IS NOT NULL AND template != ''
+        WHERE type = 'cv'
+          AND action = 'download'
+          AND template IS NOT NULL
+          AND template != ''
+          AND created_at >= $1
+          AND created_at <= $2
         GROUP BY 1
         ORDER BY count DESC
-      `),
-      pool.query("SELECT COUNT(*)::int AS count FROM users WHERE created_at >= $1 AND created_at < $2", [previous30Days, last30Days]),
-      pool.query("SELECT COUNT(*)::int AS count FROM users WHERE last_login >= $1 AND last_login < $2 AND is_admin = false", [previous7Days, last7Days]),
-      pool.query("SELECT COUNT(*)::int AS count FROM users WHERE plan != 'Free' AND is_admin = false AND created_at >= $1 AND created_at < $2", [previous30Days, last30Days]),
-      pool.query("SELECT COUNT(*)::int AS count FROM users WHERE plan != 'Free' AND is_admin = false")
+      `,
+        [formatBoundary(analyticsWindow.startDate), formatBoundary(analyticsWindow.endDate, true)]
+      ),
+      pool.query(
+        "SELECT COUNT(*)::int AS count FROM users WHERE created_at >= $1 AND created_at <= $2",
+        [formatBoundary(previousWindowStart), formatBoundary(previousWindowEnd, true)]
+      ),
+      pool.query(
+        "SELECT COUNT(*)::int AS count FROM users WHERE last_login >= $1 AND last_login <= $2 AND is_admin = false",
+        [formatBoundary(previousWindowStart), formatBoundary(previousWindowEnd, true)]
+      ),
+      pool.query(
+        "SELECT COUNT(*)::int AS count FROM users WHERE plan != 'Free' AND is_admin = false AND created_at >= $1 AND created_at <= $2",
+        [formatBoundary(previousWindowStart), formatBoundary(previousWindowEnd, true)]
+      ),
+      pool.query(
+        "SELECT COUNT(*)::int AS count FROM users WHERE plan != 'Free' AND is_admin = false AND created_at >= $1 AND created_at <= $2",
+        [formatBoundary(analyticsWindow.startDate), formatBoundary(analyticsWindow.endDate, true)]
+      ),
     ]);
 
-    const newUsersLast30Days = newUsersResult.rows[0]?.count || 0;
-    const activeUsersLast7Days = activeUsersResult.rows[0]?.count || 0;
+    const newUsersCount = newUsersResult.rows[0]?.count || 0;
+    const activeUsersCount = activeUsersResult.rows[0]?.count || 0;
     const deletedUsersCount = deletedUsersResult.rows[0]?.count || 0;
 
     // ---------- SUBSCRIPTION BREAKDOWN ----------
@@ -437,53 +581,40 @@ export const getAnalyticsStats = async (req, res) => {
       }))
       .filter((item) => item.count > 0);
 
-    const totalPaidUsers = subscriptionBreakdown.reduce(
-      (sum, item) => (item.plan.toLowerCase() === "free" ? sum : sum + item.count),
-      0
-    );
-
     // ---------- API PERFORMANCE ----------
     let apiSuccessCount = 0;
     let apiFailureCount = 0;
     let totalRespTime = 0;
     let callsForAvg = 0;
 
-    apiStatsResult.rows.forEach(stat => {
+    apiStatsResult.rows.forEach((stat) => {
       if (stat.metric === "success") apiSuccessCount = stat.count;
       else apiFailureCount = stat.count;
 
       if (stat.avg_response) {
-        totalRespTime += (stat.avg_response * stat.count);
+        totalRespTime += stat.avg_response * stat.count;
         callsForAvg += stat.count;
       }
     });
 
     const totalApiCalls = apiSuccessCount + apiFailureCount;
-    const apiSuccessRate = totalApiCalls > 0 ? ((apiSuccessCount / totalApiCalls) * 100).toFixed(1) : 100;
+    const apiSuccessRate = totalApiCalls > 0 ? ((apiSuccessCount / totalApiCalls) * 100).toFixed(1) : "100.0";
     const apiFailureRate = totalApiCalls > 0 ? ((apiFailureCount / totalApiCalls) * 100).toFixed(1) : 0;
     const avgResponseTime = callsForAvg > 0 ? Math.round(totalRespTime / callsForAvg) : 250;
 
-    // ---------- CONSOLIDATED TREND DATA (LAST 6 MONTHS) ----------
-    const trendData = [];
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date();
-      d.setMonth(d.getMonth() - i);
-      const year = d.getFullYear();
-      const month = d.getMonth() + 1;
-      const monthName = d.toLocaleString("default", { month: "short" });
+    // ---------- CONSOLIDATED TREND DATA ----------
+    const trendData = buildMonthlyTimeline(analyticsWindow.startDate, analyticsWindow.endDate);
 
-      trendData.push({
-        year,
-        month,
-        monthName,
-        users: 0,
-        revenue: 0
+    trendData.forEach((tick) => {
+      const growthMatch = userGrowthResult.rows.find((row) => {
+        const rowDate = new Date(row.month_start);
+        return rowDate.getFullYear() === tick.year && rowDate.getMonth() + 1 === tick.month;
       });
-    }
 
-    trendData.forEach(tick => {
-      const growthMatch = userGrowthResult.rows.find(g => Number(g.year) === tick.year && Number(g.month) === tick.month);
-      const revenueMatch = revenueResult.rows.find(r => Number(r.year) === tick.year && Number(r.month) === tick.month);
+      const revenueMatch = revenueResult.rows.find((row) => {
+        const rowDate = new Date(row.month_start);
+        return rowDate.getFullYear() === tick.year && rowDate.getMonth() + 1 === tick.month;
+      });
 
       if (growthMatch) tick.users = Number(growthMatch.count || 0);
       if (revenueMatch) tick.revenue = Number(revenueMatch.revenue || 0);
@@ -553,7 +684,7 @@ export const getAnalyticsStats = async (req, res) => {
           elite: "Elite Sidebar",
           eclipse: "Eclipse",
           eclipse1: "Eclipse Alt",
-          harbor: "Harbor"
+          harbor: "Harbor",
         };
         const rawId = String(item.id);
         name = hardcodedNames[rawId] || toReadableTemplateName(rawId);
@@ -601,10 +732,10 @@ export const getAnalyticsStats = async (req, res) => {
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
-    const chartData = trendData.map(item => ({
-      month: item.monthName,
+    const chartData = trendData.map((item) => ({
+      month: item.monthLabel,
       users: item.users,
-      revenue: item.revenue
+      revenue: item.revenue,
     }));
 
     const baseUptime = 99.95;
@@ -613,14 +744,14 @@ export const getAnalyticsStats = async (req, res) => {
 
     // ──── CALCULATE PERCENTAGE CHANGES ─────
     const previousNewUsers = previousNewUsersResult.rows[0]?.count || 0;
-    const userGrowthChange = previousNewUsers > 0 
-      ? Number((((newUsersLast30Days - previousNewUsers) / previousNewUsers) * 100).toFixed(1))
-      : (newUsersLast30Days > 0 ? 100 : 0);
+    const userGrowthChange = previousNewUsers > 0
+      ? Number((((newUsersCount - previousNewUsers) / previousNewUsers) * 100).toFixed(1))
+      : (newUsersCount > 0 ? 100 : 0);
 
     const previousActiveUsers = previousActiveUsersResult.rows[0]?.count || 0;
     const activeUsersChange = previousActiveUsers > 0
-      ? Number((((activeUsersLast7Days - previousActiveUsers) / previousActiveUsers) * 100).toFixed(1))
-      : (activeUsersLast7Days > 0 ? 100 : 0);
+      ? Number((((activeUsersCount - previousActiveUsers) / previousActiveUsers) * 100).toFixed(1))
+      : (activeUsersCount > 0 ? 100 : 0);
 
     const currentPaidUsers = Number(paidUsersResult.rows[0]?.count || 0);
     const previousPaidUsers = previousPaidUsersResult.rows[0]?.count || 0;
@@ -630,23 +761,23 @@ export const getAnalyticsStats = async (req, res) => {
 
     res.status(200).json({
       userGrowth: {
-        count: Number(newUsersLast30Days),
+        count: Number(newUsersCount),
         change: userGrowthChange,
-        note: "New users in last 30 days",
+        note: `New users from ${rangeLabel}`,
       },
       conversions: {
         count: currentPaidUsers,
         change: conversionsChange,
-        note: "Total paid subscriptions",
+        note: `Paid subscriptions from ${rangeLabel}`,
       },
       activeUsers: {
-        count: Number(activeUsersLast7Days),
+        count: Number(activeUsersCount),
         change: activeUsersChange,
-        note: "Active last 7 days",
+        note: `Active users from ${rangeLabel}`,
       },
       deletedUsers: {
         count: Number(deletedUsersCount),
-        note: "Inactive or deleted accounts",
+        note: `Inactive or deleted accounts from ${rangeLabel}`,
       },
       mostUsedResumeTemplates,
       mostUsedCvTemplates,
