@@ -25,6 +25,7 @@ function usePendingTemplates() {
     try {
       const { data } = await api.fetchPending();
       setRequests(data);
+      setLoading(false);
     } catch (err) {
       console.error("Error fetching pending templates:", err);
       setError("Failed to load pending templates.");
@@ -33,7 +34,9 @@ function usePendingTemplates() {
     }
   }, []);
 
-  useEffect(() => { fetchPendingTemplates(); }, [fetchPendingTemplates]);
+  useEffect(() => {
+    fetchPendingTemplates();
+  }, [fetchPendingTemplates]);
 
   const removeRequest = (id) =>
     setRequests((prev) => prev.filter((t) => t._id !== id));
@@ -44,7 +47,9 @@ function usePendingTemplates() {
 function useScrollLock(active) {
   useEffect(() => {
     document.body.style.overflow = active ? "hidden" : "unset";
-    return () => { document.body.style.overflow = "unset"; };
+    return () => {
+      document.body.style.overflow = "unset";
+    };
   }, [active]);
 }
 
@@ -66,7 +71,12 @@ const IconButton = ({ onClick, title, color, children }) => (
   </button>
 );
 
-const TemplateCard = React.memo(function TemplateCard({ template, onPreview, onApprove, onReject }) {
+const TemplateCard = React.memo(function TemplateCard({
+  template,
+  onPreview,
+  onApprove,
+  onReject,
+}) {
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition">
       <img
@@ -77,11 +87,15 @@ const TemplateCard = React.memo(function TemplateCard({ template, onPreview, onA
       />
 
       <div className="p-5">
-        <h2 className="text-lg font-semibold text-slate-900">{template.name}</h2>
+        <h2 className="text-lg font-semibold text-slate-900">
+          {template.name}
+        </h2>
         <div className="flex justify-between items-center mt-1">
           <p className="text-slate-500 text-sm">{template.category}</p>
         </div>
-        <p className="text-slate-600 mt-2 text-sm line-clamp-2">{template.description}</p>
+        <p className="text-slate-600 mt-2 text-sm line-clamp-2">
+          {template.description}
+        </p>
 
         <div className="mt-5 flex justify-end gap-3">
           <IconButton
@@ -134,7 +148,9 @@ function PreviewModal({ template, onClose }) {
           <X size={24} />
         </button>
 
-        <h2 className="text-2xl font-bold mb-2 text-slate-900">{template.name}</h2>
+        <h2 className="text-2xl font-bold mb-2 text-slate-900">
+          {template.name}
+        </h2>
         <p className="text-slate-500 mb-4">{template.description}</p>
 
         <div className="mb-4">
@@ -181,7 +197,12 @@ export default function AdminAcceptUser() {
   };
 
   const handleReject = async (id) => {
-    if (!window.confirm("Are you sure you want to reject and delete this template?")) return;
+    if (
+      !window.confirm(
+        "Are you sure you want to reject and delete this template?",
+      )
+    )
+      return;
     try {
       await api.reject(id);
       alert("Template rejected and deleted.");
@@ -192,12 +213,17 @@ export default function AdminAcceptUser() {
     }
   };
 
-  if (loading) return <div className="p-6 text-slate-500">Loading pending requests...</div>;
+  if (loading)
+    return (
+      <div className="p-6 text-slate-500">Loading pending requests...</div>
+    );
   if (error) return <div className="p-6 text-red-500">{error}</div>;
 
   return (
     <div className="p-6 min-h-screen bg-slate-50">
-      <h1 className="text-3xl font-bold mb-8 text-slate-900">Template Approval</h1>
+      <h1 className="text-3xl font-bold mb-8 text-slate-900">
+        Template Approval
+      </h1>
 
       {requests.length === 0 ? (
         <p className="text-slate-500">No pending template requests</p>

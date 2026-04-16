@@ -9,7 +9,6 @@ import path from "path";
 import { fileURLToPath } from "url";
 import notificationRoutes from "./routers/notification.router.js";
 
-
 // Routers
 import authRouter from "./routers/auth.router.js";
 import userRouter from "./routers/user.router.js";
@@ -20,7 +19,7 @@ import planRouter from "./routers/plan.router.js";
 import blogRouter from "./routers/blog.router.js";
 
 import downloadsRouter from "./routers/downloads.router.js";
-import coverLetterRouter from "./routers/coverletter.js";  // ✅ NEW
+import coverLetterRouter from "./routers/coverletter.js"; // ✅ NEW
 import dashboardRouter from "./routers/dashboard.router.js";
 import analyticsRouter from "./routers/analytics.routes.js";
 import newsletterRouter from "./routers/newsletter.router.js";
@@ -29,16 +28,14 @@ import chatbotRouter from "./routers/chatbot.router.js";
 
 import adminRouter from "./routers/admin.router.js";
 
-
 // Config
 import connectDB from "./config/postgresdb.js";
 import bcrypt from "bcryptjs";
 
 import apiTracker from "./middlewares/apiTracker.js";
 
-
 const app = express();
-const port = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8000;
 
 app.use(apiTracker);
 
@@ -50,20 +47,21 @@ app.use(express.json());
 app.use(cookieParser());
 
 // ✅ UPDATED: Larger JSON limit for HTML content
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
 // Allow CORS from local dev frontends
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || origin.startsWith("http://localhost")) return callback(null, true);
+      if (!origin || origin.startsWith("http://localhost"))
+        return callback(null, true);
       const clientUrl = process.env.CLIENT_URL;
       if (clientUrl && origin === clientUrl) return callback(null, true);
       return callback(new Error(`CORS policy: origin ${origin} not allowed`));
     },
     credentials: true,
-  })
+  }),
 );
 
 // Routes
@@ -72,7 +70,7 @@ app.use("/api/user", userRouter);
 app.use("/api/template", templateRouter);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/resume", resumeRouter);
-app.use("/api/coverletter", coverLetterRouter);  // ✅ NEW
+app.use("/api/coverletter", coverLetterRouter); // ✅ NEW
 app.use("/api/template-visibility", templateVisibilityRouter);
 app.use("/api/plans", planRouter);
 app.use("/api/blog", blogRouter);
@@ -85,7 +83,7 @@ app.use("/api", analyticsRouter);
 // Serve uploads directory (for images/resumes)
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-app.use("/api/downloads", downloadsRouter);  
+app.use("/api/downloads", downloadsRouter);
 
 // Error handling middleware (add before listen)
 app.use((err, req, res, next) => {
@@ -100,17 +98,24 @@ const bootstrapAdmin = async () => {
     const adminPassword = process.env.ADMIN_PASSWORD;
 
     if (!adminEmail || !adminPassword) {
-      console.warn("⚠️ ADMIN_EMAIL or ADMIN_PASSWORD not found in .env. Skipping admin bootstrap.");
+      console.warn(
+        "⚠️ ADMIN_EMAIL or ADMIN_PASSWORD not found in .env. Skipping admin bootstrap.",
+      );
       return;
     }
 
-    const adminRes = await pool.query('SELECT id FROM users WHERE email = $1', [adminEmail]);
+    const adminRes = await pool.query("SELECT id FROM users WHERE email = $1", [
+      adminEmail,
+    ]);
     if (adminRes.rowCount === 0) {
       const hashedPassword = await bcrypt.hash(adminPassword, 10);
-      await pool.query(`
+      await pool.query(
+        `
         INSERT INTO users (id, username, email, password, is_admin, is_active, created_at, updated_at)
         VALUES (gen_random_uuid(), $1, $2, $3, true, true, NOW(), NOW())
-      `, ["Admin", adminEmail, hashedPassword]);
+      `,
+        ["Admin", adminEmail, hashedPassword],
+      );
       console.log(`✅ Admin user created: ${adminEmail}`);
     }
   } catch (error) {
@@ -136,11 +141,12 @@ const startServer = async () => {
     await connectDB(); // Wait for DB connection
     await ensureDeletionEventsTable();
     await bootstrapAdmin(); // Ensure admin exists
-    pool.query("SELECT 1")
-  .then(() => console.log("✅ PostgreSQL ready"))
-  .catch(err => console.error("❌ DB Error:", err.message));
-    app.listen(port, () => {
-      console.log(`✅ Server Running at http://localhost:${port}`);
+    pool
+      .query("SELECT 1")
+      .then(() => console.log("✅ PostgreSQL ready"))
+      .catch((err) => console.error("❌ DB Error:", err.message));
+    app.listen(PORT, () => {
+      console.log(`✅ Server Running at http://localhost:${PORT}`);
       console.log(`✅ Database Connected`);
     });
   } catch (error) {
