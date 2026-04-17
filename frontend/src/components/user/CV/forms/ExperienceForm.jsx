@@ -56,13 +56,49 @@ const ExperienceForm = ({ formData, setFormData, highlightEmpty }) => {
   };
 
   const formatMonthYear = (value) => {
-    if (!value) return "";
-    const [year, month] = value.split("-");
-    const months = [
+    if (!value || typeof value !== "string") return "";
+    const trimmed = value.trim();
+    if (!trimmed) return "";
+    if (trimmed.toLowerCase() === "present") return "Present";
+
+    const shortMonths = [
       "Jan", "Feb", "Mar", "Apr", "May", "Jun",
       "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
     ];
-    return `${months[Number(month) - 1]} ${year}`;
+
+    // Handle YYYY-MM or MM-YYYY (with dash or slash)
+    const sepMatch = trimmed.match(/^(\d{1,4})[-\/](\d{1,4})$/);
+    if (sepMatch) {
+      let year, monthNum;
+      if (sepMatch[1].length === 4) {
+        year = sepMatch[1];
+        monthNum = parseInt(sepMatch[2], 10);
+      } else {
+        monthNum = parseInt(sepMatch[1], 10);
+        year = sepMatch[2];
+      }
+      if (!isNaN(monthNum) && monthNum >= 1 && monthNum <= 12 && year) {
+        return `${shortMonths[monthNum - 1]} ${year}`;
+      }
+    }
+
+    // Handle natural language: "Jan 2023", "January 2023"
+    const natMatch = trimmed.match(/^([A-Za-z]+)[,\s]+(\d{4})$/);
+    if (natMatch) {
+      const allMonths = [
+        "january","february","march","april","may","june",
+        "july","august","september","october","november","december"
+      ];
+      const idx = allMonths.indexOf(natMatch[1].toLowerCase());
+      if (idx !== -1) return `${shortMonths[idx]} ${natMatch[2]}`;
+      const shortIdx = shortMonths.findIndex(m => m.toLowerCase() === natMatch[1].toLowerCase());
+      if (shortIdx !== -1) return `${shortMonths[shortIdx]} ${natMatch[2]}`;
+    }
+
+    // Year-only
+    if (/^\d{4}$/.test(trimmed)) return trimmed;
+
+    return "";
   };
 
   const handleAIEnhance = async (id) => {
