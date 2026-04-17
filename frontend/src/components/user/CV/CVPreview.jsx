@@ -93,6 +93,8 @@ const CVPreview = ({ formData, selectedTemplate, isMaximized, onToggleMaximize }
   const hasUserEnteredEducation = useMemo(() => formData?.education?.some(edu => edu?.school?.trim() || edu?.degree?.trim() || edu?.field?.trim() || edu?.year?.trim()), [formData?.education]);
   const hasUserEnteredProjects = useMemo(() => formData?.projects?.some(proj => { const linkStr = typeof proj?.link === 'string' ? proj.link : (proj?.link?.github || proj?.link?.liveLink || proj?.link?.other || ''); return proj?.title?.trim() || proj?.name?.trim() || proj?.description?.trim() || linkStr?.trim(); }), [formData?.projects]);
   const hasUserEnteredCertifications = useMemo(() => formData?.certifications?.some(cert => cert?.name?.trim() || cert?.issuer?.trim() || cert?.date?.trim()), [formData?.certifications]);
+  const hasUserEnteredTechnicalSkills = useMemo(() => (formData?.skills?.technical?.length ?? 0) > 0, [formData?.skills?.technical]);
+  const hasUserEnteredSoftSkills = useMemo(() => (formData?.skills?.soft?.length ?? 0) > 0, [formData?.skills?.soft]);
 
   /* ─── merge + filter display data ─────────────────────────────────────── */
   const displayData = useMemo(() => {
@@ -103,8 +105,10 @@ const CVPreview = ({ formData, selectedTemplate, isMaximized, onToggleMaximize }
     if (!hasUserEnteredEducation && Array.isArray(merged.education)) merged.education = [];
     if (!hasUserEnteredProjects && Array.isArray(merged.projects)) merged.projects = [];
     if (!hasUserEnteredCertifications && Array.isArray(merged.certifications)) merged.certifications = [];
+    if (!hasUserEnteredTechnicalSkills) merged.skills = { ...merged.skills, technical: [] };
+    if (!hasUserEnteredSoftSkills) merged.skills = { ...merged.skills, soft: [] };
     return merged;
-  }, [formData, hasUserEnteredExperience, hasUserEnteredEducation, hasUserEnteredProjects, hasUserEnteredCertifications]);
+  }, [formData, hasUserEnteredExperience, hasUserEnteredEducation, hasUserEnteredProjects, hasUserEnteredCertifications, hasUserEnteredTechnicalSkills, hasUserEnteredSoftSkills]);
 
   const isUserData = useMemo(() => hasAnyUserData(formData), [formData]);
   const effectiveZoom = useMemo(() => clamp(manualZoom * fitZoom, ZOOM_MIN, ZOOM_MAX), [manualZoom, fitZoom]);
