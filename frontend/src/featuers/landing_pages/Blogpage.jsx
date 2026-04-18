@@ -1,7 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, ChevronDown, Calendar, Sparkles, Loader2, Check, AlertCircle, Mail } from 'lucide-react';
-import NavBar from '../../components/NavBar';
+import {
+  Search,
+  ChevronDown,
+  Calendar,
+  Sparkles,
+  Loader2,
+  Check,
+  AlertCircle,
+  Mail,
+} from "lucide-react";
+import NavBar from "../../components/NavBar";
 import Footer from "./Footer";
 import { motion } from "framer-motion";
 import axiosInstance from "../../api/axios";
@@ -413,5 +422,3 @@ const BlogPage = () => {
 };
 
 export default BlogPage;
-
-
