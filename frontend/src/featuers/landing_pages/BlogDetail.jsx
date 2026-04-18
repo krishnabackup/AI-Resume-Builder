@@ -8,8 +8,8 @@ import {
   Share2,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import axiosInstance from "../api/axios";
-import NavBar from "../components/NavBar";
+import axiosInstance from "../../api/axios";
+import NavBar from "../../components/NavBar";
 import Footer from "./Footer";
 
 const fadeUp = {
