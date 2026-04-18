@@ -2,62 +2,62 @@ import React from "react";
 import { Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 
-import Home from "./pages/Home";
-import TemplatesPage from "./pages/TemplatesPage";
-import BuilderPage from "./pages/Builder";
-import LoginPage from "./pages/login";
-import RegisterPage from "./pages/Register";
-import ForgotPasswordPage from "./pages/ForgotPassword";
-import VerifyEmail from "./pages/VerifyEmail";
-import TemplateEditor from "./pages/TemplateEditor";
-import Contact from "./pages/Contact";
-import HelpCenter from "./pages/HelpCenter";
-import About from "./pages/About";
-import Pricing from "./pages/Pricing";
-import BlogPage from "./pages/Blogpage";
-import CareersPage from "./pages/Careerpage";
-import ATSCheckerPage from "./pages/ATSChecker";
-import TemplatesFeature from "./pages/TemplatesFeature";
-import AIBuilderPage from "./pages/AIBuilder";
-import AIContentEnhancementPage from "./pages/AIContentEnhance";
-import ScoreChecker from "./pages/ScoreChecker";
-import ResumeHubPage from "./pages/ResumeHub";
-import GrowthInsightsPage from "./pages/GrowthInsights";
-import AICoverLetterPage from "./pages/CoverLetter";
-import CoverLetterExamples from "./pages/CoverLetterExamples";
-import CVFormattingPage from "./pages/CV";
-import WritingCoverLetter from "./pages/WritingCoverLetter"
+import Home from "./featuers/landing_pages/Home";
+import TemplatesPage from "./featuers/landing_pages/TemplatesPage";
+import BuilderPage from "./featuers/landing_pages/Builder";
+import LoginPage from "./featuers/landing_pages/login";
+import RegisterPage from "./featuers/landing_pages/Register";
+import ForgotPasswordPage from "./featuers/landing_pages/ForgotPassword";
+import VerifyEmail from "./featuers/landing_pages/VerifyEmail";
+import TemplateEditor from "./featuers/landing_pages/TemplateEditor";
+import Contact from "./featuers/landing_pages/Contact";
+import HelpCenter from "./featuers/landing_pages/HelpCenter";
+import About from "./featuers/landing_pages/About";
+import Pricing from "./featuers/landing_pages/Pricing";
+import BlogPage from "./featuers/landing_pages/Blogpage";
+import CareersPage from "./featuers/landing_pages/Careerpage";
+import ATSCheckerPage from "./featuers/landing_pages/ATSChecker";
+import TemplatesFeature from "./featuers/landing_pages/TemplatesFeature";
+import AIBuilderPage from "./featuers/landing_pages/AIBuilder";
+import AIContentEnhancementPage from "./featuers/landing_pages/AIContentEnhance";
+import ScoreChecker from "./featuers/landing_pages/ScoreChecker";
+import ResumeHubPage from "./featuers/landing_pages/ResumeHub";
+import GrowthInsightsPage from "./featuers/landing_pages/GrowthInsights";
+import AICoverLetterPage from "./featuers/landing_pages/CoverLetter";
+import CoverLetterExamples from "./featuers/landing_pages/CoverLetterExamples";
+import CVFormattingPage from "./featuers/landing_pages/CV";
+import WritingCoverLetter from "./featuers/landing_pages/WritingCoverLetter"
 
-import ScrollToTop from "./components/ScrollToTop";
-import RequireAuth from "./components/RequireAuth";
-import PrivacyPolicy from "./pages/Privacypolicy";
-import ResumeChecker from "./pages/ResumeChecker";
-import Terms from "./pages/Terms";
-import LandingPageLayouts from "./pages/LandingPageLayouts";
-import NotFound from "./pages/NotFound";
+import ScrollToTop from "./featuers/ScrollToTop";
+import RequireAuth from "./featuers/RequireAuth";
+import PrivacyPolicy from "./featuers/landing_pages/Privacypolicy";
+import ResumeChecker from "./featuers/landing_pages/ResumeChecker";
+import Terms from "./featuers/landing_pages/Terms";
+import LandingPageLayouts from "./featuers/landing_pages/LandingPageLayouts";
+import NotFound from "./featuers/landing_pages/NotFound";
 
 // ================= ADMIN =================
 
-import AdminLayout from "./components/admin/AdminLayout";
-import AdminDashboard from "./components/admin/AdminDashboard/AdminDashboard";
+import AdminLayout from "./featuers/admin/AdminLayout";
+import AdminDashboard from "./featuers/admin/AdminDashboard/AdminDashboard";
 
 // import TemplateDocs from "./components/admin/AdminCreateTemplates/TemplateDocs";
-import Resume from "./components/admin/resume";
-import AdminUsers from "./components/admin/AdminUser/AdminUsers";
-import AdminNotification from "./components/admin/AdminNotification/Notification";
-import AdminSubscription from "./components/admin/AdminSubscription/AdminSubscription";
-import AdminAnalytics from "./components/admin/AdminAnalytics/AdminAnalytics";
-import AdminTemplates from "./components/admin/AdminCreateTemplates/Template";
-import AdminSecurity from "./components/admin/AdminSecurity/AdminSecurity";
-import AdminProfile from "./components/admin/AdminProfile/AdminProfile";
-import AdminBlog from "./components/admin/AdminBlog/AdminBlog";
+import Resume from "./featuers/admin/resume";
+import AdminUsers from "./featuers/admin/AdminUser/AdminUsers";
+import AdminNotification from "./featuers/admin/AdminNotification/Notification";
+import AdminSubscription from "./featuers/admin/AdminSubscription/AdminSubscription";
+import AdminAnalytics from "./featuers/admin/AdminAnalytics/AdminAnalytics";
+import AdminTemplates from "./featuers/admin/AdminCreateTemplates/Template";
+import AdminSecurity from "./featuers/admin/AdminSecurity/AdminSecurity";
+import AdminProfile from "./featuers/admin/AdminProfile/AdminProfile";
+import AdminBlog from "./featuers/admin/AdminBlog/AdminBlog";
 
 // User routes
-import UserRoutes from "./pages/UserRoutes";
-import ResumeGuide from "./pages/ResumeGuide";
-import ResumeExamplesPage from "./pages/ResumeExample";
-import CoverLetterTemplates from "./pages/CoverLetterTemplates";
-import Faq from "./pages/Faq";
+import UserRoutes from "./featuers/landing_pages/UserRoutes";
+import ResumeGuide from "./featuers/landing_pages/ResumeGuide";
+import ResumeExamplesPage from "./featuers/landing_pages/ResumeExample";
+import CoverLetterTemplates from "./featuers/landing_pages/CoverLetterTemplates";
+import Faq from "./featuers/landing_pages/Faq";
 
 function App() {
   return (

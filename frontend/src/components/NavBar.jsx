@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import UpToSkillsImg from "../assets/logo6.png";
-import axiosInstance from "./../api/axios";
+import axiosInstance from "../api/axios";
 import {
   Menu,
   LogIn,
