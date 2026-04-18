@@ -300,12 +300,6 @@ const BlogPage = () => {
                     }}
                     className="inline-flex items-center gap-2 font-bold text-[#0077cc] transition-all hover:gap-3"
                   >
-                    {expandedPosts[post.id || post._id]
-                      ? "Show Less"
-                      : "Read More"}
-                    <ChevronDown
-                      className={`w-4 h-4 transition-transform duration-300 ${expandedPosts[post.id || post._id] ? "rotate-180" : ""}`}
-                    />
                   </button>
                 </div>
               </motion.article>
