@@ -17,7 +17,7 @@ async function getAIResponse(prompt, temperature) {
     const response = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       {
-        model: "meta-llama/llama-3.3-70b-instruct:free",
+        model: "nvidia/nemotron-3-nano-30b-a3b",
         messages: [
           { role: "user", content: prompt }
         ],
@@ -90,23 +90,23 @@ export async function generateResumeAI(data) {
 
       Rules:
       - 3 to 4 lines only
-      - Write in FIRST PERSON using "I" (not the candidate's name)
+      - Write ONLY in FIRST PERSON using "I am" or "I have"
+      - NEVER mention or use the candidate's name anywhere in the summary
       - No headings
       - No bullet points
       - No explanations
       - No notes
       - Plain text only
       - Focus on key achievements and skills
-      - Start with "I am" or "I have"
 
       Instructions:
       - If a professional summary is provided by the user, analyze it and improve it.
       - Preserve the user's intent and core information.
       - Do NOT repeat the summary verbatim.
       - If no summary is provided, generate one from the candidate details.
+      - CRITICAL: Under NO circumstances should the candidate's name appear in the output.
 
       Candidate Details:
-      Name: ${data.fullName}
       Skills: ${formatSkills(data.skills) || "Not provided"}
       Education: ${formatEducation(data.education) || "Not provided"}
       Experience: ${formatExperience(data.experience) || "Not provided"}
@@ -129,35 +129,27 @@ export async function refineExperienceDescription(data) {
     console.log("AI FUNCTION CALLED");
     console.log("INPUT DATA:", data);
     const prompt = `
-      Create ONLY a professional resume summary in first person.
+      You are an expert resume writer specializing in ATS (Applicant Tracking System) optimization.
 
-      Rules:
-      - 3 to 4 lines only
-      - Write in FIRST PERSON using "I" (not the candidate's name)
-      - No headings
-      - No bullet points
-      - No explanations
-      - No notes
-      - Plain text only
-      - Focus on key achievements and skills
-      - Start with "I am" or "I have"
+      Your task is to generate or enhance a professional work experience description for a resume.
 
-      Instructions:
-      - If a professional summary is provided by the user, analyze it and improve it.
-      - Preserve the user's intent and core information.
-      - Do NOT repeat the summary verbatim.
-      - If no summary is provided, generate one from the candidate details.
+      Requirements:
+      - The final output must be a single paragraph.
+      - Do NOT use bullet points, numbering, or lists.
+      - The description must NOT exceed 600 characters.
+      - Use clear, professional, action-oriented language suitable for resumes.
+      - Include relevant technical keywords, tools, and measurable outcomes when possible.
+      - Focus on responsibilities, achievements, and impact in the role.
+      - Write in third person (no "I" or "we").
 
-      Candidate Details:
-      Name: ${data.fullName}
-      Skills: ${formatSkills(data.skills) || "Not provided"}
-      Education: ${formatEducation(data.education) || "Not provided"}
-      Experience: ${formatExperience(data.experience) || "Not provided"}
-      Certifications: ${formatCertifications(data.certifications) || "Not provided"}
-      Projects: ${formatProjects(data.projects) || "Not provided"}
-      Existing Summary: ${data.summary?.trim() || "Not provided"}
+      Return ONLY the improved work experience description with no additional text, explanations, or headings.
 
-      Example format: "I am a skilled software developer with expertise in..."
+      Job Details:
+      Job Title: ${data.title || "Not provided"}
+      Company: ${data.company || "Not provided"}
+      Location: ${data.location || "Not provided"}
+      Duration: ${data.startDate || ""} - ${data.endDate || "Present"}
+      Existing Description: ${data.description?.trim() || "Not provided"}
     `;
     const response = await getAIResponse(prompt);
     return response;
@@ -206,13 +198,8 @@ export const generateCoverLetterAI = async (jobDetails, sectionType) => {
     console.log("🔍 Section:", sectionType);
     console.log("📝 Job Details:", JSON.stringify(jobDetails, null, 2));
 
-    const client = getGroqClient();
-    if (!client) {
-      console.warn("⚠️ AI Service unavailable (Missing API Key)");
-      throw new Error("AI Service unavailable (Missing API Key)");
-    }
-
     let prompt = "";
+
     const baseContext = `
       Job Title: ${jobDetails.jobTitle || 'Role'}
       Company: ${jobDetails.companyName || 'Company'}
@@ -221,76 +208,113 @@ export const generateCoverLetterAI = async (jobDetails, sectionType) => {
       Experience: ${jobDetails.experience || ''}
     `;
 
+    // ✅ CLEAN CONTEXT (REMOVE NAME + THIRD PERSON)
+    const cleanedContext = baseContext
+      .replace(/Candidate Name:.*\n?/gi, "")
+      .replace(/\b[A-Z][a-z]+\s[A-Z][a-z]+\b/g, "") // remove full names
+      .replace(/\b(he|his|him|she|her)\b/gi, "");
+
     switch (sectionType) {
+
       case 'openingParagraph':
         prompt = `
-          Write a professional opening paragraph for a cover letter for the position of ${jobDetails.jobTitle} at ${jobDetails.companyName}.
-          Context:
-          ${baseContext}
-          
-          Rules:
-          - Write in first person ("I").
-          - Express enthusiasm for the role and company.
-          - Mention why you are a great fit briefly.
-          - Keep it under 4 lines.
-          - STRICTLY NO placeholders like [Role] or [Company]. Use the provided details.
-          - STRICTLY NO meta-commentary like "Here is the paragraph". Just the text.
-          - Tone: Professional, Confident, Engaging.
-        `;
+Write a professional opening paragraph for a cover letter.
+
+Context:
+${cleanedContext}
+
+Rules:
+- Write ONLY in first person ("I", "my").
+- NEVER use any name.
+- Show enthusiasm for ${jobDetails.jobTitle} at ${jobDetails.companyName}.
+- Keep it under 4 lines.
+- No placeholders.
+- No meta-commentary.
+`;
         break;
 
       case 'bodyParagraph1':
         prompt = `
-          Write the first body paragraph of a cover letter focusing on key qualifications.
-          Context:
-          ${baseContext}
-          
-          Rules:
-          - Focus on the candidate's skills and experience relevant to ${jobDetails.jobTitle}.
-          - Use specific examples if available in the context.
-          - STRICTLY NO placeholders. If specific numbers aren't known, use qualitative descriptors (e.g., "significant increase", "led a team").
-          - STRICTLY NO meta-commentary. Just the paragraph text.
-          - Keep it under 6 lines.
-        `;
+Write the first body paragraph of a cover letter.
+
+Context:
+${cleanedContext}
+
+Rules:
+- Write ONLY in first person ("I", "my", "me").
+- NEVER use any name or third-person words.
+- Start sentences with "I" (e.g., "I bring", "I have built").
+- Convert ALL context into first person.
+- Focus on skills relevant to ${jobDetails.jobTitle}.
+- Keep it under 6 lines.
+- No placeholders.
+- No meta-commentary.
+
+IMPORTANT:
+If any name appears, rewrite the response in first person.
+`;
         break;
 
       case 'bodyParagraph2':
         prompt = `
-          Write the second body paragraph of a cover letter focusing on cultural fit and additional value.
-          Context:
-          ${baseContext}
-          
-          Rules:
-          - Explain why the candidate is passionate about ${jobDetails.companyName} or the industry.
-          - Mention soft skills like leadership, collaboration, or problem-solving.
-          - STRICTLY NO placeholders.
-          - STRICTLY NO meta-commentary. Just the paragraph text.
-          - Keep it under 6 lines.
-        `;
+Write the second body paragraph of a cover letter.
+
+Context:
+${cleanedContext}
+
+Rules:
+- Write ONLY in first person.
+- NEVER use any name.
+- Show interest in ${jobDetails.companyName}.
+- Include soft skills (teamwork, problem-solving, leadership).
+- Keep it under 6 lines.
+- No placeholders.
+- No meta-commentary.
+`;
         break;
 
       case 'closingParagraph':
         prompt = `
-          Write a strong closing paragraph for a cover letter.
-          Context:
-          ${baseContext}
-          
-          Rules:
-          - Reiterate interest in the ${jobDetails.jobTitle} role.
-          - Include a call to action (requesting an interview).
-          - Thank the reader.
-          - Do NOT include the signature ("Sincerely, Name"). JUST the paragraph.
-          - STRICTLY NO placeholders.
-          - STRICTLY NO meta-commentary.
-          - Keep it under 3 lines.
-        `;
+Write a closing paragraph for a cover letter.
+
+Context:
+${cleanedContext}
+
+Rules:
+- Write ONLY in first person.
+- NEVER use any name.
+- Reaffirm interest in ${jobDetails.jobTitle}.
+- Ask for an interview.
+- Thank the reader.
+- Max 3 lines.
+- No placeholders.
+- No meta-commentary.
+`;
+        break;
+
+      case 'jobDescription':
+        prompt = `
+Rewrite the job description professionally.
+
+Context:
+${cleanedContext}
+Job Description: ${jobDetails.jobDescription || ''}
+
+Rules:
+- Keep meaning intact.
+- Use strong professional language.
+- No placeholders.
+- No meta-commentary.
+`;
         break;
 
       default:
         throw new Error("Invalid section type");
     }
+
     const response = await getAIResponse(prompt, 0.7);
     return response;
+
   } catch (error) {
     console.error("❌ AI COVER LETTER ERROR:", error);
     throw error;
@@ -875,6 +899,214 @@ export async function chatBotAPIResponse(userQuestion, history, isLoggedin) {
     return response;
   } catch (error) {
     console.error("AI SERVICE ERROR:", error);
+    throw error;
+  }
+}
+
+export async function adminChatbotAIResponse(userQuestion, history, stats) {
+  try {
+    const formattedHistory = history
+      .map(msg => `${msg.from === "user" ? "ADMIN" : "ASSISTANT"}: ${msg.text}`)
+      .join("\n");
+
+    const statsContext = `
+LIVE PLATFORM STATS (as of now):
+- Total Users: ${stats.totalUsers}
+- Active Users (last 7 days): ${stats.activeUsers}
+- New Users (last 30 days): ${stats.newUsers}
+- Total Resumes Generated: ${stats.totalResumes}
+- Active Subscriptions: ${stats.activeSubscriptions}
+- Total Revenue: ₹${stats.totalRevenue}
+- API Success Rate: ${stats.apiSuccessRate}
+- Total API Calls (last 30 days): ${stats.totalApiCalls}
+- Subscription Breakdown: ${JSON.stringify(stats.subscriptionBreakdown)}
+- Daily Active Users (last 7 days): ${JSON.stringify(stats.dailyActiveUsers)}
+- User Growth (last 6 months): ${JSON.stringify(stats.userGrowth)}
+- Resume Chart (last 6 months): ${JSON.stringify(stats.resumeChart)}
+- Most Used Templates: ${JSON.stringify(stats.mostUsedTemplates)}
+- System Uptime: ${stats.systemUptime}
+`;
+
+    const prompt = `
+You are an intelligent Admin AI Assistant for the UpToSkills platform.
+You have access to live platform data and help the admin understand and navigate the admin panel.
+
+==============================
+RESPONSE FORMAT (MANDATORY)
+==============================
+
+Return ONLY valid JSON. No text outside JSON.
+
+For normal answers:
+{ "mode": "message", "text": "MARKDOWN_RESPONSE" }
+
+For navigation:
+{ "mode": "navigation", "text": "Short confirmation", "path": "/admin/route" }
+
+==============================
+ADMIN NAVIGATION ROUTES
+==============================
+
+Use ONLY these exact admin routes when navigating:
+- Dashboard / home: /admin
+- Users: /admin/users
+- Subscription / subscriptions / plans: /admin/subscription
+- Analytics: /admin/analytics
+- Templates: /admin/manage-templates
+- Notifications: /admin/notifications
+- Blog: /admin/blog
+- Profile: /admin/profile
+- Security / change password: /admin/change-password
+
+If user says "go to dashboard", "open users", "show templates", "open subscriptions", "go to notifications", "open blog" etc → use navigation mode with the exact path above.
+
+==============================
+LIVE DATA RULE
+==============================
+
+You have access to real-time platform stats. Use them to answer questions accurately.
+
+${statsContext}
+
+When admin asks about:
+- "users" / "total users" / "how many users" → use totalUsers, activeUsers, newUsers
+- "subscriptions" / "active subscriptions" / "paid users" → use activeSubscriptions, subscriptionBreakdown
+- "revenue" / "earnings" / "income" → use totalRevenue
+- "resumes" / "resume count" → use totalResumes
+- "analytics" / "api" / "performance" → use apiSuccessRate, totalApiCalls, systemUptime
+- "active users" / "daily users" → use activeUsers, dailyActiveUsers
+- "growth" / "user growth" → use userGrowth
+- "templates" / "popular templates" → use mostUsedTemplates
+- "dashboard" / "overview" / "summary" → give a full summary using all stats
+
+==============================
+GREETING RULE
+==============================
+
+If admin says hi/hello/hey respond:
+👋 Hello Admin! I'm your UpToSkills Admin Assistant.
+How can I help you manage the platform today?
+
+==============================
+SUMMARY RULE
+==============================
+
+If admin asks for a summary or overview, respond like:
+
+### 📊 Platform Overview
+
+| Metric | Value |
+|--------|-------|
+| Total Users | ${stats.totalUsers} |
+| Active Users (7d) | ${stats.activeUsers} |
+| Active Subscriptions | ${stats.activeSubscriptions} |
+| Total Revenue | ₹${stats.totalRevenue} |
+| Resumes Generated | ${stats.totalResumes} |
+| API Success Rate | ${stats.apiSuccessRate} |
+
+---
+
+### 📈 Subscription Breakdown
+(list each plan and count from subscriptionBreakdown)
+
+---
+
+### 🔗 Quick Links
+[Dashboard](/admin) | [Users](/admin/users) | [Analytics](/admin/analytics) | [Subscriptions](/admin/subscription) | [Blogs] (/admin/blog) 
+
+==============================
+MARKDOWN RULE
+==============================
+
+Always use markdown. Use tables for data comparisons.
+Use headings, bullet points, bold text for clarity.
+
+==============================
+SCOPE RULE
+==============================
+
+Only answer questions related to:
+- Platform stats and data
+- User management
+- Subscriptions and revenue
+- Templates
+- Analytics and performance
+- Blog and notifications
+- Admin navigation
+
+For unrelated questions respond:
+"I'm your Admin Assistant. I can only help with platform management topics."
+
+==============================
+PREVIOUS CHAT
+==============================
+
+${formattedHistory}
+
+Admin Question: ${userQuestion}
+
+Follow all rules strictly. Return ONLY valid JSON.
+    `;
+
+    const response = await getAIResponse(prompt, 0.5);
+    return response;
+  } catch (error) {
+    console.error("ADMIN CHATBOT AI ERROR:", error);
+    throw error;
+  }
+}
+
+export async function atsResumeAdviceAI(userQuestion, scanData) {
+  try {
+    const sections = (scanData.sectionScores || [])
+      .map(s => `- ${s.sectionName}: ${s.score}/${s.maxScore} — ${s.status || ""}`)
+      .join("\n");
+
+    const matched = (scanData.matchedKeywords || []).slice(0, 15).map(k => k.keyword || k).join(", ");
+    const missing = (scanData.missingKeywords || []).slice(0, 15).map(k => k.keyword || k).join(", ");
+    const suggestions = (scanData.suggestions || []).slice(0, 8).join("\n- ");
+    const misspelled = (scanData.misspelledWords || []).slice(0, 10).join(", ");
+
+    const prompt = `
+You are an expert ATS resume coach. A user has uploaded their resume and received an ATS analysis. Answer their question using the actual scan data below.
+
+==============================
+ATS SCAN RESULTS
+==============================
+Overall Score: ${scanData.overallScore}/100
+Job Title Scanned For: ${scanData.jobTitle || "General"}
+
+Section Scores:
+${sections || "Not available"}
+
+Matched Keywords: ${matched || "None"}
+Missing Keywords: ${missing || "None"}
+Misspelled Words: ${misspelled || "None"}
+
+Suggestions from scan:
+- ${suggestions || "None"}
+
+==============================
+RESPONSE RULES
+==============================
+- Answer ONLY based on the scan data above.
+- Be specific — mention actual section names, scores, missing keywords.
+- Use markdown with bullet points and headings.
+- Prioritize the lowest-scoring sections first.
+- Give actionable, concrete steps to improve.
+- Keep response focused and under 400 words.
+- Do NOT make up information not in the scan data.
+
+User Question: ${userQuestion}
+
+Return ONLY valid JSON:
+{ "mode": "message", "text": "MARKDOWN_RESPONSE" }
+    `;
+
+    const response = await getAIResponse(prompt, 0.5);
+    return response;
+  } catch (error) {
+    console.error("ATS ADVICE AI ERROR:", error);
     throw error;
   }
 }

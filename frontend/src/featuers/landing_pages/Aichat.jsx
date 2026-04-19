@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Bot, SendHorizontal, Trash2, X } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import axiosInstance from "../../api/axios";
 import chatbotIcon from "../../assets/chatbot_image.png";
 
 export default function Aichat() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [open, setOpen] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -72,6 +73,33 @@ export default function Aichat() {
     return () => document.removeEventListener("keydown", listener);
   }, []);
 
+  // Listen for ATS scan complete → auto open chatbot with edit options
+  useEffect(() => {
+    const handleAtsScanComplete = (e) => {
+      const score = e.detail?.score ?? "";
+      setOpen(true);
+      setMessages((prev) => [
+        ...prev,
+        {
+          from: "bot",
+          text: `✅ **ATS Scan Complete! Your score: ${score}/100**\n\nWould you like to improve your resume using the AI Resume Builder?`,
+          actions: [
+            {
+              label: "✏️ Continue with same data",
+              onClick: "ats-same-data",
+            },
+            {
+              label: "🆕 Build new resume",
+              onClick: "ats-new-resume",
+            },
+          ],
+        },
+      ]);
+    };
+    window.addEventListener("ats-scan-complete", handleAtsScanComplete);
+    return () => window.removeEventListener("ats-scan-complete", handleAtsScanComplete);
+  }, []);
+
   useEffect(() => {
     if (messagesRef.current) {
       messagesRef.current.scrollTo({
@@ -85,13 +113,175 @@ export default function Aichat() {
     if (!customText && !input.trim()) return;
 
     const text = customText ? customText : input.trim();
+    const lower = text.toLowerCase();
+
+    // Admin switch intercept — works even from user dashboard
+    if (lower.includes("go to admin") || lower.includes("switch to admin") || lower.includes("admin dashboard") || lower.includes("admin dashbord") || lower.includes("super admin") || lower.includes("admin mode")) {
+      setMessages((prev) => [...prev,
+        { from: "user", text },
+        { from: "bot", text: "✅ Taking you to the Admin Dashboard!" }
+      ]);
+      setInput("");
+      setTimeout(() => { setOpen(false); navigate("/admin"); }, 1000);
+      return;
+    }
 
     setMessages((prev) => [...prev, { from: "user", text }]);
     setInput("");
     setResponseLoading(true);
 
+    // Check if user is asking about their uploaded resume on ATS checker page
+    const atsKeywords = ["improve my resume", "how to improve", "ats score", "missing keywords",
+      "improve score", "resume feedback", "what's wrong", "whats wrong", "fix my resume",
+      "resume suggestions", "improve my ats", "analyze my resume", "resume analysis",
+      "how can i improve", "what should i improve", "resume issues", "ats feedback",
+      "uploaded resume", "my resume", "improve uploaded", "resume score", "resume problem",
+      "resume mistake", "resume error", "keyword missing", "low score"];
+    const isAtsQuestion = atsKeywords.some(k => lower.includes(k));
+
+    // Check if user wants to edit their resume
+    const editKeywords = ["edit my resume", "edit resume", "can i edit", "how to edit",
+      "update my resume", "change my resume", "modify resume", "fix resume",
+      "edit this", "update resume", "make changes", "change resume"];
+    const isEditQuestion = editKeywords.some(k => lower.includes(k));
+    const storedScan = sessionStorage.getItem("ats_analysis_result");
+
+    if (isEditQuestion) {
+      setInput("");
+      setMessages((prev) => [...prev, {
+        from: "bot",
+        text: `✏️ **Why Edit with AI Resume Builder?**
+
+Editing your resume with our **AI Resume Builder** gives you a major advantage over manual editing. Here's why:
+
+---
+
+### 🤖 AI-Powered Advantages
+
+- **📝 Smart Summary Generation** — AI writes a professional summary tailored to your experience and skills automatically.
+
+- **💼 Experience Enhancement** — Transforms weak job descriptions into strong, ATS-optimized, action-oriented bullet points.
+
+- **🎯 Keyword Optimization** — AI identifies and adds missing keywords that recruiters and ATS systems look for.
+
+- **📊 Real-time ATS Score** — See your ATS score improve as you make changes before downloading.
+
+- **🎨 Professional Templates** — Choose from premium ATS-friendly templates that pass screening systems.
+
+- **⚡ One-Click Enhance** — Every section has an "Enhance with AI" button for instant improvement.
+
+- **✅ Spelling & Grammar** — AI catches errors and suggests professional language automatically.
+
+- **📄 Instant PDF Export** — Download a perfectly formatted resume in one click.
+
+---
+
+💡 **Pro Tip:** After editing with AI, re-upload here to see your improved ATS score!
+
+Choose where to edit your resume:`,
+        actions: [
+          { label: "📝 Open AI Resume Builder", path: "/user/resume-builder" },
+          { label: "📄 Open CV Builder", path: "/user/cv" },
+        ]
+      }]);
+      setResponseLoading(false);
+      return;
+    }
+
+    if (isAtsQuestion && !storedScan) {
+      // If asking how to improve without a scan, still show AI builder benefits
+      const improveKeywords = ["how to improve", "improve ats", "improve score", "increase score",
+        "boost score", "increase ats", "boost ats", "get better score", "higher score",
+        "improve my ats", "fix my ats", "how can i improve"];
+      const isImproveQuestion = improveKeywords.some(k => lower.includes(k));
+      if (isImproveQuestion) {
+        setMessages((prev) => [...prev, {
+          from: "bot",
+          text: "📄 Upload your resume first to get your ATS score, then use the **AI Resume Builder** to improve it!",
+          actions: [
+            { label: "🚀 Open AI Resume Builder", path: "/user/resume-builder" },
+          ]
+        }]);
+      } else {
+        setMessages((prev) => [...prev, { from: "bot", text: "📄 Please upload your resume on the [ATS Checker](/user/ats-checker) page first, then ask me to analyze it!" }]);
+      }
+      setResponseLoading(false);
+      return;
+    }
+
+    if (isAtsQuestion && storedScan) {
+      // If asking HOW TO IMPROVE → show popup + redirect to AI builder
+      const improveKeywords = ["how to improve", "improve ats", "improve score", "increase score",
+        "boost score", "increase ats", "boost ats", "get better score", "higher score",
+        "improve my ats", "fix my ats", "how can i improve"];
+      const isImproveQuestion = improveKeywords.some(k => lower.includes(k));
+
+      if (isImproveQuestion) {
+        setMessages((prev) => [...prev, {
+          from: "bot",
+          text: `🚀 **How to Improve Your ATS Score**
+
+The fastest way to improve your ATS score is to use the **AI Resume Builder**. Here's what it does for you:
+
+---
+
+### ✨ AI Resume Builder Advantages
+
+- **🎯 Keyword Optimization** — Automatically adds the missing keywords ATS systems scan for, boosting your match rate instantly.
+
+- **📝 AI Summary Generation** — Rewrites your professional summary to be concise, impactful, and ATS-friendly.
+
+- **💼 Experience Enhancement** — Converts weak job descriptions into strong, action-verb-driven bullet points.
+
+- **📊 Live ATS Score Preview** — Watch your score improve in real-time as you make AI-powered edits.
+
+- **🎨 ATS-Safe Templates** — Choose from professionally designed templates that pass all ATS formatting checks.
+
+- **⚡ One-Click Enhance** — Every section has an instant AI enhance button — no manual rewriting needed.
+
+- **✅ Spell & Grammar Check** — AI catches errors that lower your score automatically.
+
+---
+
+💡 **Result:** Most users improve their ATS score by **20-40 points** after using the AI Resume Builder!`,
+          actions: [
+            { label: "🚀 Improve with AI Resume Builder", path: "/user/resume-builder" },
+            { label: "📄 Try CV Builder", path: "/user/cv" },
+          ]
+        }]);
+        setResponseLoading(false);
+        return;
+      }
+      try {
+        const scanData = JSON.parse(storedScan);
+        const res = await axiosInstance.post("/api/chatbot/ats-advice", {
+          message: text,
+          scanData,
+        });
+        const reply = res.data;
+        setMessages((prev) => [...prev, { from: "bot", text: "" }]);
+        let idx = 0;
+        const interval = setInterval(() => {
+          idx += 1;
+          setMessages((prev) => {
+            const msgs = [...prev];
+            msgs[msgs.length - 1].text = reply.text.slice(0, idx);
+            return msgs;
+          });
+          if (idx >= reply.text.length) clearInterval(interval);
+        }, 20);
+      } catch (err) {
+        console.error("ATS advice error:", err);
+        setMessages((prev) => [...prev, { from: "bot", text: "Something went wrong analyzing your resume. Please try again." }]);
+      }
+      setResponseLoading(false);
+      return;
+    }
+
     try {
-      const res = await axiosInstance.post("/api/chatbot/chat", {
+      const res = await axiosInstance.post(location.pathname === "/admin"
+    ? "/api/chatbot/admin-chat"
+    : "/api/chatbot/chat", {
         message: text,
         prevMsg: messages,
         isLoggedIn,
@@ -164,7 +354,7 @@ export default function Aichat() {
       {/* CHAT CONTAINER */}
       <div
         ref={chatbotContainerRef}
-        className="fixed sm:right-8 right-2 md:bottom-8 sm:bottom-16 bottom-4 md:w-[380px] w-[350px] h-[560px] flex flex-col bg-white rounded-2xl border border-slate-200 shadow-[0_20px_60px_rgba(0,0,0,0.08)] transition-all duration-500 ease-in-out z-[9999]"
+        className="fixed right-8 md:bottom-8 bottom-16 md:w-[380px] w-[350px] h-[560px] flex flex-col bg-white rounded-2xl border border-slate-200 shadow-[0_20px_60px_rgba(0,0,0,0.08)] transition-all duration-500 ease-in-out z-[9999]"
         style={{
           transform: open ? "translateX(0)" : "translateX(120%)",
           opacity: open ? 1 : 0,
@@ -175,7 +365,7 @@ export default function Aichat() {
           <div className="flex flex-col">
             <div className="flex items-center gap-2 font-semibold text-sm">
               <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-              AI Resume Assistant
+              AI Assistant
             </div>
             <span className="text-[11px] text-slate-400">
               Powered by UpToSkills AI
@@ -265,7 +455,96 @@ export default function Aichat() {
                   >
                     {m.text}
                   </ReactMarkdown>
-                  <hr className="mt-8" />
+                  {/* Action buttons for edit/navigate options */}
+                  {m.actions && m.actions.length > 0 && (
+                    <div className="flex flex-col gap-2 mt-3">
+                      {m.actions.map((action, ai) => (
+                        <button
+                          key={ai}
+                          onClick={() => {
+                            if (action.onClick === "ats-same-data") {
+                              // Map extractedData → resumeFormData and navigate
+                              const raw = sessionStorage.getItem("ats_extracted_data");
+                              if (raw) {
+                                try {
+                                  const d = JSON.parse(raw);
+                                  const mapped = {
+                                    fullName: d.fullName || d.name || "",
+                                    email: d.email || "",
+                                    phone: d.phone || "",
+                                    location: d.location || "",
+                                    linkedin: d.linkedin || "",
+                                    website: d.website || "",
+                                    summary: d.summary || "",
+                                    experience: (d.experience || []).map((e, i) => ({
+                                      id: i + 1,
+                                      title: e.title || "",
+                                      company: e.company || "",
+                                      location: e.location || "",
+                                      startDate: e.startDate || "",
+                                      endDate: e.endDate || "",
+                                      description: e.description || "",
+                                    })),
+                                    education: (d.education || []).map((e, i) => ({
+                                      id: i + 1,
+                                      school: e.school || "",
+                                      degree: e.degree || "",
+                                      location: e.location || "",
+                                      startDate: e.startDate || "",
+                                      graduationDate: e.graduationDate || e.endDate || "",
+                                      gpa: e.gpa || "",
+                                    })),
+                                    skills: {
+                                      technical: Array.isArray(d.skills?.technical) ? d.skills.technical : [],
+                                      soft: Array.isArray(d.skills?.soft) ? d.skills.soft : [],
+                                    },
+                                    projects: (d.projects || []).map((p, i) => ({
+                                      id: i + 1,
+                                      name: p.name || "",
+                                      description: p.description || "",
+                                      technologies: p.technologies || "",
+                                      link: {
+                                        github: p.link?.github || "",
+                                        liveLink: p.link?.liveLink || "",
+                                        other: p.link?.other || "",
+                                      },
+                                    })),
+                                    certifications: (d.certifications || []).map((c, i) => ({
+                                      id: i + 1,
+                                      name: c.name || "",
+                                      issuer: c.issuer || "",
+                                      date: c.date || "",
+                                      link: c.link || "",
+                                    })),
+                                  };
+                                  localStorage.setItem("resumeFormData", JSON.stringify(mapped));
+                                  console.log("✅ Mapped resume data saved:", mapped);
+                                } catch (err) {
+                                  console.error("Failed to map extracted data:", err);
+                                }
+                              } else {
+                                console.warn("No ats_extracted_data found in sessionStorage");
+                              }
+                              setOpen(false);
+                              // Small delay to ensure localStorage is written before navigation
+                              setTimeout(() => navigate("/user/resume-builder"), 100);
+                            } else if (action.onClick === "ats-new-resume") {
+                              localStorage.removeItem("resumeFormData");
+                              setOpen(false);
+                              navigate("/user/resume-builder");
+                            } else if (action.path) {
+                              setOpen(false);
+                              navigate(action.path);
+                            }
+                          }}
+                          className="w-full px-4 py-2.5 bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold rounded-xl transition text-left flex items-center gap-2"
+                        >
+                          {action.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <hr className="mt-4" />
                 </div>
               )}
             </div>
