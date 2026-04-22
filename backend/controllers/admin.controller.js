@@ -141,7 +141,8 @@ export const getAdminDashboardStats = async (req, res) => {
         SELECT
           COUNT(*)::bigint AS total_users,
           COUNT(*) FILTER (WHERE created_at < $1)::bigint AS last_month_users,
-          COUNT(*) FILTER (WHERE plan = 'Free' AND is_active = true AND is_admin = false)::bigint AS free_users
+          COUNT(*) FILTER (WHERE plan_id = 1 AND is_active = true AND is_admin = false)::bigint AS free_users,
+          (SELECT name FROM plans WHERE plan_id = 1 LIMIT 1) AS free_plan_name
         FROM users
       `, [lastMonthStart]),
 
@@ -158,12 +159,13 @@ export const getAdminDashboardStats = async (req, res) => {
         SELECT
           (SELECT COUNT(*) FROM subscriptions WHERE status = 'active') AS total_active,
           (SELECT COUNT(*) FROM subscriptions WHERE status = 'active' AND created_at < $1) AS last_month_active,
-          json_agg(json_build_object('plan', plan, 'count', count)) AS plans
+          json_agg(json_build_object('plan', plan_name, 'count', count)) AS plans
         FROM (
-          SELECT plan, COUNT(*)::int AS count
-          FROM subscriptions
-          WHERE status = 'active'
-          GROUP BY plan
+          SELECT p.name AS plan_name, COUNT(*)::int AS count
+          FROM subscriptions s
+          JOIN plans p ON s.plan_id = p.plan_id
+          WHERE s.status = 'active'
+          GROUP BY p.name
         ) t
       `, [lastMonthStart]),
 
@@ -311,7 +313,7 @@ export const getAdminDashboardStats = async (req, res) => {
 
     const subscriptionSplit = [
       {
-        name: "Free",
+        name: u.free_plan_name || "Free",
         value: total ? Number(((freeUserCount / total) * 100).toFixed(2)) : 0
       },
       ...plans.map(p => ({
@@ -406,7 +408,13 @@ export const getAnalyticsStats = async (req, res) => {
         )::int AS count
       `, [formatBoundary(analyticsWindow.startDate), formatBoundary(analyticsWindow.endDate, true)]),
       pool.query("SELECT name FROM plans"),
-      pool.query("SELECT plan AS id, COUNT(*)::int AS count FROM users WHERE is_admin = false GROUP BY 1"),
+      pool.query(`
+        SELECT p.name AS id, COUNT(u.id)::int AS count 
+        FROM users u 
+        JOIN plans p ON u.plan_id = p.plan_id 
+        WHERE u.is_admin = false 
+        GROUP BY p.name
+      `),
       pool.query(
         `
         SELECT 

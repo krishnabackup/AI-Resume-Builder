@@ -13,7 +13,7 @@ export const register = async (req, res) => {
     if (!username || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
-
+ 
     if (password.length < 6) {
       return res
         .status(400)
@@ -39,8 +39,8 @@ export const register = async (req, res) => {
     try {
       await client.query('BEGIN');
       await client.query(
-        `INSERT INTO users (id, username, email, password, is_admin, is_active, created_at, updated_at) 
-       VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())`,
+        `INSERT INTO users (id, username, email, password, is_admin, is_active, plan_id, created_at, updated_at) 
+       VALUES ($1, $2, $3, $4, $5, $6, 1, NOW(), NOW())`,
         [newUserId, username, email, hashedPass, isAdmin, true]);
 
       await client.query(

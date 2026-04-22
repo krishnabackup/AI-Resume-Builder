@@ -175,6 +175,22 @@ const EditProfile = () => {
 
   };
 
+  const handleSaveLink = async () => {
+    try {
+      await axios.put("/api/user/profile", formData);
+      toast.success("Link saved successfully!", {
+        duration: 3000,
+        position: 'top-right'
+      });
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save link. Please try again.", {
+        duration: 4000,
+        position: 'top-right'
+      });
+    }
+  };
+
   const handleSave = async () => {
     // Validate all fields before submission
     const fullNameError = validateFullName(formData.fullName);
@@ -338,22 +354,38 @@ const EditProfile = () => {
                         style={{ padding: "6px 10px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "0.85rem", color: "#1e293b" }}
                       />
 
-                      <button
-                        type="button"
-                        onClick={() => removeLink(index)}
-                        style={{
-                          alignSelf: "flex-end",
-                          background: "#ef4444",
-                          color: "white",
-                          border: "none",
-                          padding: "4px 10px",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                          fontSize: "0.8rem"
-                        }}
-                      >
-                        Remove
-                      </button>
+                      <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "4px" }}>
+                        <button
+                          type="button"
+                          onClick={handleSaveLink}
+                          style={{
+                            background: "#22c55e",
+                            color: "white",
+                            border: "none",
+                            padding: "4px 10px",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                            fontSize: "0.8rem"
+                          }}
+                        >
+                          Save
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removeLink(index)}
+                          style={{
+                            background: "#ef4444",
+                            color: "white",
+                            border: "none",
+                            padding: "4px 10px",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                            fontSize: "0.8rem"
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </div>
 
                     </div>
 
